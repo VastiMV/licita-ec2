@@ -21,6 +21,8 @@ export const ENDPOINTS = {
     cotacoes: 'licitacoes/cotacoes/',
     /** Quem saiu do ciclo — encerramento calculado no backend. */
     encerradas: 'licitacoes/encerradas/',
+    /** Tiradas da lista antes do prazo — tela própria, fora de Encerradas. */
+    descartadas: 'licitacoes/descartadas/',
     salva: (id: number) => `licitacoes/salvas/${id}/`,
     /** Histórico cru de uma salva (o log). */
     salvaEventos: (id: number) => `licitacoes/salvas/${id}/eventos/`,

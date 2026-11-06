@@ -55,6 +55,7 @@ describe('SidebarComponent', () => {
       'Disputas',
       'Empenhos',
       'Encerradas',
+      'Descartadas',
       'Empresas',
       'Fornecedores',
       'Produtos',
@@ -87,7 +88,7 @@ describe('SidebarComponent', () => {
       .queryAll(By.directive(NavItemComponent))
       .map((item) => (item.componentInstance as NavItemComponent).path());
 
-    expect(rotas.slice(0, 8)).toEqual([
+    expect(rotas.slice(0, 9)).toEqual([
       '/ciclo/visao-geral',
       '/oportunidades/buscar',
       '/oportunidades/salvas',
@@ -96,6 +97,7 @@ describe('SidebarComponent', () => {
       '/ciclo/disputas',
       '/ciclo/empenhos',
       '/ciclo/encerradas',
+      '/ciclo/descartadas',
     ]);
   });
 

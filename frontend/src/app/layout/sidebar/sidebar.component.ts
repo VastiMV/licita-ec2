@@ -92,6 +92,8 @@ const MENU: readonly NavLink[] = [
       { path: '/ciclo/disputas', label: 'Disputas', icon: 'disputa' },
       { path: '/ciclo/empenhos', label: 'Empenhos', icon: 'empenho' },
       { path: '/ciclo/encerradas', label: 'Encerradas', icon: 'encerradas' },
+      // Tiradas da lista antes do prazo — não são encerradas (ver encerradas.py).
+      { path: '/ciclo/descartadas', label: 'Descartadas', icon: 'trash' },
     ],
   },
   // Os cadastros que o Cotador usa: com quem eu disputo, de quem eu compro
