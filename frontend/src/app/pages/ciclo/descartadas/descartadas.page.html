@@ -1,0 +1,35 @@
+<h1>Descartadas</h1>
+<p class="muted">
+  As oportunidades que a equipe salvou e depois tirou da lista, antes do prazo vencer. Nada é
+  apagado: abra o processo para ver quem descartou e quando.
+</p>
+
+<form [formGroup]="filtros" (ngSubmit)="pesquisar()" class="form-grid" novalidate>
+  <app-date-picker label="Descartadas de" formControlName="data_inicial" />
+  <app-date-picker label="até" formControlName="data_final" />
+  <app-select label="UF" [options]="ufs" formControlName="uf" />
+  <div class="form-acoes">
+    <app-button type="submit">Pesquisar</app-button>
+  </div>
+</form>
+
+@if (erro()) {
+  <p class="erro">Não foi possível carregar as descartadas agora.</p>
+}
+
+<app-data-table
+  [colunas]="colunas"
+  [linhas]="linhas()"
+  [total]="total()"
+  [estado]="estado()"
+  [carregando]="carregando()"
+  [chaveDe]="chaveDe"
+  rotuloBusca="Buscar"
+  placeholderBusca="Busca no objeto e nos itens…"
+  mensagemVazia="Nenhuma oportunidade descartada no período."
+  (estadoMudou)="aoMudarEstado($event)"
+>
+  <ng-template appTabelaAcoes let-linha>
+    <app-menu [itens]="acoesDe(linha)" [descricao]="'Ações do processo ' + linha.chave" />
+  </ng-template>
+</app-data-table>

@@ -78,6 +78,11 @@ export const routes: Routes = [
             loadComponent: () =>
               import('./pages/ciclo/encerradas/encerradas.page').then((m) => m.EncerradasPage),
           },
+          {
+            path: 'descartadas',
+            loadComponent: () =>
+              import('./pages/ciclo/descartadas/descartadas.page').then((m) => m.DescartadasPage),
+          },
           ...CICLO.map(({ path, titulo, descricao }) => ({
             path,
             pathMatch: 'full' as const,

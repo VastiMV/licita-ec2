@@ -29,11 +29,12 @@ from apps.integracoes.clients.pncp import PncpClient, PncpClientError
 from apps.integracoes.plataformas import identificar_plataforma, plataforma_padrao
 
 from .ciclo import montar_quadro
-from .encerradas import MOTIVOS, encerradas, montar_processo
+from .encerradas import MOTIVOS, descartadas, encerradas, montar_processo
 from .models import OportunidadeSalva, registrar_prazos_vencidos
 from .salvas import garantir_salva
 from .serializers import (
     CompraDetalheSerializer,
+    DescartadaSerializer,
     EmCotacaoSerializer,
     EncerradaSerializer,
     EventoOportunidadeSalvaSerializer,
@@ -401,6 +402,40 @@ class EncerradasView(APIView):
         paginacao = OportunidadesSalvasPaginacao()
         pagina = paginacao.paginate_queryset(lista, request, view=self)
         return paginacao.get_paginated_response(EncerradaSerializer(pagina, many=True).data)
+
+
+ORDENACOES_DESCARTADAS = {
+    "uasg": "uasg",
+    "cidade": "municipio",
+    "descartada_em": "removida_em",
+    "valor": "valor_total_estimado",
+}
+
+
+class DescartadasView(APIView):
+    """`GET /api/licitacoes/descartadas/` — as salvas tiradas da lista antes
+    do prazo (ver `encerradas.descartadas`), com os filtros da tela: período
+    do descarte (`data_inicial`/`data_final`), `uf` e `busca` textual."""
+
+    def get(self, request: Request) -> Response:
+        params = request.query_params
+
+        lista = descartadas().select_related("cotacao").buscar(params.get("busca", ""))
+        if inicio := _data(params.get("data_inicial")):
+            lista = lista.filter(descartada_em__gte=inicio)
+        if fim := _data(params.get("data_final")):
+            lista = lista.filter(descartada_em__lte=fim)
+        if uf := (params.get("uf") or "").strip().upper():
+            lista = lista.filter(uf=uf)
+
+        pedida = (params.get("ordering") or "").strip()
+        campo = ORDENACOES_DESCARTADAS.get(pedida.lstrip("-"))
+        ordem = (f"-{campo}" if pedida.startswith("-") else campo) if campo else "-removida_em"
+        lista = lista.order_by(ordem, "-id")
+
+        paginacao = OportunidadesSalvasPaginacao()
+        pagina = paginacao.paginate_queryset(lista, request, view=self)
+        return paginacao.get_paginated_response(DescartadaSerializer(pagina, many=True).data)
 
 
 class ProcessoView(APIView):

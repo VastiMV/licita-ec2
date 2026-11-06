@@ -4,6 +4,7 @@ from .views import (
     CicloView,
     CompraDetalheView,
     EmCotacaoView,
+    DescartadasView,
     EncerradasView,
     OportunidadeSalvaEventosView,
     OportunidadeSalvaView,
@@ -18,6 +19,7 @@ urlpatterns = [
     path("ciclo/", CicloView.as_view(), name="licitacoes-ciclo"),
     path("cotacoes/", EmCotacaoView.as_view(), name="licitacoes-cotacoes"),
     path("encerradas/", EncerradasView.as_view(), name="licitacoes-encerradas"),
+    path("descartadas/", DescartadasView.as_view(), name="licitacoes-descartadas"),
     path(
         "compras/<str:cnpj>/<int:ano>/<int:sequencial>/detalhe/",
         CompraDetalheView.as_view(),

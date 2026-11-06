@@ -347,3 +347,43 @@ class EventoOportunidadeSalvaSerializer(serializers.ModelSerializer):
 
     def get_autor(self, obj: EventoOportunidadeSalva) -> str | None:
         return obj.autor_nome or None
+
+
+class DescartadaSerializer(OportunidadeSalvaSerializer):
+    """Uma linha de Descartadas: a salva, quando e quem tirou da lista, e
+    onde ela estava (Oportunidade ou Cotação — com a cotação, se tinha).
+    Anotada por `encerradas.descartadas`."""
+
+    descartada_em = serializers.DateField(read_only=True)
+    estava_em = serializers.SerializerMethodField()
+    cotacao_id = serializers.SerializerMethodField()
+    valor_cotado = serializers.SerializerMethodField()
+    removida_em = serializers.DateTimeField(read_only=True)
+    removida_por = serializers.SerializerMethodField()
+
+    class Meta(OportunidadeSalvaSerializer.Meta):
+        fields = OportunidadeSalvaSerializer.Meta.fields + [
+            "descartada_em",
+            "estava_em",
+            "cotacao_id",
+            "valor_cotado",
+            "removida_em",
+            "removida_por",
+        ]
+
+    def _cotacao(self, obj: OportunidadeSalva):
+        return getattr(obj, "cotacao", None) if obj.tem_cotacao else None
+
+    def get_estava_em(self, obj: OportunidadeSalva) -> str:
+        return "cotacao" if obj.tem_cotacao else "oportunidade"
+
+    def get_cotacao_id(self, obj: OportunidadeSalva) -> int | None:
+        cotacao = self._cotacao(obj)
+        return cotacao.pk if cotacao else None
+
+    def get_valor_cotado(self, obj: OportunidadeSalva) -> float | None:
+        cotacao = self._cotacao(obj)
+        return float(cotacao.valor_cotado) if cotacao else None
+
+    def get_removida_por(self, obj: OportunidadeSalva) -> str | None:
+        return obj.removida_por_nome or None
