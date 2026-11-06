@@ -1,0 +1,16 @@
+# DOMINIO vem do .env (ex.: insidelicitacoes.com.br). O Caddy tira e renova
+# o certificado HTTPS sozinho — só precisa do DNS apontando para o EC2.
+
+{$DOMINIO} {
+	encode gzip
+	handle /api/* {
+		reverse_proxy backend:8000
+	}
+	handle {
+		reverse_proxy frontend:80
+	}
+}
+
+www.{$DOMINIO} {
+	redir https://{$DOMINIO}{uri} permanent
+}

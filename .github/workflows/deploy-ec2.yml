@@ -1,0 +1,79 @@
+name: Deploy EC2
+
+# Um botão só: gera as imagens novas (opcional) e atualiza o Licita no EC2.
+# Precisa de dois segredos (Settings → Secrets and variables → Actions):
+#   EC2_HOST     — o IP elástico do EC2 (ex.: 54.12.34.56)
+#   EC2_SSH_KEY  — o conteúdo inteiro do arquivo .pem do par de chaves
+# Ver deploy/ec2/README.md.
+on:
+  workflow_dispatch:
+    inputs:
+      gerar_imagens:
+        description: "Gerar imagens novas antes (desmarque só para reiniciar com as atuais)"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: deploy-ec2
+  cancel-in-progress: false
+
+jobs:
+  imagens:
+    if: ${{ inputs.gerar_imagens }}
+    uses: ./.github/workflows/build-image.yml
+    with:
+      image: both
+
+  deploy:
+    needs: imagens
+    # Roda também quando "gerar imagens" foi desmarcado (job pulado).
+    if: ${{ !failure() && !cancelled() }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Conferir segredos
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+        run: |
+          if [ -z "$EC2_HOST" ] || [ -z "$EC2_SSH_KEY" ]; then
+            echo "::error::Faltam os segredos EC2_HOST e/ou EC2_SSH_KEY — ver deploy/ec2/README.md."
+            exit 1
+          fi
+
+      - name: Chave SSH
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$EC2_SSH_KEY" > ~/.ssh/ec2.pem
+          chmod 600 ~/.ssh/ec2.pem
+          ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Enviar arquivos do deploy
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+        run: |
+          scp -i ~/.ssh/ec2.pem \
+            deploy/ec2/docker-compose.yml deploy/ec2/Caddyfile deploy/ec2/atualizar.sh \
+            "ubuntu@$EC2_HOST:/opt/licita/"
+
+      - name: Atualizar o Licita
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GHCR_USER: ${{ github.actor }}
+        run: |
+          # O token vale só durante este job: as imagens baixam mesmo se o
+          # pacote for privado, e nenhuma senha fica guardada no servidor.
+          ssh -i ~/.ssh/ec2.pem "ubuntu@$EC2_HOST" \
+            "echo '$GHCR_TOKEN' | sudo docker login ghcr.io -u '$GHCR_USER' --password-stdin >/dev/null \
+             && sudo chmod +x /opt/licita/atualizar.sh \
+             && sudo /opt/licita/atualizar.sh; \
+             status=\$?; sudo docker logout ghcr.io >/dev/null; exit \$status"

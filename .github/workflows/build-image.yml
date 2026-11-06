@@ -15,6 +15,12 @@ on:
           - backend
           - both
         default: frontend
+  # O "Deploy EC2" chama este mesmo workflow antes de atualizar o servidor.
+  workflow_call:
+    inputs:
+      image:
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -41,7 +47,7 @@ jobs:
           push: true
           # ghcr.io exige nome de imagem em minúsculo — "vastimv" fixo aqui
           # em vez de github.repository_owner (que preservaria o "VastiMV").
-          tags: ghcr.io/vastimv/licita-frontend:latest
+          tags: ghcr.io/vastimv/licita-ec2-frontend:latest
 
   backend:
     if: ${{ inputs.image == 'backend' || inputs.image == 'both' }}
@@ -61,4 +67,4 @@ jobs:
         with:
           context: backend
           push: true
-          tags: ghcr.io/vastimv/licita-backend:latest
+          tags: ghcr.io/vastimv/licita-ec2-backend:latest

@@ -1,0 +1,116 @@
+# O Licita inteiro numa máquina só (EC2), com as MESMAS imagens que o
+# GitHub Actions publica ("Build image") — é o equivalente, sem Kubernetes,
+# do que está em k8s/. Ver deploy/ec2/README.md.
+#
+# Segredos ficam em .env (gerado por instalar.sh, nunca commitado).
+
+name: licita
+
+x-backend: &backend
+  image: ghcr.io/vastimv/licita-ec2-backend:latest
+  env_file: .env
+  restart: unless-stopped
+  depends_on:
+    postgres:
+      condition: service_healthy
+    rabbitmq:
+      condition: service_healthy
+    migrate:
+      condition: service_completed_successfully
+
+services:
+  # HTTPS automático (Let's Encrypt) e o roteamento que o Ingress fazia:
+  # /api -> backend, o resto -> frontend.
+  caddy:
+    image: caddy:2.8-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMINIO: ${DOMINIO}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - backend
+      - frontend
+
+  frontend:
+    image: ghcr.io/vastimv/licita-ec2-frontend:latest
+    restart: unless-stopped
+
+  # Roda e termina antes do backend subir — o initContainer do k8s.
+  migrate:
+    image: ghcr.io/vastimv/licita-ec2-backend:latest
+    env_file: .env
+    command: ["python", "manage.py", "migrate", "--noinput"]
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # O volume de arquivos nasce de root; a imagem roda como uid 1000.
+  permissoes:
+    image: busybox:1.36
+    command: ["chown", "-R", "1000:1000", "/arquivos"]
+    volumes:
+      - arquivos:/arquivos
+    restart: "no"
+
+  backend:
+    <<: *backend
+    volumes:
+      - arquivos:/app/arquivos
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+      permissoes:
+        condition: service_completed_successfully
+
+  worker:
+    <<: *backend
+    command: ["celery", "-A", "config", "worker", "--loglevel=INFO"]
+
+  # Singleton: nunca suba dois beats (agendaria tudo em dobro).
+  beat:
+    <<: *backend
+    command:
+      [
+        "celery", "-A", "config", "beat", "--loglevel=INFO",
+        "--scheduler", "django_celery_beat.schedulers:DatabaseScheduler",
+      ]
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  # Fila descartável, como no k8s: sem volume.
+  rabbitmq:
+    image: rabbitmq:3.13-alpine
+    restart: unless-stopped
+    env_file: .env
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+
+volumes:
+  pgdata:
+  arquivos:
+  caddy_data:
+  caddy_config:
