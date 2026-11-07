@@ -103,6 +103,44 @@ cd /opt/licita && sudo docker compose ps
 cd /opt/licita && sudo docker compose logs --tail 100 backend
 ```
 
+## Ambiente de teste (antes de publicar)
+
+Um segundo Licita na mesma máquina, **separado da produção**: outro banco,
+outras senhas, outro endereço. Serve para testar uma branch antes do merge.
+
+| | Produção | Teste |
+|---|---|---|
+| Endereço | `https://<domínio>` | `https://teste.<domínio>` |
+| Roda | a `main` | a branch que você escolher |
+| Banco | o real | separado (pode bagunçar) |
+
+### Ligar (ou atualizar com a versão mais nova da branch)
+
+Actions → **Teste: ligar** → **Run workflow** → em **Use workflow from**
+escolha a **branch** → **Run workflow**. Uns 10 minutos.
+
+### Desligar (quando terminar)
+
+Actions → **Teste: desligar** → **Run workflow**. Marque **Apagar também
+os dados do teste** só se quiser que o banco do teste volte vazio.
+
+Ligado, o teste divide a memória com a produção: **desligue quando
+terminar**.
+
+### Login no teste (só na primeira vez)
+
+O banco do teste é outro, então o login também. No terminal do EC2:
+
+```bash
+cd /opt/licita-teste && sudo docker compose -f docker-compose.teste.yml exec teste-backend python manage.py createsuperuser
+```
+
+### Domínio próprio para o teste
+
+Com o endereço provisório (`sslip.io`), `teste.` já funciona sozinho. Com
+`insidelicitacoes.com.br`, crie no registro.br mais uma entrada **A**:
+nome `teste`, valor = o IP do EC2.
+
 ## O que roda na máquina
 
 | Serviço | Para quê |

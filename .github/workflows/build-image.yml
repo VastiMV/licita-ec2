@@ -21,6 +21,12 @@ on:
       image:
         required: true
         type: string
+      # "latest" = produção; o "Teste: ligar" usa "teste", para nunca
+      # sobrescrever a imagem que está no ar.
+      tag:
+        required: false
+        type: string
+        default: latest
 
 permissions:
   contents: read
@@ -47,7 +53,7 @@ jobs:
           push: true
           # ghcr.io exige nome de imagem em minúsculo — "vastimv" fixo aqui
           # em vez de github.repository_owner (que preservaria o "VastiMV").
-          tags: ghcr.io/vastimv/licita-ec2-frontend:latest
+          tags: ghcr.io/vastimv/licita-ec2-frontend:${{ inputs.tag || 'latest' }}
 
   backend:
     if: ${{ inputs.image == 'backend' || inputs.image == 'both' }}
@@ -67,4 +73,4 @@ jobs:
         with:
           context: backend
           push: true
-          tags: ghcr.io/vastimv/licita-ec2-backend:latest
+          tags: ghcr.io/vastimv/licita-ec2-backend:${{ inputs.tag || 'latest' }}
