@@ -5,16 +5,26 @@ Como a etapa, a saída do ciclo é **calculada**, nunca gravada. A regra
 mora aqui, num lugar só, para as duas listas, o processo (modal) e o quadro
 não divergirem — e **uma licitação nunca aparece nas duas listas**.
 
-**Encerradas** (`encerradas`) — só o que **participou** do certame:
-perdida na disputa, falha no empenho, concluída. Essas etapas ainda não
-existem no sistema, então hoje a lista é vazia de propósito.
+**Encerradas** (`encerradas`) — só o que **participou** do certame e saiu:
+
+- ``perdida`` — todos os itens da empresa desclassificados, inabilitados ou
+  homologados para outro fornecedor;
+- ``revogada``, ``anulada``, ``fracassada``, ``deserta`` — a situação da compra
+  no Compras.gov.br.
 
 **Descartadas** (`descartadas`) — tudo que saiu do ciclo antes de
 participar, com ou sem cotação:
 
 - ``descartada`` — a equipe tirou da lista antes do prazo vencer;
 - ``prazo_oportunidade`` — o prazo venceu sem nenhuma cotação;
-- ``prazo_cotacao`` — o prazo venceu com a cotação feita, sem proposta.
+- ``prazo_cotacao`` — o prazo venceu com a cotação feita, sem sinal de
+  participação, numa compra que a Sentinela não lê (fora do Compras.gov.br);
+- ``sem_proposta`` — apareceu em "Minhas participações" sem proposta
+  cadastrada quando a sessão abriu.
+
+A regra é a mesma da Torre de Controle (`torre.avaliar`), escrita aqui como
+consulta para a lista filtrar e ordenar no banco; `test_saidas.py` garante
+que as duas concordam.
 
 Pedido da operação: cotar não é participar. Encerrada é quem foi até o
 certame; o resto foi descartado, por escolha ou por prazo.
@@ -30,72 +40,155 @@ from __future__ import annotations
 import datetime as dt
 import re
 
-from django.db.models import Case, CharField, DateField, Exists, F, OuterRef, Q, Value, When
-from django.db.models.functions import TruncDate
+from django.db.models import (
+    Case,
+    CharField,
+    DateField,
+    DateTimeField,
+    Exists,
+    F,
+    OuterRef,
+    Q,
+    Subquery,
+    Value,
+    When,
+)
+from django.db.models.functions import Coalesce, TruncDate
 from django.utils import timezone
 
 from apps.cotador.models import Cotacao
 
-from .models import EventoOportunidadeSalva, OportunidadeSalva, OportunidadeSalvaQuerySet
+from .models import EventoOportunidadeSalva, ItemParticipado, OportunidadeSalva, OportunidadeSalvaQuerySet
+from .torre import (
+    FASES_COMPRA_ANTES_DA_SESSAO,
+    FORNECEDOR_INABILITADO,
+    PLATAFORMA_COM_SENTINELA,
+    PROPOSTA_DESCLASSIFICADA,
+)
 
-# Os motivos de Encerradas chegam com as etapas Disputa e Empenho.
-MOTIVOS: dict[str, str] = {}
+# Quem participou e saiu: a regra é a mesma da Torre (`torre.avaliar`), aqui
+# em forma de consulta para a lista filtrar e ordenar no banco.
+MOTIVOS: dict[str, str] = {
+    "perdida": "Perdida",
+    "revogada": "Revogada",
+    "anulada": "Anulada",
+    "fracassada": "Fracassada",
+    "deserta": "Deserta",
+}
+MOTIVO_DA_SITUACAO = {"RE": "revogada", "AN": "anulada", "FR": "fracassada", "DE": "deserta"}
 
 MOTIVOS_DESCARTE = {
     "descartada": "Tirada da lista",
     "prazo_oportunidade": "Prazo venceu sem cotação",
     "prazo_cotacao": "Prazo venceu com cotação",
+    "sem_proposta": "Sem proposta cadastrada",
 }
+
+ITEM_PERDIDO = Q(vencedor_e_a_empresa=False) | Q(
+    situacao_proposta__in=[*PROPOSTA_DESCLASSIFICADA, FORNECEDOR_INABILITADO]
+)
+COMPRA_ENCERRADA = Q(participacao__situacao_compra__in=list(MOTIVO_DA_SITUACAO))
+PARTICIPOU = Q(tem_itens=True) | Q(participacao__proposta_cadastrada=True) | COMPRA_ENCERRADA
+
+
+def _sem_proposta(hoje: dt.date) -> Q:
+    """Participou sem proposta cadastrada (caso Cubatão): a Sentinela leu
+    "Minhas participações" e não havia proposta quando a sessão abriu."""
+
+    return (
+        Q(tem_itens=False, participacao__proposta_cadastrada=False)
+        & (
+            ~Q(participacao__fase_compra__in=FASES_COMPRA_ANTES_DA_SESSAO)
+            | Q(data_encerramento_proposta__lt=hoje)
+        )
+        & ~COMPRA_ENCERRADA
+    )
 
 
 def _venceu_antes(hoje: dt.date) -> Q:
     """O prazo venceu antes de (ou sem) a remoção: saiu do ciclo pelo prazo.
-    Com proposta gerada, o prazo vencer é o caminho normal, não perda."""
+
+    Não sai pelo prazo quem tem sinal de participação: fatos da Torre (itens,
+    proposta cadastrada), proposta gerada no fluxo antigo, ou cotação feita
+    numa compra do Compras.gov.br — essa espera a Sentinela confirmar."""
 
     prazo = "data_encerramento_proposta"
-    return Q(**{f"{prazo}__lt": hoje}, proposta__isnull=True) & (
-        Q(removida_em__isnull=True) | Q(**{f"{prazo}__lt": TruncDate("removida_em")})
+    espera_a_sentinela = Q(tem_cotacao=True, plataforma_id=PLATAFORMA_COM_SENTINELA)
+    return (
+        Q(**{f"{prazo}__lt": hoje}, proposta__isnull=True)
+        & ~PARTICIPOU
+        & ~espera_a_sentinela
+        & ~_sem_proposta(hoje)
+        & (Q(removida_em__isnull=True) | Q(**{f"{prazo}__lt": TruncDate("removida_em")}))
     )
 
 
-def _com_cotacao(lista: OportunidadeSalvaQuerySet) -> OportunidadeSalvaQuerySet:
+def _com_fatos(lista: OportunidadeSalvaQuerySet) -> OportunidadeSalvaQuerySet:
+    itens = ItemParticipado.objects.filter(oportunidade=OuterRef("pk"))
     return lista.annotate(
         tem_cotacao=Exists(Cotacao.objects.filter(oportunidade=OuterRef("pk"))),
+        tem_itens=Exists(itens),
+        tem_item_vivo=Exists(itens.exclude(ITEM_PERDIDO)),
     )
 
 
 def encerradas(hoje: dt.date | None = None) -> OportunidadeSalvaQuerySet:
-    """As encerradas — quem participou do certame —, anotadas com
-    ``encerrada_em``, ``motivo`` e ``tem_cotacao``. Vazia até as etapas
-    Disputa e Empenho existirem (ver a docstring do módulo); a forma fica
-    pronta para a tela e o processo não mudarem quando elas chegarem."""
+    """As encerradas — quem participou do certame e saiu —, anotadas com
+    ``encerrada_em``, ``motivo`` e ``tem_cotacao``: compra revogada,
+    anulada, fracassada ou deserta, ou todos os itens da empresa perdidos."""
 
-    return _com_cotacao(OportunidadeSalva.objects.none()).annotate(
-        encerrada_em=F("data_encerramento_proposta"),
-        motivo=Value("", output_field=CharField()),
+    perdida = Q(tem_itens=True, tem_item_vivo=False)
+    ultima_leitura_de_item = Subquery(
+        ItemParticipado.objects.filter(oportunidade=OuterRef("pk"))
+        .order_by("-atualizado_em")
+        .values("atualizado_em")[:1],
+        output_field=DateTimeField(),
+    )
+    return (
+        _com_fatos(OportunidadeSalva.objects.ativas())
+        .filter(COMPRA_ENCERRADA | perdida)
+        .annotate(
+            motivo=Case(
+                *(
+                    When(participacao__situacao_compra=situacao, then=Value(motivo))
+                    for situacao, motivo in MOTIVO_DA_SITUACAO.items()
+                ),
+                default=Value("perdida"),
+                output_field=CharField(),
+            ),
+            encerrada_em=Case(
+                When(COMPRA_ENCERRADA, then=TruncDate("participacao__atualizada_em")),
+                default=Coalesce(TruncDate(ultima_leitura_de_item), F("data_encerramento_proposta")),
+                output_field=DateField(),
+            ),
+        )
     )
 
 
 def descartadas(hoje: dt.date | None = None) -> OportunidadeSalvaQuerySet:
-    """As descartadas — tiradas da lista antes do prazo ou com o prazo
-    vencido, com ou sem cotação —, anotadas com ``motivo``,
-    ``descartada_em`` (o que veio primeiro: o dia da remoção ou o prazo) e
-    ``tem_cotacao`` (onde estava: Oportunidade ou Cotação)."""
+    """As descartadas — tiradas da lista antes do prazo, com o prazo vencido
+    sem sinal de participação, ou que participaram sem proposta cadastrada —,
+    anotadas com ``motivo``, ``descartada_em`` (o que veio primeiro: o dia da
+    remoção ou o prazo) e ``tem_cotacao`` (onde estava: Oportunidade ou
+    Cotação)."""
 
     hoje = hoje or timezone.localdate()
     venceu = _venceu_antes(hoje)
+    sem_proposta = _sem_proposta(hoje) & Q(removida_em__isnull=True)
     tirada_antes = Q(removida_em__isnull=False) & ~venceu
     return (
-        _com_cotacao(OportunidadeSalva.objects.all())
-        .filter(tirada_antes | venceu)
+        _com_fatos(OportunidadeSalva.objects.all())
+        .filter(tirada_antes | venceu | sem_proposta)
         .annotate(
             motivo=Case(
+                When(sem_proposta, then=Value("sem_proposta")),
                 When(venceu & Q(tem_cotacao=True), then=Value("prazo_cotacao")),
                 When(venceu, then=Value("prazo_oportunidade")),
                 default=Value("descartada"),
                 output_field=CharField(),
             ),
             descartada_em=Case(
+                When(sem_proposta, then=TruncDate("participacao__atualizada_em")),
                 When(venceu, then=F("data_encerramento_proposta")),
                 default=TruncDate("removida_em"),
                 output_field=DateField(),
@@ -193,6 +286,21 @@ def montar_processo(salva: OportunidadeSalva, hoje: dt.date | None = None) -> di
 
 
 def _desfecho(salva, eventos: list[dict]) -> dict:
+    if salva.motivo == "sem_proposta":
+        porque = (
+            "A sessão pública abriu e a empresa estava sem proposta cadastrada no Compras.gov.br."
+        )
+        return {"tipo": "sem_proposta", "data": salva.descartada_em, "por": None, "porque": porque}
+    if salva.motivo == "perdida":
+        porque = (
+            "A empresa perdeu todos os itens em que tinha proposta: desclassificada, "
+            "inabilitada ou homologada para outro fornecedor."
+        )
+        return {"tipo": "perdida", "data": salva.encerrada_em, "por": None, "porque": porque}
+    if salva.motivo in MOTIVO_DA_SITUACAO.values():
+        porque = f"O órgão marcou a compra como {MOTIVOS[salva.motivo].lower()} no Compras.gov.br."
+        return {"tipo": salva.motivo, "data": salva.encerrada_em, "por": None, "porque": porque}
+
     cotacoes = [e for e in eventos if e["tipo"].startswith("cotacao_")]
     salvo = next((e for e in eventos if e["tipo"] == "oportunidade_salva"), None)
     prazo = salva.data_encerramento_proposta

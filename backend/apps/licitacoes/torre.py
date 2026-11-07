@@ -76,6 +76,10 @@ PROPOSTA_ADJUDICADA = "6"
 
 CENTAVO = Decimal("0.01")
 
+# A única plataforma que a Sentinela lê. Licitação de outro portal não espera
+# por ela (ficaria presa): segue a regra de prazo de sempre.
+PLATAFORMA_COM_SENTINELA = "compras_gov"
+
 SITUACOES_QUE_ENCERRAM = {"RE": "Revogada", "AN": "Anulada", "FR": "Fracassada", "DE": "Deserta"}
 
 
@@ -181,6 +185,13 @@ def _cotacao_de(salva):
         return None
 
 
+def _proposta_de(salva):
+    try:
+        return salva.proposta
+    except OportunidadeSalva.proposta.RelatedObjectDoesNotExist:
+        return None
+
+
 def _participacao_de(salva):
     try:
         return salva.participacao
@@ -249,10 +260,18 @@ def avaliar(salva: OportunidadeSalva, hoje: dt.date) -> tuple[dict | None, Saida
     elif prazo_vencido:
         if not _cotacao_de(salva):
             return None, Saida("descartadas", "Prazo venceu sem cotação")
-        # Até a Sentinela ler o Compras.gov.br não dá para saber se a proposta
-        # foi cadastrada: a licitação espera aqui em vez de ir para Descartadas.
-        etapa = "cadastro_proposta"
-        etiquetas.append(Etiqueta("aviso", "confirmar com a Sentinela"))
+        if salva.plataforma_id == PLATAFORMA_COM_SENTINELA:
+            # Até a Sentinela ler o Compras.gov.br não dá para saber se a
+            # proposta foi cadastrada: espera aqui em vez de ir para Descartadas.
+            etapa = "cadastro_proposta"
+            etiquetas.append(Etiqueta("aviso", "confirmar com a Sentinela"))
+        elif _proposta_de(salva):
+            # Proposta gerada no fluxo antigo, em portal que a Sentinela não
+            # lê: é sinal de que participou. Fica até alguém confirmar.
+            etapa = "cadastro_proposta"
+            etiquetas.append(Etiqueta("aviso", "confirmar participação"))
+        else:
+            return None, Saida("descartadas", "Prazo venceu com cotação")
     else:
         etapa = "cotacao" if _cotacao_de(salva) else "oportunidade"
 
@@ -309,7 +328,7 @@ def montar_torre(hoje: dt.date | None = None) -> dict:
     hoje = hoje or timezone.localdate()
     salvas = (
         OportunidadeSalva.objects.ativas()
-        .select_related("cotacao", "participacao")
+        .select_related("cotacao", "participacao", "proposta")
         .prefetch_related("itens_participados", "documentos_financeiros", "entregas")
     )
 

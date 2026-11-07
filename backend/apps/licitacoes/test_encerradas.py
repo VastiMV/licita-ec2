@@ -68,9 +68,9 @@ class Base(APITestCase):
 
 
 class EncerradasTests(Base):
-    """Encerradas é só quem participou do certame (disputa, empenho). Essas
-    etapas ainda não existem, então hoje ela fica vazia — tudo que saiu do
-    ciclo antes disso está em Descartadas (ver `test_descartadas.py`)."""
+    """Encerradas é só quem participou do certame. O que saiu antes disso
+    está em Descartadas (ver `test_descartadas.py`); os casos com fatos da
+    Torre (perdida, deserta…) estão em `test_saidas.py`."""
 
     def test_nada_que_saiu_antes_de_participar_e_encerrada(self):
         self.salva("1", 5).remover(por=self.user)  # tirada, sem cotação

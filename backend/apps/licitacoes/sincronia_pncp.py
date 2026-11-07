@@ -35,6 +35,7 @@ from apps.integracoes.clients.compras_gov import (
     montar_link_compras_gov,
     montar_link_pncp,
 )
+from apps.integracoes.plataformas import plataforma_padrao
 
 from .models import (
     DocumentoFinanceiro,
@@ -107,6 +108,8 @@ def _salva_da_compra(chave, id_compra: str, cliente, resumo: dict) -> Oportunida
         data_publicacao=_data(contratacao.get("data_publicacao")),
         data_encerramento_proposta=_data(contratacao.get("data_encerramento_proposta")),
         valor_total_estimado=_decimal(contratacao.get("valor_total_estimado")),
+        plataforma_id=plataforma_padrao().id,
+        plataforma_nome=plataforma_padrao().nome,
         link_plataforma=(montar_link_compras_gov(contratacao) if contratacao else None) or "",
         link_pncp=(
             montar_link_pncp({"cnpj_orgao": cnpj, "ano_compra": ano, "sequencial_compra": sequencial}) or ""

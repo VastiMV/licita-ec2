@@ -132,13 +132,22 @@ class TorreTests(APITestCase):
         self.assertEqual(self.etapa(salva), "cotacao")
 
     def test_prazo_vencido_com_cotacao_e_sem_dado_do_compras_gov_espera_a_sentinela(self):
-        salva = self.salva(prazo_em_dias=-2)
+        salva = self.salva(prazo_em_dias=-2, plataforma_id="compras_gov")
         self.cotar(salva)
 
         cartao = self.cartao(self.torre(), salva)
 
         self.assertEqual(cartao["etapa"], "cadastro_proposta")
         self.assertIn("confirmar com a Sentinela", [e["texto"] for e in cartao["etiquetas"]])
+
+    def test_prazo_vencido_com_cotacao_em_outro_portal_e_descartada(self):
+        salva = self.salva(prazo_em_dias=-2, plataforma_id="")
+        self.cotar(salva)
+
+        torre = self.torre()
+
+        self.assertIsNone(self.cartao(torre, salva))
+        self.assertEqual(torre["saidas"]["descartadas"], 1)
 
     def test_prazo_vencido_sem_cotacao_sai_da_torre(self):
         salva = self.salva(prazo_em_dias=-2)

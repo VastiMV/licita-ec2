@@ -46,7 +46,10 @@ Saídas do quadro:
   Pregão 55/2026, Cubatão).
 - **Prazo vencido com cotação e sem dado do Compras.gov** não é descartada:
   fica em Cadastro de proposta com a etiqueta "confirmar com a Sentinela",
-  até a Sentinela dizer se a proposta foi cadastrada.
+  até a Sentinela dizer se a proposta foi cadastrada. Só vale para compras
+  do Compras.gov.br (a única plataforma que a Sentinela lê); nos outros
+  portais o prazo vencido com cotação continua indo para Descartadas, a não
+  ser que tenha proposta gerada no fluxo antigo.
 - **Suspensa** não é saída: é etiqueta no cartão. **Recurso** também é
   etiqueta (entre Julgado e habilitado e Aguardando adjudicação).
 - Item **perdendo** (2º lugar em diante) fica em cinza até a homologação: pode
@@ -84,7 +87,7 @@ garantida.
 ### Passo 1 — etapas novas no backend
 - [x] Models `ParticipacaoCompra`, `ItemParticipado`, `DocumentoFinanceiro`, `Entrega` (migração só acrescenta)
 - [x] `torre.py` (ao lado do `ciclo.py`): `ESTAGIOS` e as 13 etapas; regra de etapa por item; cartão com a etapa de cada item
-- [ ] `encerradas.py`: motivos de Encerradas (perdida, fracassada, deserta, revogada, anulada) e o descarte `sem_proposta`
+- [x] `encerradas.py`: motivos de Encerradas (perdida, fracassada, deserta, revogada, anulada) e o descarte `sem_proposta`, com a mesma regra da Torre (`test_saidas.py` garante que cada licitação está em um lugar só)
 - [x] API do quadro novo (`GET /api/licitacoes/torre/`) sem quebrar `GET /api/licitacoes/ciclo/`
 - [ ] Lançamento manual do que nenhum sistema informa: ordem de fornecimento e entrega (a situação do item fica para a Sentinela beta)
 - [x] Testes de cada regra antes do código (casos reais: 61, 56, 112, 201, 55) — `test_torre.py`
