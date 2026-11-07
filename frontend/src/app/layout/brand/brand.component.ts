@@ -2,12 +2,18 @@ import { Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 /**
- * Marca "Inside Solutions" (logo + nome). Único lugar que desenha isso —
- * usado pela `Sidebar` (páginas de módulo) e sozinho na página de login,
- * que não tem shell nenhuma.
+ * Marca "Inside Solutions". Único lugar que desenha isso — usado pela
+ * `Sidebar`, pela topbar mobile e pela página de login.
  *
- * `[compact]` mostra só a marca (mesmo desenho do favicon), sem o nome —
- * usado na Sidebar recolhida (modo ícone) e na topbar mobile.
+ * As imagens ficam em `public/marca/` (fundo transparente, cores originais
+ * do logo). O logo é claro, feito para fundo escuro: quem usa a marca põe
+ * ela sobre `--color-marca-fundo` (a faixa do topo do menu, o topo do
+ * login). No modo `compact` a própria marca traz esse fundo, num quadrado,
+ * porque aparece também sobre fundo branco (topbar mobile).
+ *
+ * - padrão: símbolo + "INSIDE SOLUTIONS LTDA" (menu);
+ * - `[completo]`: com a frase "Construindo resultados…" (login);
+ * - `[compact]`: só o símbolo "iS" (menu recolhido, topbar mobile, favicon).
  */
 @Component({
   selector: 'app-brand',
@@ -17,4 +23,10 @@ import { RouterLink } from '@angular/router';
 })
 export class BrandComponent {
   readonly compact = input(false);
+  readonly completo = input(false);
+
+  protected imagem(): string {
+    if (this.compact()) return 'marca/simbolo.png';
+    return this.completo() ? 'marca/logo-completo.png' : 'marca/logo-horizontal.png';
+  }
 }

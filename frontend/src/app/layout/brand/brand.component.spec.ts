@@ -7,6 +7,9 @@ import { BrandComponent } from './brand.component';
 describe('BrandComponent', () => {
   let fixture: ComponentFixture<BrandComponent>;
 
+  const img = () =>
+    fixture.debugElement.query(By.css('img.brand-logo')).nativeElement as HTMLImageElement;
+
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [BrandComponent],
@@ -16,9 +19,9 @@ describe('BrandComponent', () => {
     fixture.detectChanges();
   });
 
-  it('mostra INSIDE e solutions', () => {
-    expect(fixture.nativeElement.textContent).toContain('INSIDE');
-    expect(fixture.nativeElement.textContent).toContain('solutions');
+  it('mostra o logo com nome, e o nome no texto alternativo', () => {
+    expect(img().getAttribute('src')).toBe('marca/logo-horizontal.png');
+    expect(img().alt).toBe('Inside Solutions');
   });
 
   it('linka pra raiz da aplicação', () => {
@@ -26,11 +29,18 @@ describe('BrandComponent', () => {
     expect(link.attributes['href']).toBe('/');
   });
 
-  it('em modo compact, mostra só a marca (sem o nome)', () => {
+  it('em modo compact, mostra só o símbolo, no quadrado escuro', () => {
     fixture.componentRef.setInput('compact', true);
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.textContent).not.toContain('INSIDE');
-    expect(fixture.debugElement.query(By.css('svg.brand-mark'))).toBeTruthy();
+    expect(img().getAttribute('src')).toBe('marca/simbolo.png');
+    expect(fixture.debugElement.query(By.css('a.brand.compact'))).toBeTruthy();
+  });
+
+  it('completo traz o logo com a frase (login)', () => {
+    fixture.componentRef.setInput('completo', true);
+    fixture.detectChanges();
+
+    expect(img().getAttribute('src')).toBe('marca/logo-completo.png');
   });
 });

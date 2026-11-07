@@ -1,33 +1,30 @@
 .brand {
   display: flex;
   align-items: center;
-  gap: 0.7rem;
   text-decoration: none;
 }
 
-.brand-mark {
-  width: 30px;
-  height: 30px;
-  flex-shrink: 0;
+.brand-logo {
+  display: block;
+  height: 44px;
+  width: auto;
 }
 
-.brand-name {
-  display: flex;
-  flex-direction: column;
-  line-height: 1;
+// No login o logo vem com a frase, que só fica legível com mais altura.
+.completo .brand-logo {
+  height: 104px;
 }
 
-.brand-inside {
-  font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-bold);
-  letter-spacing: 0.14em;
-  color: var(--color-navy);
-}
+// Só o símbolo, num quadrado da cor do fundo do logo — legível sobre
+// qualquer fundo (a parte branca do "S" some em fundo branco).
+.compact {
+  width: 36px;
+  height: 36px;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  background: var(--color-marca-fundo);
 
-.brand-solutions {
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-regular);
-  letter-spacing: 0.28em;
-  color: var(--color-blue);
-  margin-top: 2px;
+  .brand-logo {
+    height: 26px;
+  }
 }
