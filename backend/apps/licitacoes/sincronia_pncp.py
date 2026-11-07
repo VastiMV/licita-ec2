@@ -91,6 +91,12 @@ def _salva_da_compra(chave, id_compra: str, cliente, resumo: dict) -> Oportunida
         .first()
     )
     if existente:
+        if not existente.numero_processo:
+            # O processo liga o empenho do Portal da Transparência à compra.
+            processo = (cliente.detalhar_contratacao(id_compra) or {}).get("processo")
+            if processo:
+                existente.numero_processo = processo
+                existente.save(update_fields=["numero_processo"])
         return existente
 
     contratacao = cliente.detalhar_contratacao(id_compra) or {}
@@ -108,6 +114,7 @@ def _salva_da_compra(chave, id_compra: str, cliente, resumo: dict) -> Oportunida
         data_publicacao=_data(contratacao.get("data_publicacao")),
         data_encerramento_proposta=_data(contratacao.get("data_encerramento_proposta")),
         valor_total_estimado=_decimal(contratacao.get("valor_total_estimado")),
+        numero_processo=contratacao.get("processo") or "",
         plataforma_id=plataforma_padrao().id,
         plataforma_nome=plataforma_padrao().nome,
         link_plataforma=(montar_link_compras_gov(contratacao) if contratacao else None) or "",

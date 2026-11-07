@@ -95,8 +95,8 @@ garantida.
 ### Passo 2 — depois da homologação, sozinho
 - [x] Sincronia diária (8h, Celery beat) do **PNCP** por CNPJ das Empresas: resultados homologados e atas. Cria a salva se ainda não existir (`sincronia_pncp.py`, `manage.py sincronizar_pncp`). Conferida contra a API real em 07/11/2026: 18 itens e as 2 compras homologadas (IBAMA 112/2026, UFVJM 201/2026)
 - [ ] Contratos no PNCP: o módulo de contratos está instável (Comunicado nº 18/26) e ainda não há contrato real da empresa para conferir o formato. Até lá, lançamento manual
-- [ ] Sincronia diária do **Portal da Transparência** (federal): empenho, liquidação, pagamento. Liga ao processo pelo número do processo e pela observação; o que não ligar fica para escolha manual
-- [ ] Chave do Portal da Transparência na configuração do servidor (nunca no código)
+- [x] Sincronia diária (8h10) do **Portal da Transparência** (federal): empenho, liquidação, pagamento. Liga pelo número do processo (só dígitos, também quando vem na observação) e, sem processo, pela UG quando há uma licitação ganha só naquele órgão; o que não ligar fica "sem licitação" (`documentos-financeiros/sem-licitacao/` e `.../<id>/ligar/`). A sincronia do PNCP passa a guardar o `numero_processo` da compra. Conferida contra a API real em 07/11/2026 (chave aceita; nenhum empenho ainda)
+- [x] Chave do Portal da Transparência na configuração do servidor (`PORTAL_TRANSPARENCIA_CHAVE` no `.env`; passo a passo no README do EC2)
 - [ ] Prazo de validade da proposta (Lei 14.133, art. 90, §3º) e lembrete de cobrança por dias parados
 
 ### Passo 3 — Telegram

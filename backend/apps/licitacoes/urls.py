@@ -5,11 +5,13 @@ from .views import (
     CompraDetalheView,
     DocumentoFinanceiroView,
     DocumentosFinanceirosView,
+    DocumentosSemLicitacaoView,
     EmCotacaoView,
     DescartadasView,
     EncerradasView,
     EntregasView,
     EntregaView,
+    LigarDocumentoView,
     OportunidadeSalvaEventosView,
     OportunidadeSalvaView,
     OportunidadesSalvasChavesView,
@@ -49,6 +51,17 @@ urlpatterns = [
         name="licitacoes-salva-documentos-financeiros",
     ),
     path("salvas/<int:pk>/entregas/", EntregasView.as_view(), name="licitacoes-salva-entregas"),
+    # Rota de nome fixo antes da de <int:pk>, como em "salvas/".
+    path(
+        "documentos-financeiros/sem-licitacao/",
+        DocumentosSemLicitacaoView.as_view(),
+        name="licitacoes-documentos-sem-licitacao",
+    ),
+    path(
+        "documentos-financeiros/<int:pk>/ligar/",
+        LigarDocumentoView.as_view(),
+        name="licitacoes-documento-financeiro-ligar",
+    ),
     path(
         "documentos-financeiros/<int:pk>/",
         DocumentoFinanceiroView.as_view(),

@@ -359,6 +359,7 @@ def _normalizar_contratacao(c: dict[str, Any]) -> dict[str, Any]:
         "modalidade": c.get("modalidadeNome"),
         "codigo_modalidade": c.get("codigoModalidade"),
         "objeto": c.get("objetoCompra"),
+        "processo": c.get("processo"),
         "situacao": c.get("situacaoCompraNomePncp"),
         "srp": c.get("srp"),
         "valor_total_estimado": c.get("valorTotalEstimado"),

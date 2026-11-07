@@ -535,3 +535,36 @@ class EntregaView(APIView):
         get_object_or_404(Entrega, pk=pk).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+
+class DocumentosSemLicitacaoView(APIView):
+    """`GET /api/licitacoes/documentos-financeiros/sem-licitacao/` — o que a
+    sincronia trouxe e não conseguiu ligar a uma licitação sozinha."""
+
+    def get(self, request: Request) -> Response:
+        soltos = DocumentoFinanceiro.objects.filter(oportunidade__isnull=True).order_by("-data", "-id")
+        return Response(DocumentoFinanceiroSerializer(soltos, many=True).data)
+
+
+class LigarDocumentoView(APIView):
+    """`POST /api/licitacoes/documentos-financeiros/<id>/ligar/` —
+    `{"oportunidade_id": 12, "item_numero": "49"}`. A sincronia nunca desfaz
+    uma ligação feita aqui."""
+
+    def post(self, request: Request, pk: int) -> Response:
+        documento = get_object_or_404(DocumentoFinanceiro, pk=pk)
+        salva = OportunidadeSalva.objects.ativas().filter(pk=request.data.get("oportunidade_id")).first()
+        if salva is None:
+            return Response({"oportunidade_id": "Licitação não encontrada."}, status=status.HTTP_400_BAD_REQUEST)
+        item = None
+        if numero := str(request.data.get("item_numero") or "").strip():
+            item = salva.itens_participados.filter(numero_item=numero).first()
+            if item is None:
+                return Response(
+                    {"item_numero": f"O item {numero} não é desta licitação."}, status=status.HTTP_400_BAD_REQUEST
+                )
+        documento.oportunidade = salva
+        documento.item = item
+        documento.dados = {**documento.dados, "ligado_por": "manual"}
+        documento.save(update_fields=["oportunidade", "item", "dados"])
+        return Response(DocumentoFinanceiroSerializer(documento).data)
+

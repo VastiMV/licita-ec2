@@ -80,6 +80,7 @@ CONTRATACOES = {
         "modalidade": "Pregão - Eletrônico",
         "codigo_modalidade": "05",
         "objeto": "Registro de preços para eventual aquisição de animais vivos",
+        "processo": "23086011683202671",
         "situacao": "Divulgada no PNCP",
         "srp": True,
         "valor_total_estimado": 50000.0,
@@ -100,6 +101,7 @@ CONTRATACOES = {
         "modalidade": "Pregão - Eletrônico",
         "codigo_modalidade": "05",
         "objeto": "Fornecimento de hortifrutigranjeiros e rações para o Centro de Triagem",
+        "processo": "02001.015536/2024-21",
         "situacao": "Divulgada no PNCP",
         "srp": False,
         "valor_total_estimado": 90000.0,
@@ -144,6 +146,8 @@ class SincroniaPncpTests(TestCase):
         self.assertEqual(salva.uasg, "153036")
         self.assertEqual(salva.uf, "MG")
         self.assertEqual(salva.data_encerramento_proposta, dt.date(2026, 10, 21))
+        self.assertEqual(salva.numero_processo, "23086011683202671")
+        self.assertEqual(salva.plataforma_id, "compras_gov")
         self.assertEqual(resumo["salvas_criadas"], 1)
         evento = salva.eventos.get()
         self.assertEqual(evento.tipo, EventoOportunidadeSalva.Tipo.SALVA)
@@ -175,6 +179,8 @@ class SincroniaPncpTests(TestCase):
 
         self.assertEqual(OportunidadeSalva.objects.count(), 1)
         self.assertEqual(ItemParticipado.objects.get().oportunidade, existente)
+        existente.refresh_from_db()
+        self.assertEqual(existente.numero_processo, "23086011683202671")
         self.assertEqual(resumo["salvas_criadas"], 0)
 
     def test_rodar_duas_vezes_nao_duplica_nada(self):

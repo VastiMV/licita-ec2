@@ -137,6 +137,42 @@ cd /opt/licita && sudo docker compose ps
 cd /opt/licita && sudo docker compose logs --tail 100 backend
 ```
 
+## Sincronias diárias (PNCP e Portal da Transparência)
+
+Todo dia, sozinho (Celery Beat):
+
+- **8h — PNCP:** traz os itens que a empresa ganhou e as atas de registro de
+  preços, para cada CNPJ ativo em Cadastros › Empresas. Licitação ganha que
+  não estava salva no Licita é criada.
+- **8h10 — Portal da Transparência:** traz empenho, liquidação e pagamento
+  dos órgãos **federais** e liga cada um à licitação.
+
+O Portal da Transparência precisa de uma **chave** (pessoal e gratuita:
+cadastro com gov.br em portaldatransparencia.gov.br/api-de-dados/cadastrar-email).
+Ela fica no `.env` do servidor, nunca no código. Para colocar (troque
+`SUA_CHAVE` pela chave que chegou por e-mail):
+
+```bash
+echo 'PORTAL_TRANSPARENCIA_CHAVE=SUA_CHAVE' | sudo tee -a /opt/licita/.env > /dev/null
+```
+
+```bash
+cd /opt/licita && sudo docker compose up -d backend worker beat
+```
+
+Sem a chave, a sincronia do Portal só avisa no log e não roda; o resto
+funciona.
+
+**Rodar na hora** (sem esperar as 8h), logo depois de um deploy:
+
+```bash
+cd /opt/licita && sudo docker compose exec backend python manage.py sincronizar_pncp
+```
+
+```bash
+cd /opt/licita && sudo docker compose exec backend python manage.py sincronizar_transparencia
+```
+
 ## Backup do banco (automático)
 
 Todo deploy faz um backup do banco **antes** de rodar as migrações

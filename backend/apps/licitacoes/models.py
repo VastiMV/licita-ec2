@@ -141,6 +141,12 @@ class OportunidadeSalva(models.Model):
     plataforma_nome = models.CharField("nome da plataforma", max_length=120, blank=True)
     link_plataforma = models.TextField("link na plataforma", blank=True)
     link_pncp = models.TextField("link no PNCP", blank=True)
+    numero_processo = models.CharField(
+        "nº do processo",
+        max_length=60,
+        blank=True,
+        help_text="Processo administrativo do órgão — liga empenho e pagamento do Portal da Transparência à compra.",
+    )
 
     capag = models.JSONField("selo CAPAG", null=True, blank=True)
     itens = models.JSONField(
@@ -533,7 +539,10 @@ class DocumentoFinanceiro(models.Model):
         OportunidadeSalva,
         verbose_name="oportunidade",
         related_name="documentos_financeiros",
+        null=True,
+        blank=True,
         on_delete=models.CASCADE,
+        help_text="Nulo = veio de um sistema e ainda não foi ligado a uma licitação.",
     )
     item = models.ForeignKey(
         ItemParticipado,

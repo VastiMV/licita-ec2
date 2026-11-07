@@ -77,6 +77,18 @@ class Environment:
     pncp_base_url: str = field(
         default_factory=lambda: os.environ.get("PNCP_BASE_URL", "https://pncp.gov.br")
     )
+    # Portal da Transparência (CGU): empenho, liquidação e pagamento dos
+    # órgãos federais. A chave é pessoal e gratuita (cadastro com gov.br em
+    # portaldatransparencia.gov.br/api-de-dados/cadastrar-email) e vai no
+    # cabeçalho `chave-api-dados`. Sem ela, a sincronia avisa e não roda.
+    portal_transparencia_chave: str = field(
+        default_factory=lambda: os.environ.get("PORTAL_TRANSPARENCIA_CHAVE", "")
+    )
+    portal_transparencia_base_url: str = field(
+        default_factory=lambda: os.environ.get(
+            "PORTAL_TRANSPARENCIA_BASE_URL", "https://api.portaldatransparencia.gov.br/api-de-dados"
+        )
+    )
     # Endpoint não documentado (ver docs/DOMINIO.md) — permite desligar em
     # produção se ele mudar/sumir sem aviso, caindo direto no catálogo local.
     usar_busca_pncp: bool = field(default_factory=lambda: _get_bool("USAR_BUSCA_PNCP", default=True))
