@@ -14,3 +14,19 @@
 www.{$DOMINIO} {
 	redir https://{$DOMINIO}{uri} permanent
 }
+
+# O ambiente de teste (deploy/ec2/docker-compose.teste.yml). Desligado, os
+# containers não existem e o Caddy cai no handle_errors com um aviso.
+teste.{$DOMINIO} {
+	encode gzip
+	handle /api/* {
+		reverse_proxy teste-backend:8000
+	}
+	handle {
+		reverse_proxy teste-frontend:80
+	}
+	handle_errors {
+		header Content-Type "text/plain; charset=utf-8"
+		respond "Ambiente de teste desligado (ou ainda ligando). Ligue pelo botão \"Teste: ligar\" no GitHub e espere alguns minutos." 503
+	}
+}

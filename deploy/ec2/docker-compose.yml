@@ -108,6 +108,9 @@ services:
       interval: 10s
       timeout: 10s
       retries: 12
+      # RabbitMQ demora para subir numa máquina pequena: falhas nesse
+      # período não contam, e o deploy não desiste antes da hora.
+      start_period: 90s
 
 volumes:
   pgdata:

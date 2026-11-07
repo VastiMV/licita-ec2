@@ -1,0 +1,108 @@
+# O AMBIENTE DE TESTE — liga e desliga pelos botões "Teste: ligar" e
+# "Teste: desligar" do GitHub. Ver deploy/ec2/README.md.
+#
+# Roda na mesma máquina da produção, mas separado dela:
+# - imagens com a tag "teste" (a produção usa "latest");
+# - banco, fila e arquivos próprios (volumes deste projeto);
+# - nomes de serviço com "teste-" na frente. Só teste-backend e
+#   teste-frontend entram na rede da produção — é por ela que o Caddy da
+#   produção chega até eles. Como nenhum serviço da produção se chama
+#   "teste-postgres", o teste nunca acha o banco de produção por engano.
+
+name: licita-teste
+
+x-backend: &backend
+  image: ghcr.io/vastimv/licita-ec2-backend:teste
+  env_file: .env
+  restart: unless-stopped
+  depends_on:
+    teste-postgres:
+      condition: service_healthy
+    teste-rabbitmq:
+      condition: service_healthy
+    teste-migrate:
+      condition: service_completed_successfully
+
+services:
+  teste-frontend:
+    image: ghcr.io/vastimv/licita-ec2-frontend:teste
+    restart: unless-stopped
+    networks: [interna, producao]
+
+  teste-migrate:
+    image: ghcr.io/vastimv/licita-ec2-backend:teste
+    env_file: .env
+    command: ["python", "manage.py", "migrate", "--noinput"]
+    restart: "no"
+    networks: [interna]
+    depends_on:
+      teste-postgres:
+        condition: service_healthy
+
+  teste-permissoes:
+    image: busybox:1.36
+    command: ["chown", "-R", "1000:1000", "/arquivos"]
+    volumes:
+      - arquivos:/arquivos
+    restart: "no"
+    networks: [interna]
+
+  teste-backend:
+    <<: *backend
+    volumes:
+      - arquivos:/app/arquivos
+    networks: [interna, producao]
+    depends_on:
+      teste-postgres:
+        condition: service_healthy
+      teste-rabbitmq:
+        condition: service_healthy
+      teste-migrate:
+        condition: service_completed_successfully
+      teste-permissoes:
+        condition: service_completed_successfully
+
+  # Sem "beat": o teste não precisa das sincronizações agendadas, e assim
+  # gasta menos memória da máquina que divide com a produção.
+  teste-worker:
+    <<: *backend
+    command: ["celery", "-A", "config", "worker", "--loglevel=INFO", "--concurrency=1"]
+    networks: [interna]
+
+  teste-postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks: [interna]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  teste-rabbitmq:
+    image: rabbitmq:3.13-alpine
+    restart: unless-stopped
+    env_file: .env
+    networks: [interna]
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+      # RabbitMQ demora para subir numa máquina pequena: falhas nesse
+      # período não contam, e o deploy não desiste antes da hora.
+      start_period: 90s
+
+networks:
+  interna: {}
+  # A rede padrão do projeto "licita" (a produção), criada pelo Deploy EC2.
+  producao:
+    external: true
+    name: licita_default
+
+volumes:
+  pgdata:
+  arquivos:

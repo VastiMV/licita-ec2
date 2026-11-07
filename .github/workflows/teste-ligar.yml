@@ -1,0 +1,71 @@
+name: "Teste: ligar"
+
+# Liga o ambiente de teste com a branch escolhida em "Use workflow from".
+# Rodar de novo com a mesma branch atualiza o teste com a versão mais nova.
+# A produção não é tocada. Ver deploy/ec2/README.md.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: teste-ec2
+  cancel-in-progress: false
+
+jobs:
+  imagens:
+    uses: ./.github/workflows/build-image.yml
+    with:
+      image: both
+      tag: teste
+
+  ligar:
+    needs: imagens
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Conferir segredos
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+        run: |
+          if [ -z "$EC2_HOST" ] || [ -z "$EC2_SSH_KEY" ]; then
+            echo "::error::Faltam os segredos EC2_HOST e/ou EC2_SSH_KEY — ver deploy/ec2/README.md."
+            exit 1
+          fi
+
+      - name: Chave SSH
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$EC2_SSH_KEY" > ~/.ssh/ec2.pem
+          chmod 600 ~/.ssh/ec2.pem
+          ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Enviar arquivos do teste
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+        run: |
+          scp -i ~/.ssh/ec2.pem deploy/ec2/docker-compose.teste.yml deploy/ec2/teste.sh \
+            "ubuntu@$EC2_HOST:/tmp/"
+          ssh -i ~/.ssh/ec2.pem "ubuntu@$EC2_HOST" \
+            "sudo mkdir -p /opt/licita-teste \
+             && sudo mv /tmp/docker-compose.teste.yml /tmp/teste.sh /opt/licita-teste/ \
+             && sudo chmod +x /opt/licita-teste/teste.sh"
+
+      - name: Ligar o teste (branch ${{ github.ref_name }})
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GHCR_USER: ${{ github.actor }}
+        run: |
+          ssh -i ~/.ssh/ec2.pem "ubuntu@$EC2_HOST" \
+            "echo '$GHCR_TOKEN' | sudo docker login ghcr.io -u '$GHCR_USER' --password-stdin >/dev/null \
+             && sudo /opt/licita-teste/teste.sh ligar; \
+             status=\$?; sudo docker logout ghcr.io >/dev/null; exit \$status"
+          echo "### Teste ligado com a branch \`${{ github.ref_name }}\`" >> "$GITHUB_STEP_SUMMARY"
