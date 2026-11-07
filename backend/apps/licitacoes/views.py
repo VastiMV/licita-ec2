@@ -46,6 +46,7 @@ from .services import (
     buscar_oportunidades,
     detalhar_compra_cacheada,
 )
+from .torre import montar_torre
 
 # Mesma janela padrão do protótipo (`app/routers/licitacoes.py`) para o modo
 # interativo — diferente do lookback de 2 dias usado pelo scanner de
@@ -349,6 +350,14 @@ class EmCotacaoView(APIView):
         paginacao = OportunidadesSalvasPaginacao()
         pagina = paginacao.paginate_queryset(lista, request, view=self)
         return paginacao.get_paginated_response(EmCotacaoSerializer(pagina, many=True).data)
+
+
+class TorreView(APIView):
+    """`GET /api/licitacoes/torre/` — a Torre de Controle: os 4 estágios com
+    as etapas e os cartões, a etapa calculada por item (ver `torre.py`)."""
+
+    def get(self, request: Request) -> Response:
+        return Response(montar_torre())
 
 
 class CicloView(APIView):

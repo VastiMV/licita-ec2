@@ -355,3 +355,247 @@ class EventoOportunidadeSalva(models.Model):
 
     def __str__(self) -> str:
         return f"{self.ocorrido_em:%d/%m/%Y %H:%M} — {self.descricao}"
+
+
+# ---------------------------------------------------------------------------
+# Torre de Controle — o que acontece depois de cotar
+#
+# Os quatro models abaixo guardam **fatos** vindos de fora (Compras.gov.br
+# pela Sentinela, PNCP, Portal da Transparência) ou lançados à mão. A etapa
+# continua calculada (ver `torre.py`): ninguém grava "esta licitação está em
+# Habilitação"; grava-se que a proposta do item 22 foi aceita, e a etapa sai
+# disso. Ver docs/Tarefas/feat-torre-de-controle.md.
+# ---------------------------------------------------------------------------
+
+
+class Fonte(models.TextChoices):
+    """De onde veio o fato — para saber em quem confiar quando duas fontes
+    discordam e para mostrar "lido pela Sentinela às 14h"."""
+
+    SENTINELA = "sentinela", "Sentinela (Compras.gov.br)"
+    PNCP = "pncp", "PNCP"
+    TRANSPARENCIA = "transparencia", "Portal da Transparência"
+    MANUAL = "manual", "Lançado à mão"
+
+
+class ParticipacaoCompra(models.Model):
+    """O que o Compras.gov.br diz da compra para a empresa.
+
+    Os códigos são os do próprio Compras.gov.br (`comprasnet-fase-externa/v1/
+    enums`), gravados como vêm: traduzir na leitura deixa o fato fiel à fonte
+    e a tradução num lugar só (`torre.py`).
+    """
+
+    class Situacao(models.TextChoices):
+        PUBLICADA = "PD", "Publicada"
+        SUSPENSA = "SU", "Suspensa"
+        REVOGADA = "RE", "Revogada"
+        ANULADA = "AN", "Anulada"
+        FRACASSADA = "FR", "Fracassada"
+        DESERTA = "DE", "Deserta"
+
+    oportunidade = models.OneToOneField(
+        OportunidadeSalva,
+        verbose_name="oportunidade",
+        related_name="participacao",
+        on_delete=models.CASCADE,
+    )
+    fase_compra = models.CharField(
+        "fase da compra",
+        max_length=4,
+        blank=True,
+        help_text="FaseCompraFaseExterna: 1 aguardando abertura, 99 disputa agendada, 3 disputa, 4 seleção de fornecedores.",
+    )
+    situacao_compra = models.CharField(
+        "situação da compra", max_length=2, choices=Situacao.choices, blank=True
+    )
+    proposta_cadastrada = models.BooleanField(
+        "proposta cadastrada",
+        null=True,
+        blank=True,
+        help_text="Nulo = ainda não se sabe (a Sentinela não leu).",
+    )
+    diligencia_em_andamento = models.BooleanField("diligência em andamento", default=False)
+    convocacao_em_andamento = models.BooleanField("convocação em andamento", default=False)
+    sessao_abre_em = models.DateTimeField("sessão abre em", null=True, blank=True)
+    fonte = models.CharField("fonte", max_length=16, choices=Fonte.choices, default=Fonte.SENTINELA)
+    atualizada_em = models.DateTimeField("atualizada em", auto_now=True)
+
+    class Meta:
+        verbose_name = "participação na compra"
+        verbose_name_plural = "participações nas compras"
+
+    def __str__(self) -> str:
+        return f"Participação em {self.oportunidade}"
+
+
+class ItemParticipado(models.Model):
+    """Um item da compra em que a empresa tem proposta.
+
+    A etapa da licitação é a do item mais adiantado (ver `torre.py`), por
+    isso o fato mora aqui, no item, e não na compra.
+    """
+
+    class SituacaoProposta(models.TextChoices):
+        # SituacaoPropostaItemEnum do Compras.gov.br. 1, 2 e 9 são todas
+        # "desclassificada" na origem; guardamos o código como veio.
+        DESCLASSIFICADA = "1", "Proposta desclassificada"
+        DESCLASSIFICADA_2 = "2", "Proposta desclassificada"
+        DESCLASSIFICADA_9 = "9", "Proposta desclassificada"
+        ACEITA = "3", "Proposta aceita"
+        HABILITADO = "4", "Fornecedor habilitado"
+        INABILITADO = "5", "Fornecedor inabilitado"
+        ADJUDICADA = "6", "Proposta adjudicada"
+        PENDENTE_COTA = "7", "Pendente aceite para assumir cota"
+        RECUSA_COTA = "8", "Recusa para assumir cota"
+
+    oportunidade = models.ForeignKey(
+        OportunidadeSalva,
+        verbose_name="oportunidade",
+        related_name="itens_participados",
+        on_delete=models.CASCADE,
+    )
+    numero_item = models.CharField("nº do item", max_length=20, help_text='Como no edital: "22", "G2".')
+    descricao = models.TextField("descrição", blank=True)
+    quantidade = models.DecimalField("quantidade", max_digits=16, decimal_places=4, null=True, blank=True)
+    marca = models.CharField("marca/fabricante", max_length=120, blank=True)
+    modelo = models.CharField("modelo/versão", max_length=120, blank=True)
+
+    classificacao = models.PositiveIntegerField("posição", null=True, blank=True)
+    situacao_proposta = models.CharField(
+        "situação da proposta", max_length=2, choices=SituacaoProposta.choices, blank=True
+    )
+    fase_item = models.CharField(
+        "fase do item", max_length=4, blank=True, help_text="FaseItemEnum do Compras.gov.br (E, HE, AR, AE…)."
+    )
+    anexo_solicitado = models.CharField(
+        "convocação de anexo",
+        max_length=1,
+        blank=True,
+        help_text="S solicitada · P parcialmente encerrada · E encerrada · vazio = nunca pedida.",
+    )
+    recurso_ate = models.DateField("recurso aberto até", null=True, blank=True)
+
+    valor_proposta_inicial = models.DecimalField(
+        "proposta inicial (unitário)", max_digits=18, decimal_places=4, null=True, blank=True
+    )
+    valor_lance_final = models.DecimalField(
+        "lance final (unitário)", max_digits=18, decimal_places=4, null=True, blank=True
+    )
+    valor_negociado = models.DecimalField(
+        "negociado (unitário)", max_digits=18, decimal_places=4, null=True, blank=True
+    )
+    valor_homologado = models.DecimalField(
+        "homologado (unitário)", max_digits=18, decimal_places=4, null=True, blank=True
+    )
+    homologado_em = models.DateField("homologado em", null=True, blank=True)
+    vencedor_e_a_empresa = models.BooleanField(
+        "a empresa venceu",
+        null=True,
+        blank=True,
+        help_text="Do resultado do PNCP. Nulo = sem resultado; falso = homologado para outro fornecedor.",
+    )
+
+    fonte = models.CharField("fonte", max_length=16, choices=Fonte.choices, default=Fonte.SENTINELA)
+    atualizado_em = models.DateTimeField("atualizado em", auto_now=True)
+
+    class Meta:
+        verbose_name = "item participado"
+        verbose_name_plural = "itens participados"
+        ordering = ["oportunidade_id", "id"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["oportunidade", "numero_item"], name="item_participado_unico_por_compra"
+            )
+        ]
+
+    def __str__(self) -> str:
+        return f"Item {self.numero_item} de {self.oportunidade}"
+
+
+class DocumentoFinanceiro(models.Model):
+    """Contrato, ata, empenho, ordem de fornecimento, liquidação ou pagamento.
+
+    Vários do mesmo tipo são normais: no registro de preços o órgão empenha
+    em partes, quando precisa, enquanto a ata vale. `item` nulo = vale para a
+    compra inteira (um contrato que cobre todos os itens ganhos).
+    """
+
+    class Tipo(models.TextChoices):
+        CONTRATO = "contrato", "Contrato"
+        ATA = "ata", "Ata de registro de preços"
+        EMPENHO = "empenho", "Empenho"
+        ORDEM_FORNECIMENTO = "ordem_fornecimento", "Ordem de fornecimento"
+        LIQUIDACAO = "liquidacao", "Liquidação"
+        PAGAMENTO = "pagamento", "Pagamento"
+
+    oportunidade = models.ForeignKey(
+        OportunidadeSalva,
+        verbose_name="oportunidade",
+        related_name="documentos_financeiros",
+        on_delete=models.CASCADE,
+    )
+    item = models.ForeignKey(
+        ItemParticipado,
+        verbose_name="item",
+        related_name="documentos_financeiros",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )
+    tipo = models.CharField("tipo", max_length=24, choices=Tipo.choices)
+    numero = models.CharField("número", max_length=60, blank=True, help_text="Ex.: 2026NE000632.")
+    data = models.DateField("data", null=True, blank=True)
+    valor = models.DecimalField("valor", max_digits=18, decimal_places=2, null=True, blank=True)
+    vigente_ate = models.DateField("vigente até", null=True, blank=True, help_text="Contrato e ata.")
+    fonte = models.CharField("fonte", max_length=16, choices=Fonte.choices, default=Fonte.MANUAL)
+    dados = models.JSONField("dados da fonte", default=dict, blank=True)
+    criado_em = models.DateTimeField("lido em", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "documento financeiro"
+        verbose_name_plural = "documentos financeiros"
+        ordering = ["data", "id"]
+        constraints = [
+            # A mesma nota de empenho lida duas vezes do Portal não duplica.
+            models.UniqueConstraint(
+                fields=["fonte", "tipo", "numero"],
+                condition=~Q(numero=""),
+                name="documento_financeiro_unico_por_fonte",
+            )
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.get_tipo_display()} {self.numero}".strip()
+
+
+class Entrega(models.Model):
+    """Uma entrega feita ao órgão. Lançada à mão: nenhum sistema público
+    diz quando o caminhão chegou."""
+
+    oportunidade = models.ForeignKey(
+        OportunidadeSalva,
+        verbose_name="oportunidade",
+        related_name="entregas",
+        on_delete=models.CASCADE,
+    )
+    item = models.ForeignKey(
+        ItemParticipado,
+        verbose_name="item",
+        related_name="entregas",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )
+    data = models.DateField("entregue em")
+    nota_fiscal = models.CharField("nota fiscal", max_length=60, blank=True)
+    observacao = models.TextField("observação", blank=True)
+    criada_em = models.DateTimeField("lançada em", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "entrega"
+        verbose_name_plural = "entregas"
+        ordering = ["data", "id"]
+
+    def __str__(self) -> str:
+        return f"Entrega de {self.data:%d/%m/%Y}"

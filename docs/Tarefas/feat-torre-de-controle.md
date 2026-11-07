@@ -4,7 +4,7 @@ Decisões (07/11/2026, com a operação):
 
 - **Torre de Controle** substitui o nome "Ciclo de Licitação". O quadro tem
   **4 estágios** lado a lado, cada um com as suas **etapas**; o menu mostra
-  as 14 etapas, cada uma abre a lista daquela etapa.
+  as 13 etapas, cada uma abre a lista daquela etapa.
 - **A etapa continua calculada, nunca gravada** (mesma regra de `ciclo.py`).
   O que muda são as entradas: além de cotação e proposta, passam a contar a
   **participação no Compras.gov** (por item), o **PNCP** e o **Portal da
@@ -44,6 +44,9 @@ Saídas do quadro:
 - **Descartadas** (não participou): as regras de hoje, mais **`sem_proposta`**
   — aparece em "Minhas participações" sem proposta cadastrada (caso do
   Pregão 55/2026, Cubatão).
+- **Prazo vencido com cotação e sem dado do Compras.gov** não é descartada:
+  fica em Cadastro de proposta com a etiqueta "confirmar com a Sentinela",
+  até a Sentinela dizer se a proposta foi cadastrada.
 - **Suspensa** não é saída: é etiqueta no cartão. **Recurso** também é
   etiqueta (entre Julgado e habilitado e Aguardando adjudicação).
 - Item **perdendo** (2º lugar em diante) fica em cinza até a homologação: pode
@@ -79,12 +82,12 @@ garantida.
 - [x] README do EC2: como voltar um deploy
 
 ### Passo 1 — etapas novas no backend
-- [ ] Models `ParticipacaoCompra`, `ItemParticipado`, `DocumentoFinanceiro`, `Entrega` (migração só acrescenta)
-- [ ] `ciclo.py`: `ESTAGIOS` e as 14 etapas; regra de etapa por item; cartão com a etapa de cada item
+- [x] Models `ParticipacaoCompra`, `ItemParticipado`, `DocumentoFinanceiro`, `Entrega` (migração só acrescenta)
+- [x] `torre.py` (ao lado do `ciclo.py`): `ESTAGIOS` e as 13 etapas; regra de etapa por item; cartão com a etapa de cada item
 - [ ] `encerradas.py`: motivos de Encerradas (perdida, fracassada, deserta, revogada, anulada) e o descarte `sem_proposta`
-- [ ] API do quadro novo (`GET /api/licitacoes/torre/`) sem quebrar `GET /api/licitacoes/ciclo/`
-- [ ] Lançamento manual do que a Sentinela ainda não lê (situação do item, OF, entrega)
-- [ ] Testes de cada regra antes do código (casos reais: 61, 56, 112, 201, 55)
+- [x] API do quadro novo (`GET /api/licitacoes/torre/`) sem quebrar `GET /api/licitacoes/ciclo/`
+- [ ] Lançamento manual do que nenhum sistema informa: ordem de fornecimento e entrega (a situação do item fica para a Sentinela beta)
+- [x] Testes de cada regra antes do código (casos reais: 61, 56, 112, 201, 55) — `test_torre.py`
 
 ### Passo 2 — depois da homologação, sozinho
 - [ ] Sincronia diária (8h, Celery beat) do **PNCP** por CNPJ das Empresas: resultados homologados, contratos, atas. Cria a salva se ainda não existir
@@ -99,7 +102,7 @@ garantida.
 ### Passo 4 — Torre de Controle (frontend), ao lado da tela atual
 - [ ] Quadro com os 4 estágios lado a lado, etapa em cada cartão, mais urgente no topo
 - [ ] Estágio aberto (etapas como colunas, os outros estágios recolhidos)
-- [ ] Menu novo: Buscar no topo, 14 etapas, Encerradas > Descartadas, Cadastros, Radar, status da Sentinela, avisos
+- [ ] Menu novo: Buscar no topo, 13 etapas, Encerradas > Descartadas, Cadastros, Radar, status da Sentinela, avisos
 - [ ] Lista por etapa (como as listas de hoje)
 
 ### Passo 5 — Sentinela v1.0 (extensão do Chrome)

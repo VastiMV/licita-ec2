@@ -12,11 +12,13 @@ from .views import (
     OportunidadesSalvasView,
     OportunidadesView,
     ProcessoView,
+    TorreView,
 )
 
 urlpatterns = [
     path("oportunidades/", OportunidadesView.as_view(), name="licitacoes-oportunidades"),
     path("ciclo/", CicloView.as_view(), name="licitacoes-ciclo"),
+    path("torre/", TorreView.as_view(), name="licitacoes-torre"),
     path("cotacoes/", EmCotacaoView.as_view(), name="licitacoes-cotacoes"),
     path("encerradas/", EncerradasView.as_view(), name="licitacoes-encerradas"),
     path("descartadas/", DescartadasView.as_view(), name="licitacoes-descartadas"),
