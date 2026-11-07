@@ -1,12 +1,17 @@
 <h1>Descartadas</h1>
 <p class="muted">
-  As oportunidades que a equipe salvou e depois tirou da lista, antes do prazo vencer. Nada é
-  apagado: abra o processo para ver quem descartou e quando.
+  Tudo que saiu do ciclo antes de participar do certame: a equipe tirou da lista, ou o prazo venceu,
+  com ou sem cotação. Nada é apagado: abra o processo para ver o que aconteceu.
 </p>
 
 <form [formGroup]="filtros" (ngSubmit)="pesquisar()" class="form-grid" novalidate>
-  <app-date-picker label="Descartadas de" formControlName="data_inicial" />
-  <app-date-picker label="até" formControlName="data_final" />
+  <app-select label="Período" [options]="periodos" [opcaoVazia]="false" formControlName="periodo" />
+  @if (escolhendoDatas()) {
+    <app-date-picker label="De" formControlName="data_inicial" />
+    <app-date-picker label="Até" formControlName="data_final" />
+  }
+  <app-select label="Motivo" [options]="motivos" formControlName="motivo" placeholder="Todos" />
+  <app-input-text label="UASG" formControlName="uasg" placeholder="Ex.: 925001" />
   <app-select label="UF" [options]="ufs" formControlName="uf" />
   <div class="form-acoes">
     <app-button type="submit">Pesquisar</app-button>

@@ -33,6 +33,9 @@ export class SelectComponent implements ControlValueAccessor {
   readonly label = input('');
   readonly options = input.required<readonly SelectOption[]>();
   readonly placeholder = input('Todas');
+  /** `false` tira a opção vazia (o placeholder) — para campos que sempre
+   * têm um valor escolhido, como um período. */
+  readonly opcaoVazia = input(true);
   readonly error = input<string | null>(null);
 
   protected readonly selectId = `select-${++nextId}`;

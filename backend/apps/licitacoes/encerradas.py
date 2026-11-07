@@ -1,24 +1,28 @@
-"""Encerradas — as licitações que saíram do Ciclo de Licitação.
+"""Encerradas e Descartadas — as licitações que saíram do Ciclo de
+Licitação, cada uma na sua tela.
 
-Como a etapa, o encerramento é **calculado**, nunca gravado: uma salva está
-encerrada quando o prazo de proposta venceu antes de ela virar proposta. O
-motivo e a data saem da mesma regra, num lugar só, para a lista e o quadro
-não divergirem.
+Como a etapa, a saída do ciclo é **calculada**, nunca gravada. A regra
+mora aqui, num lugar só, para as duas listas, o processo (modal) e o quadro
+não divergirem — e **uma licitação nunca aparece nas duas listas**.
 
-Motivos de hoje (perdida na disputa e falha no empenho entram quando essas
-etapas existirem):
+**Encerradas** (`encerradas`) — só o que **participou** do certame:
+perdida na disputa, falha no empenho, concluída. Essas etapas ainda não
+existem no sistema, então hoje a lista é vazia de propósito.
 
-- ``prazo_oportunidade`` — o prazo venceu sem a equipe ter cotado;
+**Descartadas** (`descartadas`) — tudo que saiu do ciclo antes de
+participar, com ou sem cotação:
+
+- ``descartada`` — a equipe tirou da lista antes do prazo vencer;
+- ``prazo_oportunidade`` — o prazo venceu sem nenhuma cotação;
 - ``prazo_cotacao`` — o prazo venceu com a cotação feita, sem proposta.
 
-**Descartada não é encerrada.** Quem a equipe tirou da lista antes do prazo
-vencer sai de Encerradas e vai para a tela Descartadas (`descartadas`) — para quem opera,
-encerrado é o que não foi cotado a tempo ou o que seguiu o ciclo até o fim,
-e o descarte é só "não me interessa". A remoção continua lógica: o registro
-e o histórico ficam no banco (`ProcessoView` ainda mostra o processo).
+Pedido da operação: cotar não é participar. Encerrada é quem foi até o
+certame; o resto foi descartado, por escolha ou por prazo.
 
-Quem foi descartada **depois** do prazo vencer encerrou pelo prazo: a
-remoção foi só limpeza da lista, e ela aparece aqui com o motivo do prazo.
+Tirada da lista **depois** do prazo vencer: vale o prazo, que veio
+primeiro — a remoção foi só limpeza. A remoção continua lógica: o registro
+e o histórico ficam no banco (`ProcessoView` mostra o processo de qualquer
+uma).
 """
 
 from __future__ import annotations
@@ -26,7 +30,7 @@ from __future__ import annotations
 import datetime as dt
 import re
 
-from django.db.models import Case, CharField, Exists, F, OuterRef, Q, Value, When
+from django.db.models import Case, CharField, DateField, Exists, F, OuterRef, Q, Value, When
 from django.db.models.functions import TruncDate
 from django.utils import timezone
 
@@ -34,14 +38,18 @@ from apps.cotador.models import Cotacao
 
 from .models import EventoOportunidadeSalva, OportunidadeSalva, OportunidadeSalvaQuerySet
 
-MOTIVOS = {
-    "prazo_oportunidade": "Prazo perdido sem cotação",
-    "prazo_cotacao": "Prazo perdido na cotação",
+# Os motivos de Encerradas chegam com as etapas Disputa e Empenho.
+MOTIVOS: dict[str, str] = {}
+
+MOTIVOS_DESCARTE = {
+    "descartada": "Tirada da lista",
+    "prazo_oportunidade": "Prazo venceu sem cotação",
+    "prazo_cotacao": "Prazo venceu com cotação",
 }
 
 
 def _venceu_antes(hoje: dt.date) -> Q:
-    """O prazo venceu antes de (ou sem) a remoção: encerrou pelo prazo.
+    """O prazo venceu antes de (ou sem) a remoção: saiu do ciclo pelo prazo.
     Com proposta gerada, o prazo vencer é o caminho normal, não perda."""
 
     prazo = "data_encerramento_proposta"
@@ -57,34 +65,43 @@ def _com_cotacao(lista: OportunidadeSalvaQuerySet) -> OportunidadeSalvaQuerySet:
 
 
 def encerradas(hoje: dt.date | None = None) -> OportunidadeSalvaQuerySet:
-    """As encerradas, anotadas com ``encerrada_em``, ``motivo`` e
-    ``tem_cotacao``. Descartadas antes do prazo ficam de fora (ver a
-    docstring do módulo e `descartadas`)."""
+    """As encerradas — quem participou do certame —, anotadas com
+    ``encerrada_em``, ``motivo`` e ``tem_cotacao``. Vazia até as etapas
+    Disputa e Empenho existirem (ver a docstring do módulo); a forma fica
+    pronta para a tela e o processo não mudarem quando elas chegarem."""
 
-    hoje = hoje or timezone.localdate()
-    return _com_cotacao(OportunidadeSalva.objects.filter(_venceu_antes(hoje))).annotate(
+    return _com_cotacao(OportunidadeSalva.objects.none()).annotate(
         encerrada_em=F("data_encerramento_proposta"),
-        motivo=Case(
-            When(tem_cotacao=True, then=Value("prazo_cotacao")),
-            default=Value("prazo_oportunidade"),
-            output_field=CharField(),
-        ),
+        motivo=Value("", output_field=CharField()),
     )
 
 
 def descartadas(hoje: dt.date | None = None) -> OportunidadeSalvaQuerySet:
-    """As que a equipe tirou da lista **antes** do prazo vencer — o que saiu
-    de Encerradas e ganhou tela própria. Anotadas com ``descartada_em`` (o
-    dia da remoção) e ``tem_cotacao`` (onde estava: Oportunidade ou
-    Cotação). Removida depois do prazo é Encerrada, não Descartada: as duas
-    listas nunca mostram a mesma licitação."""
+    """As descartadas — tiradas da lista antes do prazo ou com o prazo
+    vencido, com ou sem cotação —, anotadas com ``motivo``,
+    ``descartada_em`` (o que veio primeiro: o dia da remoção ou o prazo) e
+    ``tem_cotacao`` (onde estava: Oportunidade ou Cotação)."""
 
     hoje = hoje or timezone.localdate()
-    return _com_cotacao(
-        OportunidadeSalva.objects.filter(removida_em__isnull=False).exclude(
-            _venceu_antes(hoje)
+    venceu = _venceu_antes(hoje)
+    tirada_antes = Q(removida_em__isnull=False) & ~venceu
+    return (
+        _com_cotacao(OportunidadeSalva.objects.all())
+        .filter(tirada_antes | venceu)
+        .annotate(
+            motivo=Case(
+                When(venceu & Q(tem_cotacao=True), then=Value("prazo_cotacao")),
+                When(venceu, then=Value("prazo_oportunidade")),
+                default=Value("descartada"),
+                output_field=CharField(),
+            ),
+            descartada_em=Case(
+                When(venceu, then=F("data_encerramento_proposta")),
+                default=TruncDate("removida_em"),
+                output_field=DateField(),
+            ),
         )
-    ).annotate(descartada_em=TruncDate("removida_em"))
+    )
 
 
 # ---------- o processo (modal) ----------
@@ -161,12 +178,12 @@ def montar_processo(salva: OportunidadeSalva, hoje: dt.date | None = None) -> di
             item |= {"tipo": evento.tipo, "texto": evento.get_tipo_display()}
         eventos.append({**item, "etapa": etapa})
 
-    encerrada = encerradas(hoje).filter(pk=salva.pk).first()
-    if encerrada is None and salva.removida_em:
-        # Descartada não está em Encerradas, mas a história dela continua
-        # contando quem tirou da lista e quando.
-        salva.motivo = "descartada"
-        encerrada = salva
+    # Saiu do ciclo por uma das duas listas (nunca pelas duas): o motivo
+    # anotado escolhe o texto do desfecho.
+    encerrada = (
+        encerradas(hoje).filter(pk=salva.pk).first()
+        or descartadas(hoje).filter(pk=salva.pk).first()
+    )
     return {
         "id": salva.pk,
         "etapa": etapa,

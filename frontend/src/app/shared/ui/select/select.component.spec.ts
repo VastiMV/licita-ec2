@@ -12,7 +12,12 @@ const MODALIDADES: SelectOption[] = [
 
 @Component({
   imports: [FormsModule, SelectComponent],
-  template: `<app-select label="Modalidade" [options]="opcoes" [ngModel]="valor()" (ngModelChange)="valor.set($event)" />`,
+  template: `<app-select
+    label="Modalidade"
+    [options]="opcoes"
+    [ngModel]="valor()"
+    (ngModelChange)="valor.set($event)"
+  />`,
 })
 class HostComponent {
   opcoes = MODALIDADES;
@@ -56,5 +61,35 @@ describe('SelectComponent', () => {
 
     const select: HTMLSelectElement = fixture.debugElement.query(By.css('select')).nativeElement;
     expect(select.value).toBe('8');
+  });
+});
+
+@Component({
+  imports: [FormsModule, SelectComponent],
+  template: `<app-select
+    label="Período"
+    [options]="opcoes"
+    [opcaoVazia]="false"
+    [ngModel]="valor()"
+    (ngModelChange)="valor.set($event)"
+  />`,
+})
+class HostSemVazioComponent {
+  opcoes = MODALIDADES;
+  valor = signal('8');
+}
+
+describe('SelectComponent sem opção vazia, com valor inicial', () => {
+  it('mostra o valor inicial (não cai na primeira opção) e não tem placeholder', async () => {
+    TestBed.configureTestingModule({ imports: [HostSemVazioComponent] });
+    const fixture = TestBed.createComponent(HostSemVazioComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const select: HTMLSelectElement = fixture.debugElement.query(By.css('select')).nativeElement;
+    expect(select.options).toHaveLength(2);
+    expect(select.value).toBe('8');
+    expect(select.selectedOptions[0].textContent?.trim()).toBe('Dispensa de Licitação');
   });
 });
