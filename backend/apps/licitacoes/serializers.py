@@ -19,7 +19,14 @@ import datetime as dt
 
 from rest_framework import serializers
 
-from .models import EventoOportunidadeSalva, OportunidadeSalva, montar_texto_busca
+from .models import (
+    DocumentoFinanceiro,
+    Entrega,
+    EventoOportunidadeSalva,
+    ItemParticipado,
+    OportunidadeSalva,
+    montar_texto_busca,
+)
 
 
 class OportunidadeSerializer(serializers.Serializer):
@@ -397,3 +404,81 @@ class DescartadaSerializer(OportunidadeSalvaSerializer):
 
     def get_removida_por(self, obj: OportunidadeSalva) -> str | None:
         return obj.removida_por_nome or None
+
+
+class _LancamentoComItemSerializer(serializers.ModelSerializer):
+    """Base dos lançamentos manuais da Torre: o item é escolhido pelo número,
+    como está no edital ("49"), e precisa ser desta licitação."""
+
+    item_numero = serializers.CharField(required=False, allow_blank=True, write_only=True)
+
+    def validate_item_numero(self, valor: str) -> str:
+        return valor.strip()
+
+    def _item(self, numero: str) -> ItemParticipado | None:
+        if not numero:
+            return None
+        oportunidade = self.context["oportunidade"]
+        item = oportunidade.itens_participados.filter(numero_item=numero).first()
+        if item is None:
+            raise serializers.ValidationError({"item_numero": f"O item {numero} não é desta licitação."})
+        return item
+
+    def create(self, validated_data):
+        numero = validated_data.pop("item_numero", "")
+        validated_data["item"] = self._item(numero)
+        validated_data["oportunidade"] = self.context["oportunidade"]
+        return super().create(validated_data)
+
+    def to_representation(self, instance):
+        dados = super().to_representation(instance)
+        dados["item_numero"] = instance.item.numero_item if instance.item_id else None
+        return dados
+
+
+class DocumentoFinanceiroSerializer(_LancamentoComItemSerializer):
+    """Contrato, ata, empenho, ordem de fornecimento, liquidação ou pagamento.
+    Lançado à mão sempre com fonte "manual"; os que vieram do PNCP ou do
+    Portal da Transparência aparecem na mesma lista, só para leitura."""
+
+    tipo_rotulo = serializers.CharField(source="get_tipo_display", read_only=True)
+    fonte_rotulo = serializers.CharField(source="get_fonte_display", read_only=True)
+    valor = serializers.DecimalField(max_digits=18, decimal_places=2, min_value=0, required=False, allow_null=True)
+
+    class Meta:
+        model = DocumentoFinanceiro
+        fields = [
+            "id",
+            "tipo",
+            "tipo_rotulo",
+            "numero",
+            "data",
+            "valor",
+            "vigente_ate",
+            "item_numero",
+            "fonte",
+            "fonte_rotulo",
+            "criado_em",
+        ]
+        read_only_fields = ["fonte", "criado_em"]
+        # A unicidade (fonte, tipo, número) vale só com número preenchido; a
+        # conferência é a de `validate`, com mensagem em vez de erro de banco.
+        validators: list = []
+        extra_kwargs = {"numero": {"required": False}}
+
+    def validate(self, dados):
+        numero = (dados.get("numero") or "").strip()
+        dados["numero"] = numero
+        if numero and DocumentoFinanceiro.objects.filter(
+            fonte="manual", tipo=dados["tipo"], numero=numero
+        ).exists():
+            raise serializers.ValidationError({"numero": "Já existe um lançamento deste tipo com este número."})
+        return dados
+
+
+class EntregaSerializer(_LancamentoComItemSerializer):
+    class Meta:
+        model = Entrega
+        fields = ["id", "data", "nota_fiscal", "observacao", "item_numero", "criada_em"]
+        read_only_fields = ["criada_em"]
+

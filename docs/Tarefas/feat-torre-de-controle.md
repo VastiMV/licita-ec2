@@ -89,7 +89,7 @@ garantida.
 - [x] `torre.py` (ao lado do `ciclo.py`): `ESTAGIOS` e as 13 etapas; regra de etapa por item; cartão com a etapa de cada item
 - [x] `encerradas.py`: motivos de Encerradas (perdida, fracassada, deserta, revogada, anulada) e o descarte `sem_proposta`, com a mesma regra da Torre (`test_saidas.py` garante que cada licitação está em um lugar só)
 - [x] API do quadro novo (`GET /api/licitacoes/torre/`) sem quebrar `GET /api/licitacoes/ciclo/`
-- [ ] Lançamento manual do que nenhum sistema informa: ordem de fornecimento e entrega (a situação do item fica para a Sentinela beta)
+- [x] Lançamento manual do que nenhum sistema informa: ordem de fornecimento e entrega, e por enquanto contrato e o empenho de estados e prefeituras (`salvas/<id>/documentos-financeiros/`, `salvas/<id>/entregas/`; apaga só o que é manual). A situação do item fica para a Sentinela beta
 - [x] Testes de cada regra antes do código (casos reais: 61, 56, 112, 201, 55) — `test_torre.py`
 
 ### Passo 2 — depois da homologação, sozinho

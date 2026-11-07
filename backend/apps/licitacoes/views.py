@@ -17,6 +17,7 @@ from __future__ import annotations
 import datetime as dt
 
 from django.shortcuts import get_object_or_404
+from rest_framework import status
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -30,13 +31,21 @@ from apps.integracoes.plataformas import identificar_plataforma, plataforma_padr
 
 from .ciclo import montar_quadro
 from .encerradas import MOTIVOS, MOTIVOS_DESCARTE, descartadas, encerradas, montar_processo
-from .models import OportunidadeSalva, registrar_prazos_vencidos
+from .models import (
+    DocumentoFinanceiro,
+    Entrega,
+    Fonte,
+    OportunidadeSalva,
+    registrar_prazos_vencidos,
+)
 from .salvas import garantir_salva
 from .serializers import (
     CompraDetalheSerializer,
     DescartadaSerializer,
+    DocumentoFinanceiroSerializer,
     EmCotacaoSerializer,
     EncerradaSerializer,
+    EntregaSerializer,
     EventoOportunidadeSalvaSerializer,
     OportunidadeSalvaSerializer,
     OportunidadeSerializer,
@@ -462,3 +471,67 @@ class ProcessoView(APIView):
 
     def get(self, request: Request, pk: int) -> Response:
         return Response(montar_processo(get_object_or_404(OportunidadeSalva, pk=pk)))
+
+
+class _LancamentosDaSalvaView(APIView):
+    """Base de `GET/POST /api/licitacoes/salvas/<id>/<lançamentos>/`."""
+
+    serializer_class: type
+    relacao: str
+
+    def get(self, request: Request, pk: int) -> Response:
+        salva = get_object_or_404(OportunidadeSalva, pk=pk)
+        registros = getattr(salva, self.relacao).select_related("item").order_by(*self.ordem)
+        return Response(self.serializer_class(registros, many=True).data)
+
+    def post(self, request: Request, pk: int) -> Response:
+        salva = get_object_or_404(OportunidadeSalva, pk=pk)
+        serializer = self.serializer_class(data=request.data, context={"oportunidade": salva})
+        serializer.is_valid(raise_exception=True)
+        registro = serializer.save()
+        return Response(self.serializer_class(registro).data, status=status.HTTP_201_CREATED)
+
+
+class DocumentosFinanceirosView(_LancamentosDaSalvaView):
+    """`GET/POST /api/licitacoes/salvas/<id>/documentos-financeiros/` — contrato,
+    ata, empenho, ordem de fornecimento, liquidação e pagamento da licitação.
+    O que vem do PNCP e do Portal da Transparência aparece aqui também; o
+    que se lança por aqui é sempre "manual"."""
+
+    serializer_class = DocumentoFinanceiroSerializer
+    relacao = "documentos_financeiros"
+    ordem = ("data", "id")
+
+
+class EntregasView(_LancamentosDaSalvaView):
+    """`GET/POST /api/licitacoes/salvas/<id>/entregas/` — as entregas feitas ao
+    órgão. Só manual: nenhum sistema público informa a entrega."""
+
+    serializer_class = EntregaSerializer
+    relacao = "entregas"
+    ordem = ("data", "id")
+
+
+class DocumentoFinanceiroView(APIView):
+    """`DELETE /api/licitacoes/documentos-financeiros/<id>/` — apaga um
+    lançamento manual. O que veio de um sistema não se apaga daqui: a
+    próxima sincronia o traria de volta."""
+
+    def delete(self, request: Request, pk: int) -> Response:
+        documento = get_object_or_404(DocumentoFinanceiro, pk=pk)
+        if documento.fonte != Fonte.MANUAL:
+            return Response(
+                {"detail": f"Só lançamento manual pode ser apagado (este veio de: {documento.get_fonte_display()})."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        documento.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class EntregaView(APIView):
+    """`DELETE /api/licitacoes/entregas/<id>/`."""
+
+    def delete(self, request: Request, pk: int) -> Response:
+        get_object_or_404(Entrega, pk=pk).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+

@@ -3,9 +3,13 @@ from django.urls import path
 from .views import (
     CicloView,
     CompraDetalheView,
+    DocumentoFinanceiroView,
+    DocumentosFinanceirosView,
     EmCotacaoView,
     DescartadasView,
     EncerradasView,
+    EntregasView,
+    EntregaView,
     OportunidadeSalvaEventosView,
     OportunidadeSalvaView,
     OportunidadesSalvasChavesView,
@@ -38,4 +42,17 @@ urlpatterns = [
         name="licitacoes-salva-eventos",
     ),
     path("salvas/<int:pk>/processo/", ProcessoView.as_view(), name="licitacoes-salva-processo"),
+    # Torre de Controle — lançamento manual do que nenhum sistema informa.
+    path(
+        "salvas/<int:pk>/documentos-financeiros/",
+        DocumentosFinanceirosView.as_view(),
+        name="licitacoes-salva-documentos-financeiros",
+    ),
+    path("salvas/<int:pk>/entregas/", EntregasView.as_view(), name="licitacoes-salva-entregas"),
+    path(
+        "documentos-financeiros/<int:pk>/",
+        DocumentoFinanceiroView.as_view(),
+        name="licitacoes-documento-financeiro",
+    ),
+    path("entregas/<int:pk>/", EntregaView.as_view(), name="licitacoes-entrega"),
 ]
