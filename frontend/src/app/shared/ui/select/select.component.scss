@@ -1,4 +1,4 @@
-@use 'field' as *;
+@use "field" as *;
 
 .field {
   @include field-wrapper;
