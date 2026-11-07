@@ -1,23 +1,34 @@
 /**
- * Contratos de "Ciclo de Licitação / Descartadas" — as salvas que a equipe
- * tirou da lista antes do prazo vencer. Ver `descartadas` em
+ * Contratos de "Ciclo de Licitação / Descartadas" — as salvas tiradas da
+ * lista antes do prazo e as que venceram sem cotação. Ver `descartadas` em
  * `apps/licitacoes/encerradas.py`: uma licitação nunca aparece em
  * Descartadas e Encerradas ao mesmo tempo.
  */
 
 import { OportunidadeSalvaResponse } from './oportunidade-salva.contracts';
 
+/** Por que foi descartada: tirada da lista antes do prazo, ou o prazo
+ * venceu sem nenhuma cotação. */
+export type MotivoDescarte = 'descartada' | 'prazo_oportunidade';
+
+export const MOTIVOS_DESCARTE: readonly { value: MotivoDescarte; label: string }[] = [
+  { value: 'descartada', label: 'Tirada da lista' },
+  { value: 'prazo_oportunidade', label: 'Prazo venceu sem cotação' },
+];
+
 /** Onde a licitação estava quando foi descartada. */
 export type EtapaDescarte = 'oportunidade' | 'cotacao';
 
 export interface DescartadaResponse extends OportunidadeSalvaResponse {
-  /** O dia do descarte, `aaaa-mm-dd`. */
+  /** O dia do descarte (a remoção ou o prazo, o que veio primeiro), `aaaa-mm-dd`. */
   readonly descartada_em: string;
+  readonly motivo: MotivoDescarte;
+  readonly motivo_label: string;
   readonly estava_em: EtapaDescarte;
   readonly cotacao_id: number | null;
   readonly valor_cotado: number | null;
-  /** Data e hora do descarte, ISO. */
-  readonly removida_em: string;
+  /** Data e hora em que tiraram da lista, ISO — `null` quando foi o prazo. */
+  readonly removida_em: string | null;
   readonly removida_por: string | null;
 }
 
@@ -36,5 +47,6 @@ export interface DescartadasParams {
   /** Período do descarte, `aaaa-mm-dd`. */
   readonly data_inicial?: string;
   readonly data_final?: string;
+  readonly motivo?: string;
   readonly uf?: string;
 }

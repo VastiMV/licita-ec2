@@ -4,6 +4,8 @@ import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import {
   DescartadaResponse,
   EtapaDescarte,
+  MOTIVOS_DESCARTE,
+  MotivoDescarte,
 } from '../../../contracts/licitacoes/descartada.contracts';
 import { UFS } from '../../../contracts/localidades/uf';
 import { EncerradasService } from '../../../services/licitacoes/encerradas.service';
@@ -13,6 +15,7 @@ import { DataTableComponent } from '../../../shared/ui/data-table/data-table.com
 import {
   ColunaTabela,
   EstadoTabela,
+  TomCelula,
   estadoInicialTabela,
   parametroOrdenacao,
 } from '../../../shared/ui/data-table/data-table.model';
@@ -45,6 +48,13 @@ export const ROTULO_ETAPA: Record<EtapaDescarte, string> = {
   cotacao: 'Cotação',
 };
 
+/** Prazo vencido sem cotação é perda (vermelho); tirada da lista foi
+ * escolha da equipe (sem destaque). */
+const TOM_DO_MOTIVO: Record<MotivoDescarte, TomCelula | null> = {
+  descartada: null,
+  prazo_oportunidade: 'perigo',
+};
+
 /** As chaves das colunas são contrato com `ORDENACOES_DESCARTADAS` em
  * `apps/licitacoes/views.py`. */
 const COLUNAS: readonly ColunaTabela<DescartadaResponse>[] = [
@@ -70,6 +80,12 @@ const COLUNAS: readonly ColunaTabela<DescartadaResponse>[] = [
     umaLinha: true,
   },
   {
+    chave: 'motivo',
+    titulo: 'Motivo',
+    valor: (linha) => linha.motivo_label,
+    tom: (linha) => TOM_DO_MOTIVO[linha.motivo],
+  },
+  {
     chave: 'estava_em',
     titulo: 'Estava em',
     valor: (linha) => ROTULO_ETAPA[linha.estava_em],
@@ -93,10 +109,10 @@ const COLUNAS: readonly ColunaTabela<DescartadaResponse>[] = [
 ];
 
 /**
- * "Ciclo de Licitação / Descartadas" — as salvas que a equipe tirou da
- * lista antes do prazo vencer. Não são Encerradas (ver `encerradas.py`):
- * aqui é "não me interessou", lá é "perdeu o prazo". Nada é apagado: o
- * processo e a cotação continuam consultáveis.
+ * "Ciclo de Licitação / Descartadas" — o que ficou para trás sem ser
+ * trabalhado: tirada da lista antes do prazo, ou o prazo venceu sem
+ * cotação. Não são Encerradas (ver `encerradas.py`), que é só quem cotou.
+ * Nada é apagado: o processo e a cotação continuam consultáveis.
  */
 @Component({
   selector: 'app-descartadas-page',
@@ -118,11 +134,13 @@ export class DescartadasPage implements OnInit {
   private readonly fb = inject(FormBuilder);
 
   protected readonly colunas = COLUNAS;
+  protected readonly motivos = MOTIVOS_DESCARTE;
   protected readonly ufs = UFS;
 
   protected readonly filtros = this.fb.nonNullable.group({
     data_inicial: somarDias(hojeIso(), -JANELA_PADRAO_DIAS),
     data_final: hojeIso(),
+    motivo: '',
     uf: '',
   });
 

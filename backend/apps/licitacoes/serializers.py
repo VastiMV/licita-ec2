@@ -350,11 +350,14 @@ class EventoOportunidadeSalvaSerializer(serializers.ModelSerializer):
 
 
 class DescartadaSerializer(OportunidadeSalvaSerializer):
-    """Uma linha de Descartadas: a salva, quando e quem tirou da lista, e
-    onde ela estava (Oportunidade ou Cotação — com a cotação, se tinha).
+    """Uma linha de Descartadas: a salva, por que e quando foi descartada
+    (tirada da lista ou prazo vencido sem cotação), quem tirou, e onde ela
+    estava (Oportunidade ou Cotação — com a cotação, se tinha).
     Anotada por `encerradas.descartadas`."""
 
     descartada_em = serializers.DateField(read_only=True)
+    motivo = serializers.CharField(read_only=True)
+    motivo_label = serializers.SerializerMethodField()
     estava_em = serializers.SerializerMethodField()
     cotacao_id = serializers.SerializerMethodField()
     valor_cotado = serializers.SerializerMethodField()
@@ -364,6 +367,8 @@ class DescartadaSerializer(OportunidadeSalvaSerializer):
     class Meta(OportunidadeSalvaSerializer.Meta):
         fields = OportunidadeSalvaSerializer.Meta.fields + [
             "descartada_em",
+            "motivo",
+            "motivo_label",
             "estava_em",
             "cotacao_id",
             "valor_cotado",
@@ -373,6 +378,11 @@ class DescartadaSerializer(OportunidadeSalvaSerializer):
 
     def _cotacao(self, obj: OportunidadeSalva):
         return getattr(obj, "cotacao", None) if obj.tem_cotacao else None
+
+    def get_motivo_label(self, obj: OportunidadeSalva) -> str:
+        from .encerradas import MOTIVOS_DESCARTE
+
+        return MOTIVOS_DESCARTE[obj.motivo]
 
     def get_estava_em(self, obj: OportunidadeSalva) -> str:
         return "cotacao" if obj.tem_cotacao else "oportunidade"

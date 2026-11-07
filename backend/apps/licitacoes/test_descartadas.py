@@ -16,20 +16,47 @@ class DescartadasTests(Base):
         self.assertEqual(resposta.status_code, 200)
         return resposta.data
 
-    def test_so_as_tiradas_da_lista_antes_do_prazo(self):
+    def test_tiradas_da_lista_e_vencidas_sem_cotacao(self):
         self.salva("1", 5)  # ainda na lista
-        self.salva("2", -3)  # venceu sem ser removida: é Encerrada
-        self.salva("3", 5).remover(por=self.user)  # descartada
-        self.salva("4", None).remover(por=self.user)  # sem prazo, descartada
+        self.salva("2", -3)  # venceu sem cotação: Descartada
+        self.salva("3", 5).remover(por=self.user)  # tirada da lista
+        self.salva("4", None).remover(por=self.user)  # sem prazo, tirada da lista
         tarde = self.salva("5", -10)
-        tarde.remover(por=self.user)  # removida depois do prazo: Encerrada
+        tarde.remover(por=self.user)  # venceu sem cotação, removida depois
+        cotada = self.salva("6", -2)
+        self.cotar(cotada)  # venceu COM cotação: Encerrada, não aparece aqui
 
         linhas = self.por_sequencial(self.listar())
 
-        self.assertEqual(sorted(linhas), ["3", "4"])
+        self.assertEqual(sorted(linhas), ["2", "3", "4", "5"])
+        self.assertEqual(linhas["3"]["motivo"], "descartada")
+        self.assertEqual(linhas["3"]["motivo_label"], "Tirada da lista")
         self.assertEqual(linhas["3"]["removida_por"], "Vasti")
         self.assertEqual(linhas["3"]["descartada_em"], str(self.hoje))
         self.assertEqual(linhas["3"]["estava_em"], "oportunidade")
+        self.assertEqual(linhas["2"]["motivo"], "prazo_oportunidade")
+        self.assertEqual(linhas["2"]["motivo_label"], "Prazo venceu sem cotação")
+        self.assertEqual(linhas["2"]["descartada_em"], str(self.hoje - dt.timedelta(days=3)))
+        # Removida depois do prazo: o prazo veio primeiro, é ele que conta.
+        self.assertEqual(linhas["5"]["motivo"], "prazo_oportunidade")
+        self.assertEqual(linhas["5"]["descartada_em"], str(self.hoje - dt.timedelta(days=10)))
+
+    def test_filtra_por_motivo(self):
+        self.salva("1", -3)
+        self.salva("2", 5).remover(por=self.user)
+
+        prazo = self.listar(motivo="prazo_oportunidade")
+        tiradas = self.listar(motivo="descartada")
+
+        self.assertEqual(sorted(self.por_sequencial(prazo)), ["1"])
+        self.assertEqual(sorted(self.por_sequencial(tiradas)), ["2"])
+
+    def test_processo_da_vencida_sem_cotacao_explica_o_prazo(self):
+        salva = self.salva("1", -3)
+
+        desfecho = self.client.get(f"/api/licitacoes/salvas/{salva.pk}/processo/").data["desfecho"]
+
+        self.assertEqual(desfecho["tipo"], "prazo_oportunidade")
 
     def test_descartada_com_cotacao_mostra_a_cotacao(self):
         cotada = self.salva("1", 5)

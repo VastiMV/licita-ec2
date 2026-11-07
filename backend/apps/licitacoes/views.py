@@ -29,7 +29,7 @@ from apps.integracoes.clients.pncp import PncpClient, PncpClientError
 from apps.integracoes.plataformas import identificar_plataforma, plataforma_padrao
 
 from .ciclo import montar_quadro
-from .encerradas import MOTIVOS, descartadas, encerradas, montar_processo
+from .encerradas import MOTIVOS, MOTIVOS_DESCARTE, descartadas, encerradas, montar_processo
 from .models import OportunidadeSalva, registrar_prazos_vencidos
 from .salvas import garantir_salva
 from .serializers import (
@@ -407,17 +407,20 @@ class EncerradasView(APIView):
 ORDENACOES_DESCARTADAS = {
     "uasg": "uasg",
     "cidade": "municipio",
-    "descartada_em": "removida_em",
+    "descartada_em": "descartada_em",
+    "motivo": "motivo",
     "valor": "valor_total_estimado",
 }
 
 
 class DescartadasView(APIView):
-    """`GET /api/licitacoes/descartadas/` — as salvas tiradas da lista antes
-    do prazo (ver `encerradas.descartadas`), com os filtros da tela: período
-    do descarte (`data_inicial`/`data_final`), `uf` e `busca` textual."""
+    """`GET /api/licitacoes/descartadas/` — tiradas da lista antes do prazo
+    e vencidas sem cotação (ver `encerradas.descartadas`), com os filtros da
+    tela: período do descarte (`data_inicial`/`data_final`), `motivo`, `uf`
+    e `busca` textual."""
 
     def get(self, request: Request) -> Response:
+        registrar_prazos_vencidos()
         params = request.query_params
 
         lista = descartadas().select_related("cotacao").buscar(params.get("busca", ""))
@@ -425,12 +428,14 @@ class DescartadasView(APIView):
             lista = lista.filter(descartada_em__gte=inicio)
         if fim := _data(params.get("data_final")):
             lista = lista.filter(descartada_em__lte=fim)
+        if (motivo := params.get("motivo")) in MOTIVOS_DESCARTE:
+            lista = lista.filter(motivo=motivo)
         if uf := (params.get("uf") or "").strip().upper():
             lista = lista.filter(uf=uf)
 
         pedida = (params.get("ordering") or "").strip()
         campo = ORDENACOES_DESCARTADAS.get(pedida.lstrip("-"))
-        ordem = (f"-{campo}" if pedida.startswith("-") else campo) if campo else "-removida_em"
+        ordem = (f"-{campo}" if pedida.startswith("-") else campo) if campo else "-descartada_em"
         lista = lista.order_by(ordem, "-id")
 
         paginacao = OportunidadesSalvasPaginacao()

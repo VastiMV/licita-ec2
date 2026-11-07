@@ -35,6 +35,8 @@ const COTADA: DescartadaResponse = {
   salva_por: 'Vasti',
   criada_em: '2026-08-31T12:00:00Z',
   descartada_em: '2026-11-05',
+  motivo: 'descartada',
+  motivo_label: 'Tirada da lista',
   estava_em: 'cotacao',
   cotacao_id: 2,
   valor_cotado: 351296.23,
@@ -46,6 +48,10 @@ const SEM_COTACAO: DescartadaResponse = {
   ...COTADA,
   id: 7,
   chave: 'x-2026-1',
+  motivo: 'prazo_oportunidade',
+  motivo_label: 'Prazo venceu sem cotação',
+  removida_em: null,
+  removida_por: null,
   estava_em: 'oportunidade',
   cotacao_id: null,
   valor_cotado: null,
@@ -94,21 +100,26 @@ describe('DescartadasPage', () => {
     expect(fixture.debugElement.queryAll(By.css('tbody tr'))).toHaveLength(2);
   });
 
-  it('mostra quem descartou e onde a licitação estava', () => {
+  it('mostra o motivo, quem descartou e onde a licitação estava', () => {
     montar();
 
-    const texto = fixture.debugElement.query(By.css('tbody tr')).nativeElement.textContent;
-    expect(texto).toContain('por Carlinhos');
-    expect(texto).toContain('Cotação');
+    const [tirada, prazo] = fixture.debugElement
+      .queryAll(By.css('tbody tr'))
+      .map((linha) => linha.nativeElement.textContent as string);
+    expect(tirada).toContain('Tirada da lista');
+    expect(tirada).toContain('por Carlinhos');
+    expect(tirada).toContain('Cotação');
+    expect(prazo).toContain('Prazo venceu sem cotação');
+    expect(prazo).not.toContain('por ');
   });
 
   it('pesquisar manda os filtros e volta para a primeira página', () => {
     montar();
-    pagina().filtros.patchValue({ uf: 'PR' });
+    pagina().filtros.patchValue({ motivo: 'prazo_oportunidade', uf: 'PR' });
     pagina().pesquisar();
 
     expect(service.descartadas).toHaveBeenLastCalledWith(
-      expect.objectContaining({ uf: 'PR', page: 1 }),
+      expect.objectContaining({ motivo: 'prazo_oportunidade', uf: 'PR', page: 1 }),
     );
   });
 
