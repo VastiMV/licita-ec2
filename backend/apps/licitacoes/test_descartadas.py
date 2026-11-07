@@ -101,6 +101,14 @@ class DescartadasTests(Base):
         self.assertEqual(sorted(self.por_sequencial(recentes)), ["2"])
         self.assertEqual(sorted(self.por_sequencial(self.listar(uf="rj"))), ["1"])
 
+    def test_filtra_por_uasg(self):
+        self.salva("1", 5, uasg="925001").remover(por=self.user)
+        self.salva("2", 5, uasg="926002").remover(por=self.user)
+
+        self.assertEqual(sorted(self.por_sequencial(self.listar(uasg="926002"))), ["2"])
+        # Parte do código também acha (quem digita os primeiros números).
+        self.assertEqual(sorted(self.por_sequencial(self.listar(uasg=" 9250"))), ["1"])
+
     def test_mais_recente_primeiro(self):
         self.salva("1", 30).remover(por=self.user, quando=dias_atras(self.hoje, 3))
         self.salva("2", 30).remover(por=self.user)

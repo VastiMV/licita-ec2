@@ -5,9 +5,11 @@
 </p>
 
 <form [formGroup]="filtros" (ngSubmit)="pesquisar()" class="form-grid" novalidate>
+  <app-select label="Mês" [options]="meses" formControlName="mes" placeholder="Escolha um mês" />
   <app-date-picker label="Descartadas de" formControlName="data_inicial" />
   <app-date-picker label="até" formControlName="data_final" />
   <app-select label="Motivo" [options]="motivos" formControlName="motivo" placeholder="Todos" />
+  <app-input-text label="UASG" formControlName="uasg" placeholder="Ex.: 925001" />
   <app-select label="UF" [options]="ufs" formControlName="uf" />
   <div class="form-acoes">
     <app-button type="submit">Pesquisar</app-button>

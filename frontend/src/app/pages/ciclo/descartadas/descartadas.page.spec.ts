@@ -7,7 +7,7 @@ import { EncerradasService } from '../../../services/licitacoes/encerradas.servi
 import { ModalService } from '../../../shared/overlay/modal.service';
 import { CotadorModalComponent } from '../../oportunidades/cotador-modal/cotador-modal.component';
 import { ProcessoModalComponent } from '../encerradas/processo-modal/processo-modal.component';
-import { DescartadasPage } from './descartadas.page';
+import { DescartadasPage, limitesDoMes, ultimosMeses } from './descartadas.page';
 
 const COTADA: DescartadaResponse = {
   id: 4,
@@ -115,12 +115,37 @@ describe('DescartadasPage', () => {
 
   it('pesquisar manda os filtros e volta para a primeira página', () => {
     montar();
-    pagina().filtros.patchValue({ motivo: 'prazo_oportunidade', uf: 'PR' });
+    pagina().filtros.patchValue({ motivo: 'prazo_oportunidade', uasg: '925001', uf: 'PR' });
     pagina().pesquisar();
 
     expect(service.descartadas).toHaveBeenLastCalledWith(
-      expect.objectContaining({ motivo: 'prazo_oportunidade', uf: 'PR', page: 1 }),
+      expect.objectContaining({
+        motivo: 'prazo_oportunidade',
+        uasg: '925001',
+        uf: 'PR',
+        page: 1,
+      }),
     );
+  });
+
+  it('escolher um mês preenche "de" e "até" e o mês não vai para a API', () => {
+    montar();
+    pagina().filtros.patchValue({ mes: '2026-02' });
+    pagina().pesquisar();
+
+    const params = service.descartadas.mock.lastCall![0];
+    expect(params).toEqual(
+      expect.objectContaining({ data_inicial: '2026-02-01', data_final: '2026-02-28' }),
+    );
+    expect(params).not.toHaveProperty('mes');
+  });
+
+  it('motivo é texto normal, sem destaque em vermelho', () => {
+    montar();
+
+    expect(
+      fixture.debugElement.queryAll(By.css('tbody .perigo, tbody [class*="perigo"]')),
+    ).toHaveLength(0);
   });
 
   it('"Ver cotação" só aparece para quem chegou a cotar', () => {
@@ -153,5 +178,20 @@ describe('DescartadasPage', () => {
     montar();
 
     expect(fixture.debugElement.query(By.css('.erro'))).not.toBeNull();
+  });
+});
+
+describe('meses do filtro', () => {
+  it('lista os últimos 12 meses, virando o ano', () => {
+    const meses = ultimosMeses('2026-02-15');
+
+    expect(meses).toHaveLength(12);
+    expect(meses[0]).toEqual({ value: '2026-02', label: 'fevereiro de 2026' });
+    expect(meses[2]).toEqual({ value: '2025-12', label: 'dezembro de 2025' });
+  });
+
+  it('acha o último dia do mês, inclusive fevereiro bissexto', () => {
+    expect(limitesDoMes('2028-02')).toEqual({ inicio: '2028-02-01', fim: '2028-02-29' });
+    expect(limitesDoMes('2026-11')).toEqual({ inicio: '2026-11-01', fim: '2026-11-30' });
   });
 });

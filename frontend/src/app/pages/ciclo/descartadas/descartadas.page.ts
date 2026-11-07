@@ -1,11 +1,11 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 
 import {
   DescartadaResponse,
   EtapaDescarte,
   MOTIVOS_DESCARTE,
-  MotivoDescarte,
 } from '../../../contracts/licitacoes/descartada.contracts';
 import { UFS } from '../../../contracts/localidades/uf';
 import { EncerradasService } from '../../../services/licitacoes/encerradas.service';
@@ -15,13 +15,13 @@ import { DataTableComponent } from '../../../shared/ui/data-table/data-table.com
 import {
   ColunaTabela,
   EstadoTabela,
-  TomCelula,
   estadoInicialTabela,
   parametroOrdenacao,
 } from '../../../shared/ui/data-table/data-table.model';
 import { TabelaAcoesDirective } from '../../../shared/ui/data-table/tabela-acoes.directive';
 import { DatePickerComponent } from '../../../shared/ui/date-picker/date-picker.component';
 import { hojeIso, somarDias } from '../../../shared/ui/date-picker/date-picker.utils';
+import { InputTextComponent } from '../../../shared/ui/input-text/input-text.component';
 import { ItemMenu, MenuComponent } from '../../../shared/ui/menu/menu.component';
 import { SelectComponent } from '../../../shared/ui/select/select.component';
 import {
@@ -48,13 +48,46 @@ export const ROTULO_ETAPA: Record<EtapaDescarte, string> = {
   cotacao: 'Cotação',
 };
 
-/** Prazo vencido é perda (vermelho); tirada da lista foi
- * escolha da equipe (sem destaque). */
-const TOM_DO_MOTIVO: Record<MotivoDescarte, TomCelula | null> = {
-  descartada: null,
-  prazo_oportunidade: 'perigo',
-  prazo_cotacao: 'perigo',
-};
+const NOMES_MES = [
+  'janeiro',
+  'fevereiro',
+  'março',
+  'abril',
+  'maio',
+  'junho',
+  'julho',
+  'agosto',
+  'setembro',
+  'outubro',
+  'novembro',
+  'dezembro',
+];
+
+/** Os últimos 12 meses, do atual para trás — `value` é `aaaa-mm`. */
+export function ultimosMeses(hoje: string, quantos = 12): { value: string; label: string }[] {
+  let [ano, mes] = hoje.split('-').map(Number);
+  const meses: { value: string; label: string }[] = [];
+  for (let i = 0; i < quantos; i++) {
+    meses.push({
+      value: `${ano}-${String(mes).padStart(2, '0')}`,
+      label: `${NOMES_MES[mes - 1]} de ${ano}`,
+    });
+    mes -= 1;
+    if (mes === 0) {
+      mes = 12;
+      ano -= 1;
+    }
+  }
+  return meses;
+}
+
+/** Primeiro e último dia do mês `aaaa-mm`, em `aaaa-mm-dd`. */
+export function limitesDoMes(mes: string): { inicio: string; fim: string } {
+  const [ano, m] = mes.split('-').map(Number);
+  const ultimoDia = new Date(Date.UTC(ano, m, 0)).getUTCDate();
+  const mm = String(m).padStart(2, '0');
+  return { inicio: `${ano}-${mm}-01`, fim: `${ano}-${mm}-${String(ultimoDia).padStart(2, '0')}` };
+}
 
 /** As chaves das colunas são contrato com `ORDENACOES_DESCARTADAS` em
  * `apps/licitacoes/views.py`. */
@@ -84,7 +117,6 @@ const COLUNAS: readonly ColunaTabela<DescartadaResponse>[] = [
     chave: 'motivo',
     titulo: 'Motivo',
     valor: (linha) => linha.motivo_label,
-    tom: (linha) => TOM_DO_MOTIVO[linha.motivo],
   },
   {
     chave: 'estava_em',
@@ -125,6 +157,7 @@ const COLUNAS: readonly ColunaTabela<DescartadaResponse>[] = [
     MenuComponent,
     DatePickerComponent,
     SelectComponent,
+    InputTextComponent,
     ButtonComponent,
   ],
   templateUrl: './descartadas.page.html',
@@ -137,14 +170,26 @@ export class DescartadasPage implements OnInit {
 
   protected readonly colunas = COLUNAS;
   protected readonly motivos = MOTIVOS_DESCARTE;
+  protected readonly meses = ultimosMeses(hojeIso());
   protected readonly ufs = UFS;
 
   protected readonly filtros = this.fb.nonNullable.group({
+    /** Atalho: escolher um mês preenche "de" e "até". Não vai para a API. */
+    mes: '',
     data_inicial: somarDias(hojeIso(), -JANELA_PADRAO_DIAS),
     data_final: hojeIso(),
     motivo: '',
+    uasg: '',
     uf: '',
   });
+
+  constructor() {
+    this.filtros.controls.mes.valueChanges.pipe(takeUntilDestroyed()).subscribe((mes) => {
+      if (!mes) return;
+      const { inicio, fim } = limitesDoMes(mes);
+      this.filtros.patchValue({ data_inicial: inicio, data_final: fim });
+    });
+  }
 
   protected readonly estado = signal<EstadoTabela>(
     estadoInicialTabela({ ordenarPor: 'descartada_em', direcao: 'desc' }),
@@ -205,6 +250,7 @@ export class DescartadasPage implements OnInit {
 
   private carregar(): void {
     const estado = this.estado();
+    const { mes: _mes, ...filtros } = this.filtros.getRawValue();
     this.carregando.set(true);
     this.erro.set(false);
 
@@ -214,7 +260,7 @@ export class DescartadasPage implements OnInit {
         page_size: estado.tamanhoPagina,
         ordering: parametroOrdenacao(estado),
         busca: estado.busca,
-        ...this.filtros.getRawValue(),
+        ...filtros,
       })
       .subscribe({
         next: (pagina) => {

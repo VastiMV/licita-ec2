@@ -416,8 +416,8 @@ ORDENACOES_DESCARTADAS = {
 class DescartadasView(APIView):
     """`GET /api/licitacoes/descartadas/` — tiradas da lista antes do prazo
     e vencidas sem cotação (ver `encerradas.descartadas`), com os filtros da
-    tela: período do descarte (`data_inicial`/`data_final`), `motivo`, `uf`
-    e `busca` textual."""
+    tela: período do descarte (`data_inicial`/`data_final`), `motivo`,
+    `uasg` (parte do código basta), `uf` e `busca` textual."""
 
     def get(self, request: Request) -> Response:
         registrar_prazos_vencidos()
@@ -430,6 +430,8 @@ class DescartadasView(APIView):
             lista = lista.filter(descartada_em__lte=fim)
         if (motivo := params.get("motivo")) in MOTIVOS_DESCARTE:
             lista = lista.filter(motivo=motivo)
+        if uasg := (params.get("uasg") or "").strip():
+            lista = lista.filter(uasg__icontains=uasg)
         if uf := (params.get("uf") or "").strip().upper():
             lista = lista.filter(uf=uf)
 
