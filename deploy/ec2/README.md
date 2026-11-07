@@ -6,6 +6,22 @@ imagens que o GitHub gera.
 
 São 4 etapas, **feitas uma vez só**. Depois disso, atualizar é um botão.
 
+## Como está instalado hoje
+
+| Item | Valor |
+|---|---|
+| Máquina | EC2 `licita`, **t3.small**, Ubuntu 24.04, região **us-east-2 (Ohio)** |
+| IP fixo (Elastic IP) | `16.59.20.70` |
+| Endereço provisório | `https://16-59-20-70.sslip.io` (teste: `https://teste.16-59-20-70.sslip.io`) |
+| Domínio definitivo | `insidelicitacoes.com.br` — **DNS ainda não configurado** (ver "Trocar para o domínio definitivo") |
+| Senhas | `/opt/licita/.env` (produção) e `/opt/licita-teste/.env` (teste) — só no servidor; a dona guarda cópia fora dele |
+| Acesso ao terminal | AWS → EC2 → `licita` → Connect → EC2 Instance Connect |
+| Segredos do GitHub | `EC2_HOST`, `EC2_SSH_KEY` (chave `licita.pem`) |
+| Backup do banco | **não existe ainda** |
+
+O sslip.io é um serviço gratuito em que o nome já contém o IP — serve para
+ter HTTPS antes do DNS do domínio estar pronto. É provisório.
+
 ---
 
 ## Etapa 1: criar a máquina (EC2)
@@ -85,6 +101,24 @@ cd /opt/licita && sudo docker compose exec backend python manage.py createsuperu
 Abra **https://insidelicitacoes.com.br**.
 
 ---
+
+## Trocar para o domínio definitivo
+
+Quando o registro.br liberar a edição do DNS:
+
+1. No registro.br, crie as entradas **A** (Etapa 2): vazio, `www` e
+   `teste`, todas com o IP fixo.
+2. Espere o domínio responder (pode levar até algumas horas).
+3. No terminal do EC2:
+
+```bash
+sudo sed -i 's/^DOMINIO=.*/DOMINIO=insidelicitacoes.com.br/' /opt/licita/.env
+```
+
+4. Rode **Deploy EC2** (pode desmarcar "Gerar imagens"). O Caddy tira os
+   certificados do domínio novo sozinho.
+
+`DJANGO_ALLOWED_HOSTS` já aceita `insidelicitacoes.com.br` e o `www`.
 
 ## No dia a dia
 
