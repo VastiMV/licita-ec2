@@ -137,6 +137,56 @@ cd /opt/licita && sudo docker compose ps
 cd /opt/licita && sudo docker compose logs --tail 100 backend
 ```
 
+## Backup do banco (automático)
+
+Todo deploy faz um backup do banco **antes** de rodar as migrações
+(`atualizar.sh`). Se o backup falhar, o deploy para e nada muda.
+
+- Onde fica: `/opt/licita/backups/licita-AAAAMMDD-HHMMSS.dump`
+- Quantos: os **10 mais recentes** (os mais velhos são apagados sozinhos).
+- Ficam **no próprio EC2**. Se a máquina morrer, eles vão junto: de vez em
+  quando, baixe o mais recente para fora.
+
+**Fazer um backup na mão** (sem deploy):
+
+```bash
+cd /opt/licita && sudo docker compose exec -T postgres sh -c 'pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Fc' | sudo tee backups/licita-manual-$(date +%Y%m%d-%H%M%S).dump > /dev/null
+```
+
+## Voltar um deploy que deu errado
+
+**1. Ver os backups** (o nome tem data e hora; use o feito logo antes do
+deploy que deu problema):
+
+```bash
+ls -lt /opt/licita/backups/
+```
+
+**2. Parar quem usa o banco:**
+
+```bash
+cd /opt/licita && sudo docker compose stop backend worker beat
+```
+
+**3. Restaurar** (troque `ARQUIVO` pelo nome do passo 1):
+
+```bash
+cd /opt/licita && sudo docker compose exec -T postgres sh -c 'pg_restore -U "$POSTGRES_USER" -d "$POSTGRES_DB" --clean --if-exists' < backups/ARQUIVO.dump
+```
+
+**4. Voltar o código:** Actions → **Deploy EC2** → Run workflow, escolhendo
+em *Use workflow from* a branch anterior (ex.: `backup/antes-da-torre`).
+Isso gera as imagens daquela versão e reinicia tudo.
+
+**5. Conferir:**
+
+```bash
+cd /opt/licita && sudo docker compose ps
+```
+
+Restaurar o banco **apaga** o que foi gravado depois do backup. Faça só se o
+dado estiver estragado; se o problema for só tela ou código, o passo 4 basta.
+
 ## Ambiente de teste (antes de publicar)
 
 Um segundo Licita na mesma máquina, **separado da produção**: outro banco,
