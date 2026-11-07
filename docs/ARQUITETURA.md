@@ -49,12 +49,15 @@ manifests já usam esse nome; o valor `licita` que aparecia aqui antes nunca foi
 | `empresas` | model `Empresa` — os CNPJs com que a equipe disputa (não confundir com `fornecedores`, que é de quem ela compra) |
 | `documentos` | dossiê de habilitação da empresa: catálogo da Lei 14.133, a vaga de cada documento, as versões com validade e o histórico — ver `DOMINIO.md` |
 | `fornecedores` | model `Fornecedor` — o cadastro compartilhado de quem a empresa compra para revender; é a base que o Cotador amarra a cada item |
+| `produtos` | Fabricante › Marca › Modelo, a afinidade fornecedor↔fabricante e a tabela de preços (`PrecoFornecedor`) que o Cotador alimenta |
+| `propostas` | a etapa depois do Cotador: a proposta em Word (modelo do cliente), os documentos de habilitação conferidos e os arquivos da licitação |
+| `capag` | nota CAPAG (Tesouro) de municípios e estados — o selo do card |
 | `cotador` | formação de preço de uma oportunidade (`Cotacao`/`ItemCotacao`/`OfertaFornecedor`), a conta em `formulas.py` e a proposta em .xlsx (`planilha.py`). App próprio, e não um campo novo no cotador antigo de `licitacoes`: os dois respondem perguntas diferentes e os nomes de campo colidiriam — ver a docstring de `apps/cotador/models.py` |
-| `filtros` | model `Filtro` (dono = usuário autenticado) |
-| `alertas` | model `Alerta`, geração e disparo de notificação |
+| `filtros` | **ainda não existe** — model `Filtro` (dono = usuário autenticado) |
+| `alertas` | **ainda não existe** — model `Alerta`, geração e disparo de notificação |
 | `integracoes` | clients HTTP para PNCP e compras.gov.br, isolados do resto (mockáveis nos testes) |
 | `armazenamento` | onde os arquivos ficam — interface única, drivers registráveis (Cloudflare R2, AWS S3, disco local) e a configuração que o cliente edita na tela; ver a seção "Armazenamento de arquivos" |
-| `core` | settings, healthcheck, exceptions/handlers comuns da API |
+| `config/` (não é app) | settings (`environment.py` é a única porta para variável de ambiente), ASGI, Celery e rotas |
 
 ### Frontend — organização Angular
 
@@ -263,20 +266,42 @@ harness de código for gerado.
 - Provisão exata da `StorageClass` (qual cluster/cloud hospeda — impacta
   `provisioner` e parâmetros de zona).
 - Provedor de e-mail transacional para `enviar_email_alerta`.
-- Domínio(s) e configuração de TLS no `Ingress`.
-- Estratégia de backup do Postgres (frequência, destino).
+- Domínio: `insidelicitacoes.com.br` registrado; falta o DNS (registro.br)
+  apontar para o EC2. Até lá, endereço provisório `16-59-20-70.sslip.io`.
+- **Backup do Postgres de produção: não existe.** Prioridade — hoje, se o
+  EC2 for perdido, os dados vão junto.
 
 ## CI e imagens
 
 Build manual, não em cada push — `.github/workflows/build-image.yml`
-(`workflow_dispatch` com um dropdown `frontend`/`backend`/`both`, acionado em
-Actions → Run workflow). Builda a imagem (`frontend/Dockerfile`,
-`backend/Dockerfile`) e publica em `ghcr.io/vastimv/licita-frontend:latest` /
-`licita-backend:latest`. Sem tag por commit ainda — só `:latest`, trocar
-exige `kubectl rollout restart` (ver [`k8s/README.md`](../k8s/README.md)).
+(dropdown `frontend`/`backend`/`both`). Builda a imagem
+(`frontend/Dockerfile`, `backend/Dockerfile`) e publica em
+`ghcr.io/vastimv/licita-ec2-frontend` / `licita-ec2-backend`, com a tag
+`latest` (produção) ou `teste` (ambiente de teste). Normalmente ninguém roda
+este workflow sozinho: **Deploy EC2** e **Teste: ligar** chamam ele antes de
+atualizar o servidor.
 
 O Dockerfile do frontend roda a suíte de testes como parte do build: a
 imagem só existe se os testes passaram.
+
+## Produção — EC2 com docker compose
+
+Este repositório roda num **EC2 só** (AWS, us-east-2, IP fixo), sem
+Kubernetes: `deploy/ec2/docker-compose.yml` sobe as mesmas imagens com
+Postgres, RabbitMQ, worker, beat e **Caddy** (HTTPS automático via Let's
+Encrypt; faz o papel do Ingress: `/api` → backend, o resto → frontend).
+
+| Botão (GitHub Actions) | O que faz |
+|---|---|
+| **Deploy EC2** | gera as imagens `latest` (opcional) e roda `deploy/ec2/atualizar.sh` no servidor por SSH: baixa as imagens, roda `migrate`, sobe o que mudou e recarrega o Caddy |
+| **Teste: ligar** | gera as imagens `teste` da branch escolhida e sobe `deploy/ec2/docker-compose.teste.yml` — outro banco, outras senhas, `teste.<domínio>` |
+| **Teste: desligar** | para o teste (opção de apagar o banco do teste) |
+
+Segredos do GitHub: `EC2_HOST` (o IP) e `EC2_SSH_KEY` (a chave `.pem`). As
+senhas do sistema ficam só no servidor, em `/opt/licita/.env` (produção) e
+`/opt/licita-teste/.env` (teste), geradas na instalação — **guarde uma
+cópia fora do servidor**. Passo a passo completo, inclusive recriar a
+máquina do zero: [`deploy/ec2/README.md`](../deploy/ec2/README.md).
 
 ## Kubernetes — o que já existe
 

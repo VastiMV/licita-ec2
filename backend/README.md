@@ -46,19 +46,31 @@ config/
                       (ConfigMap/Secret no Kubernetes). Nenhum outro módulo lê os.environ.
     base.py           settings do Django, montado em cima de Environment
   asgi.py             Daphne + Channels (roteador de websocket vazio por enquanto)
-  celery.py           app Celery (sem tasks ainda)
+  celery.py           app Celery (tasks em catalogo e capag; agenda no banco, django-celery-beat)
   urls.py
 apps/
   accounts/           User (login por e-mail) — primeiro model, AUTH_USER_MODEL
   integracoes/        Clients HTTP (compras.gov.br, PNCP) — isolados, mockáveis nos testes
   catalogo/           Model Pdm, sync assíncrono (Celery) e busca por similaridade
   capag/              Nota CAPAG (Tesouro) de municípios/estados — selo do card
-  licitacoes/         Busca de oportunidades (ao vivo, sem persistir) + oportunidades
-                      salvas e o histórico de cada uma (models.py)
+  licitacoes/         Busca de oportunidades (ao vivo, sem persistir), oportunidades
+                      salvas e o histórico de cada uma (models.py), o Ciclo de
+                      Licitação (ciclo.py) e a saída do ciclo — Encerradas ×
+                      Descartadas (encerradas.py)
+  tenants/            Tenant — de quem são os registros (uma linha só hoje)
+  empresas/           Os CNPJs com que a equipe disputa
+  documentos/         Dossiê de habilitação da empresa (certidões, validade, versões)
+  fornecedores/       De quem a equipe compra para revender
+  produtos/           Fabricante › Marca › Modelo, afinidade e tabela de preços
+  cotador/            Formação de preço (formulas.py) e a planilha .xlsx (planilha.py)
+  propostas/          A proposta em Word e os arquivos da licitação
+  armazenamento/      Onde os arquivos ficam (R2, S3, disco) — configurado na tela
 ```
 
-Próximos apps de domínio (`filtros`, `alertas`) entram um de cada vez
-conforme documentado em `docs/ARQUITETURA.md`.
+Cada `models.py` começa com uma docstring explicando as decisões daquele
+domínio — é o primeiro lugar a ler antes de mexer num app.
+
+Ainda não existem: `filtros` e `alertas` (ver `docs/ARQUITETURA.md`).
 
 ## Variáveis de ambiente
 

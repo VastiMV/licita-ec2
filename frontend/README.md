@@ -37,9 +37,18 @@ src/
     layout/shell/          topbar + router-outlet + rodapé (identidade Inside Solutions)
     pages/                 uma pasta por tela, monta átomos/modais/serviços — não redeclara nada deles
       oportunidades/       pesquisar/ (busca ao vivo) + salvas/ (lista da equipe) e o
-                           edital-card/ que as duas compartilham
-      cotador/             formação de preço para pregão; as fórmulas ficam em
-                           cotador.model.ts (funções puras, sem API)
+                           edital-card/ que as duas compartilham; cotador-modal/ é o
+                           Cotador (fórmulas em cotador.model.ts, funções puras)
+      ciclo/               o Ciclo de Licitação: quadro/ (Visão Geral), cotador/,
+                           propostas/, encerradas/ (com o processo-modal/ que mostra
+                           a história), descartadas/ e etapa-a-construir/ (Disputa,
+                           Empenho — telas que ainda não existem)
+      empresas/, fornecedores/, produtos/   os cadastros
+      configuracoes/       armazenamento/ e usuarios/ (só administrador)
+      auth/login/          login (a única tela fora do shell)
+    layout/brand/          a marca (logo) — único lugar que desenha o logo; as
+                           imagens ficam em public/marca/ e o fundo escuro do logo
+                           é o token --color-marca-fundo
 ```
 
 **Regra de organização:** um único componente por tipo de controle/modal —

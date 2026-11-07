@@ -62,8 +62,8 @@ class OportunidadeSalvaQuerySet(models.QuerySet):
 
     def no_prazo(self, hoje: dt.date | None = None) -> "OportunidadeSalvaQuerySet":
         """O contrário de `expiradas`: prazo aberto ou sem data publicada. Só
-        estas estão em alguma etapa do ciclo; as outras estão em Encerradas
-        (ver `encerradas.py`)."""
+        estas estão em alguma etapa do ciclo; as outras saíram dele (ver
+        `encerradas.py`: Descartadas, ou Encerradas quando participou)."""
 
         return self.exclude(data_encerramento_proposta__lt=hoje or timezone.localdate())
 

@@ -190,11 +190,12 @@ Regras:
   isso, um clique repetido viraria log de cria/apaga/cria — e o histórico
   perderia o sentido. Salvar a mesma compra de novo é idempotente (devolve o
   registro existente, sem novo evento).
-- **Prazo vencido não some da lista — fica destacado.** A linha da tabela
-  aparece realçada e o card (na busca e no modal) mostra em texto que o
-  prazo encerrou e que não é mais possível gerar proposta. Quando o módulo
-  de propostas existir, é `expirada` que ele consulta para bloquear a ação e
-  repetir essa mensagem — nada pode ser feito com uma oportunidade vencida.
+- **Prazo vencido sai da lista de Salvas.** Salvas mostra só o que ainda
+  está no prazo (`OportunidadeSalvaQuerySet.no_prazo`). Vencida, a
+  licitação sai do ciclo e aparece em **Descartadas** (ver "Ciclo de
+  Licitação" abaixo). O card (na busca e no modal) continua dizendo em
+  texto que o prazo encerrou e que não é mais possível gerar proposta —
+  `expirada` é o que bloqueia a ação.
 - **Dados voláteis não vêm do snapshot**: documentos do edital, plataforma
   de origem e selo CAPAG são consultados ao abrir o modal, em
   `CompraDetalheView` (cacheado, ver `services.detalhar_compra_cacheada`).
@@ -205,19 +206,18 @@ Endpoints (`apps/licitacoes/urls.py`, todos `IsAuthenticated`):
 
 | Rota | O quê |
 |---|---|
-| `GET /api/licitacoes/salvas/` | lista paginada (`page`, `page_size`), com `busca` (objeto + itens) e `ordering` por nome de coluna da tabela; devolve `count`/`results` mais `expiradas` (total do conjunto, base do aviso da tela) |
+| `GET /api/licitacoes/salvas/` | lista paginada (`page`, `page_size`) **só das que estão no prazo**, com `busca` (objeto + itens) e `ordering` por nome de coluna da tabela |
 | `POST /api/licitacoes/salvas/` | payload = `itens` (o resultado da busca daquele edital) + `capag` + `plataforma`; o resumo é derivado no backend. Repetido = 200 com o registro existente |
 | `DELETE /api/licitacoes/salvas/<id>/` | tira da lista (remoção lógica) |
-| `DELETE /api/licitacoes/salvas/expiradas/` | tira todas as vencidas de uma vez (o link do aviso) |
 | `GET /api/licitacoes/salvas/chaves/` | só as chaves das ativas — é como a busca sabe que um card já está salvo |
 | `GET /api/licitacoes/salvas/<id>/eventos/` | o histórico (ver abaixo) |
+| `GET /api/licitacoes/salvas/<id>/processo/` | a história no formato do modal "Ver processo": etapa de cada evento e o desfecho — vale também para removidas |
 
 Frontend: **"Oportunidades" virou menu de primeiro nível**, com "Pesquisar"
 (a busca ao vivo, antigo módulo "Oportunidades") e "Salvas". A tela de
 salvas é uma tabela (`shared/ui/data-table`) com busca, ordenação por
 qualquer coluna e paginação — todas integradas ao endpoint, nunca em
-memória. Linha com prazo vencido fica destacada, e o modal de visualização
-mostra em texto que não é mais possível gerar proposta.
+memória. Vencidas não aparecem (estão em Descartadas).
 
 Colunas: **UASG, modalidade, cidade, publicação, prazo da proposta e valor
 estimado**, mais um menu de ações por linha (visualizar/excluir). O objeto
@@ -252,6 +252,60 @@ a lista do que aconteceu, no estilo de um extrato de ligação.
 | `prazo_vencido` | quando a lista é servida e a oportunidade já passou do prazo sem ter esse evento (idempotente). Não há task periódica: o status é calculado, e a linha do log só precisa existir antes de alguém abrir o histórico |
 | `removida` | na exclusão (individual ou em lote pelas vencidas) |
 | `proposta_gerada` | **ainda não produzido** — declarado porque o log já é escrito no formato final; entra junto com o módulo de propostas |
+
+### Ciclo de Licitação — etapas e saída do ciclo
+
+Implementado em `apps/licitacoes/ciclo.py` (etapas) e
+`apps/licitacoes/encerradas.py` (saída do ciclo). **Nada disso é gravado:**
+etapa e saída são calculadas do que existe (cotação, proposta, prazo,
+remoção). Ninguém escolhe etapa num select nem arrasta cartão.
+
+**Etapas** (colunas da Visão Geral):
+
+| Etapa | Quando a licitação está nela |
+|---|---|
+| Oportunidade | salva, no prazo, sem cotação |
+| Cotação | com cotação salva no Cotador, no prazo |
+| Proposta | com proposta gerada (`apps.propostas`) — o prazo vencer aqui é o caminho normal |
+| Disputa | **ainda não existe** (coluna vazia) |
+| Empenho | **ainda não existe** (coluna vazia) |
+
+**Saída do ciclo — Encerradas × Descartadas** (decisão da operação,
+07/11/2026). A regra é: **cotar não é participar**.
+
+| Situação | Vai para | Motivo exibido |
+|---|---|---|
+| Tirada de Salvas antes do prazo, **sem** cotação | Descartadas | Tirada da lista |
+| Tirada de Salvas antes do prazo, **com** cotação | Descartadas | Tirada da lista |
+| Prazo venceu **sem** cotação | Descartadas | Prazo venceu sem cotação |
+| Prazo venceu **com** cotação (sem proposta) | Descartadas | Prazo venceu com cotação |
+| Participou do certame (perdeu a disputa, falhou no empenho, concluída) | **Encerradas** | chegam com as etapas Disputa e Empenho |
+
+- **Uma licitação nunca aparece nas duas listas.** A regra mora num lugar
+  só (`encerradas.py`), usada pelas duas telas e pelo modal do processo.
+- **Encerradas fica vazia até Disputa/Empenho existirem** — de propósito,
+  com aviso apontando para Descartadas.
+- **Tirada da lista depois do prazo vencer: vale o prazo**, que veio
+  primeiro (a remoção foi só limpeza). A data mostrada é a do que veio
+  primeiro: a remoção ou o prazo.
+- **Nada é apagado.** A remoção é lógica; "Ver processo" mostra quem tirou
+  da lista, quando e onde a licitação estava (Oportunidade ou Cotação).
+
+Telas: **Ciclo › Descartadas** — filtros Período (últimos 90 dias, um dos
+últimos 12 meses, ou datas livres), Motivo, UASG (parte do código basta) e
+UF; colunas UASG, cidade, data, motivo, onde estava, valor cotado e
+estimado. **Ciclo › Encerradas** — mesma tabela, para quem participou.
+
+| Rota | O quê |
+|---|---|
+| `GET /api/licitacoes/ciclo/` | o quadro da Visão Geral, com a etapa já calculada |
+| `GET /api/licitacoes/descartadas/` | `data_inicial`/`data_final`, `motivo`, `uasg`, `uf`, `busca`, `ordering` |
+| `GET /api/licitacoes/encerradas/` | mesmos filtros (hoje sempre vazia) |
+
+Pendência conhecida: o resumo da Visão Geral ainda mostra a contagem
+"vencidas — prazo de proposta perdido" (todas as vencidas, com ou sem
+cotação), anterior à regra acima. Decidir se continua assim na revisão do
+ciclo.
 
 ### `Cotacao` — a formação de preço de um edital
 
@@ -306,7 +360,42 @@ Regras da conta (as mesmas da planilha de origem):
   35% = R$158,89, lucro líquido R$35), então divergência entre elas quebra
   um teste dos dois lados.
 
+### `Fornecedor`, produtos e preços
+
+Implementado em `apps/fornecedores` e `apps/produtos` — as docstrings dos
+`models.py` têm o detalhe; aqui vai o que molda o produto.
+
+- **Fornecedor é de quem a equipe compra** para revender; **Empresa** é com
+  que CNPJ ela disputa. São cadastros diferentes de propósito.
+- **A lista é da empresa, não do usuário**, e o CNPJ do fornecedor é único
+  no cadastro inteiro.
+- **Situação é dado do cadastro**: "Documentação vencida" e "Inativo" ficam
+  no cadastro e nas cotações antigas, mas não são oferecidos em cotação nova.
+- **Produto é o modelo:** Fabricante › Marca › Modelo, sem duplicar (nome
+  comparado sem acento e sem caixa). A mesma marca em outro fabricante é
+  outro produto.
+- **Afinidade é por fabricante:** quem vende um fabricante vende todas as
+  marcas e modelos dele. O Cotador sugere primeiro os fabricantes do
+  fornecedor escolhido, e **aprende** ao salvar: grava a afinidade e o custo
+  em `PrecoFornecedor` (histórico — a sugestão é a linha mais recente).
+
+Ainda não está aqui: registrar o preço que o fornecedor passou **sem**
+cotação (por embalagem, ex.: "caixa com 10 a R$ 34") e a busca "onde tenho
+preço de caneta?". Foi feito no repositório original (`VastiMV/licita`,
+branch `claude/precos-fornecedor`) e ainda não trazido para este.
+
+### `Proposta`
+
+Implementado em `apps/propostas`. O botão "Gerar proposta" do Cotador cria
+o registro e move a licitação para a etapa Proposta. Uma por oportunidade;
+o valor é gravado ao gerar (mexer na cotação depois não muda o proposto). A
+tela é o lugar de tudo o que sobe na plataforma: a proposta comercial em
+Word (a partir do modelo do cliente), os documentos de habilitação da
+empresa e os arquivos da licitação.
+
 ### `Filtro`
+
+> **Ainda não implementado** — desenho previsto.
 Critério salvo por um usuário para monitorar novas licitações.
 
 | Campo | Tipo | Observação |
@@ -320,6 +409,8 @@ Critério salvo por um usuário para monitorar novas licitações.
 | `owner` | FK `User` | **novo** — o protótipo não tinha autenticação; multiusuário exige dono |
 
 ### `Alerta`
+
+> **Ainda não implementado** — desenho previsto.
 Registro de que um `Filtro` casou com uma `Licitacao` nova.
 
 | Campo | Tipo |
@@ -614,3 +705,17 @@ achados novos:
   texto serializado.
 - **Envio de e-mail e chamadas às APIs externas viram tasks Celery**
   assíncronas, nunca bloqueando o request HTTP.
+
+## Decisões da operação (histórico)
+
+Decisões de produto tomadas com a operação, em ordem. Quando uma regra
+acima parecer estranha, a razão costuma estar aqui.
+
+| Data | Decisão |
+|---|---|
+| 29/08/2026 | Lista de salvas e cadastros são da empresa, não do usuário |
+| 06/11/2026 | Descartada (tirada da lista) sai de Encerradas — pedido do Carlinhos |
+| 07/11/2026 | Descartadas ganha tela própria, abaixo de Encerradas |
+| 07/11/2026 | **Cotar não é participar:** tudo que saiu do ciclo antes do certame (tirada da lista ou prazo vencido, com ou sem cotação) é Descartada; Encerradas é só quem participou |
+| 07/11/2026 | Motivos em Descartadas em texto normal (sem vermelho); filtros por período/mês, motivo e UASG, numa linha só |
+| 07/11/2026 | Logo novo da Inside Solutions, sobre faixa escura (`--color-marca-fundo`) |

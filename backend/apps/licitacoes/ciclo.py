@@ -1,7 +1,7 @@
 """O Ciclo de Licitação — o quadro com uma coluna por etapa.
 
 **A etapa é calculada, nunca gravada.** Ninguém escolhe etapa num select nem
-arrasta cartão: ela sai do que existe. Hoje só existem as duas primeiras
+arrasta cartão: ela sai do que existe. Hoje existem as três primeiras
 etapas —
 
 - **Oportunidade** — salva e ainda sem cotação;
@@ -12,7 +12,8 @@ etapas —
 delas existirem. Quando existirem, a regra cresce aqui, num lugar só.
 
 **Prazo de proposta vencido sem proposta enviada sai do quadro.** É o
-"prazo perdido": a licitação vai para Encerradas. Com proposta gerada, o
+"prazo perdido": a licitação vai para Descartadas (ver `encerradas.py` —
+Encerradas é só para quem participou do certame). Com proposta gerada, o
 prazo vencer é o caminho normal e ela continua na coluna Proposta.
 
 O limite de "salva há muito tempo sem cotação" é parâmetro da empresa na
