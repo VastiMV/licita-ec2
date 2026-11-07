@@ -28,7 +28,14 @@
   justify-content: space-between;
   gap: var(--space-2);
   padding: var(--space-4) var(--space-4) var(--space-3);
-  border-bottom: 1px solid var(--color-border);
+  // Faixa da cor do fundo do logo: o logo é claro, feito para fundo escuro.
+  background: var(--color-marca-fundo);
+
+  .collapse-toggle {
+    border-color: rgb(255 255 255 / 25%);
+    background: transparent;
+    color: rgb(255 255 255 / 80%);
+  }
 
   .collapsed & {
     flex-direction: column;
