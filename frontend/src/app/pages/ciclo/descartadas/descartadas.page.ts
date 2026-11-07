@@ -48,11 +48,12 @@ export const ROTULO_ETAPA: Record<EtapaDescarte, string> = {
   cotacao: 'Cotação',
 };
 
-/** Prazo vencido sem cotação é perda (vermelho); tirada da lista foi
+/** Prazo vencido é perda (vermelho); tirada da lista foi
  * escolha da equipe (sem destaque). */
 const TOM_DO_MOTIVO: Record<MotivoDescarte, TomCelula | null> = {
   descartada: null,
   prazo_oportunidade: 'perigo',
+  prazo_cotacao: 'perigo',
 };
 
 /** As chaves das colunas são contrato com `ORDENACOES_DESCARTADAS` em
@@ -109,9 +110,10 @@ const COLUNAS: readonly ColunaTabela<DescartadaResponse>[] = [
 ];
 
 /**
- * "Ciclo de Licitação / Descartadas" — o que ficou para trás sem ser
- * trabalhado: tirada da lista antes do prazo, ou o prazo venceu sem
- * cotação. Não são Encerradas (ver `encerradas.py`), que é só quem cotou.
+ * "Ciclo de Licitação / Descartadas" — tudo que saiu do ciclo antes de
+ * participar do certame: tirada da lista antes do prazo, ou o prazo
+ * venceu, com ou sem cotação. Encerradas é só quem participou (ver
+ * `encerradas.py`).
  * Nada é apagado: o processo e a cotação continuam consultáveis.
  */
 @Component({

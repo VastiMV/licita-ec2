@@ -1,14 +1,16 @@
 <h1>Encerradas</h1>
 <p class="muted">
-  As licitações que a equipe cotou e o prazo de proposta venceu sem virar proposta. As tiradas da
-  lista e as que venceram sem cotação ficam no menu Descartadas. Abra o processo para ver o que
-  aconteceu.
+  As licitações em que a equipe participou do certame (disputa e empenho). O que saiu do ciclo antes
+  disso, tirado da lista ou com o prazo vencido, fica no menu Descartadas. Abra o processo para ver
+  o que aconteceu.
 </p>
 
 <form [formGroup]="filtros" (ngSubmit)="pesquisar()" class="form-grid" novalidate>
   <app-date-picker label="Encerradas de" formControlName="data_inicial" />
   <app-date-picker label="até" formControlName="data_final" />
-  <app-select label="Motivo" [options]="motivos" formControlName="motivo" placeholder="Todos" />
+  @if (motivos.length) {
+    <app-select label="Motivo" [options]="motivos" formControlName="motivo" placeholder="Todos" />
+  }
   <app-select label="UF" [options]="ufs" formControlName="uf" />
   <div class="form-acoes">
     <app-button type="submit">Pesquisar</app-button>
@@ -28,7 +30,7 @@
   [chaveDe]="chaveDe"
   rotuloBusca="Buscar"
   placeholderBusca="Busca no objeto e nos itens…"
-  mensagemVazia="Nenhuma licitação encerrada no período."
+  mensagemVazia="Nenhuma licitação encerrada no período. As que saíram antes do certame estão em Descartadas."
   (estadoMudou)="aoMudarEstado($event)"
 >
   <ng-template appTabelaAcoes let-linha>

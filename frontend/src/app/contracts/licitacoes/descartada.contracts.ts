@@ -1,6 +1,7 @@
 /**
- * Contratos de "Ciclo de Licitação / Descartadas" — as salvas tiradas da
- * lista antes do prazo e as que venceram sem cotação. Ver `descartadas` em
+ * Contratos de "Ciclo de Licitação / Descartadas" — tudo que saiu do ciclo
+ * antes de participar do certame: tirada da lista ou prazo vencido, com ou
+ * sem cotação. Ver `descartadas` em
  * `apps/licitacoes/encerradas.py`: uma licitação nunca aparece em
  * Descartadas e Encerradas ao mesmo tempo.
  */
@@ -8,12 +9,13 @@
 import { OportunidadeSalvaResponse } from './oportunidade-salva.contracts';
 
 /** Por que foi descartada: tirada da lista antes do prazo, ou o prazo
- * venceu sem nenhuma cotação. */
-export type MotivoDescarte = 'descartada' | 'prazo_oportunidade';
+ * venceu (com ou sem cotação). */
+export type MotivoDescarte = 'descartada' | 'prazo_oportunidade' | 'prazo_cotacao';
 
 export const MOTIVOS_DESCARTE: readonly { value: MotivoDescarte; label: string }[] = [
   { value: 'descartada', label: 'Tirada da lista' },
   { value: 'prazo_oportunidade', label: 'Prazo venceu sem cotação' },
+  { value: 'prazo_cotacao', label: 'Prazo venceu com cotação' },
 ];
 
 /** Onde a licitação estava quando foi descartada. */

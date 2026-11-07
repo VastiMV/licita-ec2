@@ -5,27 +5,24 @@ Como a etapa, a saída do ciclo é **calculada**, nunca gravada. A regra
 mora aqui, num lugar só, para as duas listas, o processo (modal) e o quadro
 não divergirem — e **uma licitação nunca aparece nas duas listas**.
 
-**Encerradas** (`encerradas`) — a equipe chegou a cotar e o prazo de
-proposta venceu sem virar proposta:
+**Encerradas** (`encerradas`) — só o que **participou** do certame:
+perdida na disputa, falha no empenho, concluída. Essas etapas ainda não
+existem no sistema, então hoje a lista é vazia de propósito.
 
-- ``prazo_cotacao`` — "Prazo perdido na cotação".
-
-(Perdida na disputa e falha no empenho entram aqui quando essas etapas
-existirem.)
-
-**Descartadas** (`descartadas`) — a licitação não chegou a ser trabalhada:
+**Descartadas** (`descartadas`) — tudo que saiu do ciclo antes de
+participar, com ou sem cotação:
 
 - ``descartada`` — a equipe tirou da lista antes do prazo vencer;
-- ``prazo_oportunidade`` — o prazo venceu sem nenhuma cotação.
+- ``prazo_oportunidade`` — o prazo venceu sem nenhuma cotação;
+- ``prazo_cotacao`` — o prazo venceu com a cotação feita, sem proposta.
 
-Para quem opera, encerrado é o que foi trabalhado (cotado) e não seguiu;
-descartado é o que ficou para trás sem trabalho. Foi pedido da operação:
-venceu sem cotação é descarte, não encerramento.
+Pedido da operação: cotar não é participar. Encerrada é quem foi até o
+certame; o resto foi descartado, por escolha ou por prazo.
 
 Tirada da lista **depois** do prazo vencer: vale o prazo, que veio
-primeiro — a remoção foi só limpeza. Com cotação, Encerrada; sem, Descartada
-por prazo. A remoção continua lógica: o registro e o histórico ficam no
-banco (`ProcessoView` mostra o processo de qualquer uma).
+primeiro — a remoção foi só limpeza. A remoção continua lógica: o registro
+e o histórico ficam no banco (`ProcessoView` mostra o processo de qualquer
+uma).
 """
 
 from __future__ import annotations
@@ -41,13 +38,13 @@ from apps.cotador.models import Cotacao
 
 from .models import EventoOportunidadeSalva, OportunidadeSalva, OportunidadeSalvaQuerySet
 
-MOTIVOS = {
-    "prazo_cotacao": "Prazo perdido na cotação",
-}
+# Os motivos de Encerradas chegam com as etapas Disputa e Empenho.
+MOTIVOS: dict[str, str] = {}
 
 MOTIVOS_DESCARTE = {
     "descartada": "Tirada da lista",
     "prazo_oportunidade": "Prazo venceu sem cotação",
+    "prazo_cotacao": "Prazo venceu com cotação",
 }
 
 
@@ -68,34 +65,32 @@ def _com_cotacao(lista: OportunidadeSalvaQuerySet) -> OportunidadeSalvaQuerySet:
 
 
 def encerradas(hoje: dt.date | None = None) -> OportunidadeSalvaQuerySet:
-    """As encerradas — venceu o prazo **com** cotação —, anotadas com
-    ``encerrada_em``, ``motivo`` e ``tem_cotacao``."""
+    """As encerradas — quem participou do certame —, anotadas com
+    ``encerrada_em``, ``motivo`` e ``tem_cotacao``. Vazia até as etapas
+    Disputa e Empenho existirem (ver a docstring do módulo); a forma fica
+    pronta para a tela e o processo não mudarem quando elas chegarem."""
 
-    hoje = hoje or timezone.localdate()
-    return (
-        _com_cotacao(OportunidadeSalva.objects.all())
-        .filter(_venceu_antes(hoje), tem_cotacao=True)
-        .annotate(
-            encerrada_em=F("data_encerramento_proposta"),
-            motivo=Value("prazo_cotacao", output_field=CharField()),
-        )
+    return _com_cotacao(OportunidadeSalva.objects.none()).annotate(
+        encerrada_em=F("data_encerramento_proposta"),
+        motivo=Value("", output_field=CharField()),
     )
 
 
 def descartadas(hoje: dt.date | None = None) -> OportunidadeSalvaQuerySet:
-    """As descartadas — tiradas da lista antes do prazo, ou vencidas sem
-    cotação —, anotadas com ``motivo``, ``descartada_em`` (o que veio
-    primeiro: o dia da remoção ou o prazo) e ``tem_cotacao`` (onde estava:
-    Oportunidade ou Cotação)."""
+    """As descartadas — tiradas da lista antes do prazo ou com o prazo
+    vencido, com ou sem cotação —, anotadas com ``motivo``,
+    ``descartada_em`` (o que veio primeiro: o dia da remoção ou o prazo) e
+    ``tem_cotacao`` (onde estava: Oportunidade ou Cotação)."""
 
     hoje = hoje or timezone.localdate()
     venceu = _venceu_antes(hoje)
     tirada_antes = Q(removida_em__isnull=False) & ~venceu
     return (
         _com_cotacao(OportunidadeSalva.objects.all())
-        .filter(tirada_antes | (venceu & Q(tem_cotacao=False)))
+        .filter(tirada_antes | venceu)
         .annotate(
             motivo=Case(
+                When(venceu & Q(tem_cotacao=True), then=Value("prazo_cotacao")),
                 When(venceu, then=Value("prazo_oportunidade")),
                 default=Value("descartada"),
                 output_field=CharField(),

@@ -35,8 +35,8 @@ const COTADA: EncerradaResponse = {
   salva_por: 'Vasti',
   criada_em: '2026-08-31T12:00:00Z',
   encerrada_em: '2026-09-14',
-  motivo: 'prazo_cotacao',
-  motivo_label: 'Prazo perdido na cotação',
+  motivo: 'concluido',
+  motivo_label: 'Concluída',
   cotacao_id: 2,
   valor_cotado: 351296.23,
   removida_em: null,
@@ -47,8 +47,8 @@ const SEM_COTACAO: EncerradaResponse = {
   ...COTADA,
   id: 7,
   chave: 'x-2026-1',
-  motivo: 'prazo_cotacao',
-  motivo_label: 'Prazo perdido na cotação',
+  motivo: 'perdido_disputa',
+  motivo_label: 'Perdida na disputa',
   cotacao_id: null,
   valor_cotado: null,
   removida_por: null,
@@ -100,11 +100,11 @@ describe('EncerradasPage', () => {
 
   it('pesquisar manda os filtros e volta para a primeira página', () => {
     montar();
-    pagina().filtros.patchValue({ motivo: 'prazo_cotacao', uf: 'PR' });
+    pagina().filtros.patchValue({ motivo: 'concluido', uf: 'PR' });
     pagina().pesquisar();
 
     expect(service.listar).toHaveBeenLastCalledWith(
-      expect.objectContaining({ motivo: 'prazo_cotacao', uf: 'PR', page: 1 }),
+      expect.objectContaining({ motivo: 'concluido', uf: 'PR', page: 1 }),
     );
   });
 

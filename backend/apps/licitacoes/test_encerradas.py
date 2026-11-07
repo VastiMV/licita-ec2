@@ -68,73 +68,19 @@ class Base(APITestCase):
 
 
 class EncerradasTests(Base):
-    def test_so_quem_saiu_do_ciclo_aparece_com_o_motivo(self):
-        self.salva("1", 5)  # no prazo: está no ciclo
-        self.salva("2", None)  # sem prazo publicado: nunca vence
+    """Encerradas é só quem participou do certame (disputa, empenho). Essas
+    etapas ainda não existem, então hoje ela fica vazia — tudo que saiu do
+    ciclo antes disso está em Descartadas (ver `test_descartadas.py`)."""
+
+    def test_nada_que_saiu_antes_de_participar_e_encerrada(self):
+        self.salva("1", 5).remover(por=self.user)  # tirada, sem cotação
+        cotada_tirada = self.salva("2", 5)
+        self.cotar(cotada_tirada)
+        cotada_tirada.remover(por=self.user)  # tirada, com cotação
         self.salva("3", -3)  # venceu sem cotação
-        cotada = self.salva("4", 5)
-        self.cotar(cotada)
-        self.vencer(cotada, 2)  # venceu com cotação
-        descartada = self.salva("5", 5)
-        descartada.remover(por=self.user)
-
-        linhas = self.por_sequencial(self.listar())
-
-        # Encerrada é só quem chegou a cotar. Venceu sem cotação (3) e
-        # descartada (5) estão em Descartadas.
-        self.assertEqual(sorted(linhas), ["4"])
-        self.assertEqual(linhas["4"]["motivo"], "prazo_cotacao")
-        self.assertEqual(linhas["4"]["motivo_label"], "Prazo perdido na cotação")
-        self.assertIsNotNone(linhas["4"]["cotacao_id"])
-
-    def test_descartada_antes_do_prazo_nao_aparece_nem_cotada(self):
-        cotada = self.salva("1", 5)
-        self.cotar(cotada)
-        cotada.remover(por=self.user)
-        self.salva("2", 5).remover(por=self.user)
+        self.vencida_cotada("4", 2)  # venceu com cotação
 
         self.assertEqual(self.listar()["count"], 0)
-        self.assertEqual(self.listar(motivo="descartada")["count"], 0)
-
-    def test_cotada_tirada_da_lista_depois_do_prazo_encerrou_pelo_prazo(self):
-        salva = self.vencida_cotada("1", 10)
-        salva.remover(por=self.user)
-
-        linha = self.listar()["results"][0]
-
-        self.assertEqual(linha["motivo"], "prazo_cotacao")
-        self.assertEqual(linha["encerrada_em"], str(self.hoje - dt.timedelta(days=10)))
-
-    def test_filtra_por_periodo_motivo_uf_e_busca(self):
-        self.vencida_cotada("1", 40)
-        self.vencida_cotada("2", 5, uf="RJ", objeto="Cadeira de rodas")
-        self.vencida_cotada("3", 3)
-
-        periodo = self.listar(data_inicial=str(self.hoje - dt.timedelta(days=10)))
-        self.assertEqual(sorted(self.por_sequencial(periodo)), ["2", "3"])
-
-        ate = self.listar(data_final=str(self.hoje - dt.timedelta(days=30)))
-        self.assertEqual(sorted(self.por_sequencial(ate)), ["1"])
-
-        na_cotacao = self.listar(motivo="prazo_cotacao")
-        self.assertEqual(sorted(self.por_sequencial(na_cotacao)), ["1", "2", "3"])
-
-        self.assertEqual(sorted(self.por_sequencial(self.listar(uf="rj"))), ["2"])
-
-        OportunidadeSalva.objects.filter(sequencial_compra="2").update(
-            texto_busca=montar_texto_busca("Cadeira de rodas", [])
-        )
-        self.assertEqual(sorted(self.por_sequencial(self.listar(busca="cadeira"))), ["2"])
-
-    def test_mais_recentes_primeiro_e_ordenacao_por_coluna(self):
-        self.vencida_cotada("1", 40)
-        self.vencida_cotada("2", 5)
-
-        padrao = [linha["sequencial_compra"] for linha in self.listar()["results"]]
-        self.assertEqual(padrao, ["2", "1"])
-
-        antigas = self.listar(ordering="encerrada_em")
-        self.assertEqual([linha["sequencial_compra"] for linha in antigas["results"]], ["1", "2"])
 
     def test_prazo_vencido_nao_aparece_mais_nas_salvas(self):
         self.salva("1", -1)
@@ -142,8 +88,6 @@ class EncerradasTests(Base):
         salvas = self.client.get("/api/licitacoes/salvas/")
 
         self.assertEqual(salvas.data["count"], 0)
-        # Sem cotação, vencida vai para Descartadas, não Encerradas.
-        self.assertEqual(self.listar()["count"], 0)
         self.assertEqual(self.client.get("/api/licitacoes/descartadas/").data["count"], 1)
 
 

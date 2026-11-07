@@ -41,8 +41,10 @@ import {
 /** Período que a tela abre consultando — o usuário muda antes de pesquisar. */
 const JANELA_PADRAO_DIAS = 90;
 
-const TOM_DO_MOTIVO: Record<EncerradaResponse['motivo'], TomCelula> = {
-  prazo_cotacao: 'perigo',
+const TOM_DO_MOTIVO: Partial<Record<EncerradaResponse['motivo'], TomCelula>> = {
+  desclassificada: 'perigo',
+  perdido_disputa: 'perigo',
+  falhou_empenho: 'perigo',
 };
 
 /** As chaves das colunas são contrato com `ORDENACOES_ENCERRADAS` em
@@ -73,7 +75,7 @@ const COLUNAS: readonly ColunaTabela<EncerradaResponse>[] = [
     titulo: 'Motivo',
     valor: (linha) => linha.motivo_label,
     secundario: (linha) => (linha.removida_por ? `por ${linha.removida_por}` : null),
-    tom: (linha) => TOM_DO_MOTIVO[linha.motivo],
+    tom: (linha) => TOM_DO_MOTIVO[linha.motivo] ?? null,
   },
   {
     chave: 'valor_cotado',
@@ -93,9 +95,9 @@ const COLUNAS: readonly ColunaTabela<EncerradaResponse>[] = [
 ];
 
 /**
- * "Ciclo de Licitação / Encerradas" — o que foi cotado e não seguiu: o
- * prazo de proposta venceu com a cotação feita. Tiradas da lista e vencidas
- * sem cotação ficam em Descartadas. Nada aqui é apagado:
+ * "Ciclo de Licitação / Encerradas" — só o que participou do certame
+ * (disputa, empenho). Até essas etapas existirem a lista fica vazia: tudo
+ * que saiu do ciclo antes disso está em Descartadas. Nada aqui é apagado:
  * a cotação continua consultável e o processo guarda o histórico inteiro.
  */
 @Component({

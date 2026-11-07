@@ -16,40 +16,57 @@ class DescartadasTests(Base):
         self.assertEqual(resposta.status_code, 200)
         return resposta.data
 
-    def test_tiradas_da_lista_e_vencidas_sem_cotacao(self):
-        self.salva("1", 5)  # ainda na lista
-        self.salva("2", -3)  # venceu sem cotação: Descartada
-        self.salva("3", 5).remover(por=self.user)  # tirada da lista
-        self.salva("4", None).remover(por=self.user)  # sem prazo, tirada da lista
-        tarde = self.salva("5", -10)
-        tarde.remover(por=self.user)  # venceu sem cotação, removida depois
-        cotada = self.salva("6", -2)
-        self.cotar(cotada)  # venceu COM cotação: Encerrada, não aparece aqui
+    def test_os_quatro_casos_com_o_motivo_certo(self):
+        self.salva("1", 5)  # ainda na lista: não aparece
+        self.salva("2", 5).remover(por=self.user)  # tirada, sem cotação
+        cotada_tirada = self.salva("3", 5)
+        self.cotar(cotada_tirada)
+        cotada_tirada.remover(por=self.user)  # tirada, com cotação
+        self.salva("4", -3)  # venceu sem cotação
+        cotada_vencida = self.salva("5", -2)
+        self.cotar(cotada_vencida)  # venceu com cotação
 
         linhas = self.por_sequencial(self.listar())
 
         self.assertEqual(sorted(linhas), ["2", "3", "4", "5"])
-        self.assertEqual(linhas["3"]["motivo"], "descartada")
-        self.assertEqual(linhas["3"]["motivo_label"], "Tirada da lista")
-        self.assertEqual(linhas["3"]["removida_por"], "Vasti")
-        self.assertEqual(linhas["3"]["descartada_em"], str(self.hoje))
-        self.assertEqual(linhas["3"]["estava_em"], "oportunidade")
-        self.assertEqual(linhas["2"]["motivo"], "prazo_oportunidade")
-        self.assertEqual(linhas["2"]["motivo_label"], "Prazo venceu sem cotação")
-        self.assertEqual(linhas["2"]["descartada_em"], str(self.hoje - dt.timedelta(days=3)))
-        # Removida depois do prazo: o prazo veio primeiro, é ele que conta.
-        self.assertEqual(linhas["5"]["motivo"], "prazo_oportunidade")
-        self.assertEqual(linhas["5"]["descartada_em"], str(self.hoje - dt.timedelta(days=10)))
+        self.assertEqual(
+            {seq: (linha["motivo"], linha["estava_em"]) for seq, linha in linhas.items()},
+            {
+                "2": ("descartada", "oportunidade"),
+                "3": ("descartada", "cotacao"),
+                "4": ("prazo_oportunidade", "oportunidade"),
+                "5": ("prazo_cotacao", "cotacao"),
+            },
+        )
+        self.assertEqual(linhas["2"]["motivo_label"], "Tirada da lista")
+        self.assertEqual(linhas["4"]["motivo_label"], "Prazo venceu sem cotação")
+        self.assertEqual(linhas["5"]["motivo_label"], "Prazo venceu com cotação")
+        self.assertEqual(linhas["2"]["removida_por"], "Vasti")
+        self.assertEqual(linhas["2"]["descartada_em"], str(self.hoje))
+        self.assertEqual(linhas["4"]["descartada_em"], str(self.hoje - dt.timedelta(days=3)))
+        self.assertIsNotNone(linhas["5"]["cotacao_id"])
+
+    def test_tirada_depois_do_prazo_vale_o_prazo(self):
+        salva = self.salva("1", -10)
+        salva.remover(por=self.user)
+
+        linha = self.listar()["results"][0]
+
+        self.assertEqual(linha["motivo"], "prazo_oportunidade")
+        self.assertEqual(linha["descartada_em"], str(self.hoje - dt.timedelta(days=10)))
 
     def test_filtra_por_motivo(self):
         self.salva("1", -3)
         self.salva("2", 5).remover(por=self.user)
+        cotada = self.salva("3", -2)
+        self.cotar(cotada)
 
-        prazo = self.listar(motivo="prazo_oportunidade")
-        tiradas = self.listar(motivo="descartada")
+        def motivo(m):
+            return sorted(self.por_sequencial(self.listar(motivo=m)))
 
-        self.assertEqual(sorted(self.por_sequencial(prazo)), ["1"])
-        self.assertEqual(sorted(self.por_sequencial(tiradas)), ["2"])
+        self.assertEqual(motivo("prazo_oportunidade"), ["1"])
+        self.assertEqual(motivo("descartada"), ["2"])
+        self.assertEqual(motivo("prazo_cotacao"), ["3"])
 
     def test_processo_da_vencida_sem_cotacao_explica_o_prazo(self):
         salva = self.salva("1", -3)
