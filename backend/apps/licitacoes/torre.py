@@ -74,6 +74,8 @@ FORNECEDOR_HABILITADO = "4"
 FORNECEDOR_INABILITADO = "5"
 PROPOSTA_ADJUDICADA = "6"
 
+CENTAVO = Decimal("0.01")
+
 SITUACOES_QUE_ENCERRAM = {"RE": "Revogada", "AN": "Anulada", "FR": "Fracassada", "DE": "Deserta"}
 
 
@@ -217,6 +219,8 @@ def avaliar(salva: OportunidadeSalva, hoje: dt.date) -> tuple[dict | None, Saida
             etiquetas.extend(resultado.etiquetas)
             valor = _valor_unitario(item)
             total = valor * item.quantidade if valor is not None and item.quantidade is not None else valor
+            if total is not None:
+                total = total.quantize(CENTAVO)
             cartoes_itens.append(
                 {
                     "numero": item.numero_item,

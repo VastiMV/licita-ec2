@@ -90,7 +90,8 @@ garantida.
 - [x] Testes de cada regra antes do código (casos reais: 61, 56, 112, 201, 55) — `test_torre.py`
 
 ### Passo 2 — depois da homologação, sozinho
-- [ ] Sincronia diária (8h, Celery beat) do **PNCP** por CNPJ das Empresas: resultados homologados, contratos, atas. Cria a salva se ainda não existir
+- [x] Sincronia diária (8h, Celery beat) do **PNCP** por CNPJ das Empresas: resultados homologados e atas. Cria a salva se ainda não existir (`sincronia_pncp.py`, `manage.py sincronizar_pncp`). Conferida contra a API real em 07/11/2026: 18 itens e as 2 compras homologadas (IBAMA 112/2026, UFVJM 201/2026)
+- [ ] Contratos no PNCP: o módulo de contratos está instável (Comunicado nº 18/26) e ainda não há contrato real da empresa para conferir o formato. Até lá, lançamento manual
 - [ ] Sincronia diária do **Portal da Transparência** (federal): empenho, liquidação, pagamento. Liga ao processo pelo número do processo e pela observação; o que não ligar fica para escolha manual
 - [ ] Chave do Portal da Transparência na configuração do servidor (nunca no código)
 - [ ] Prazo de validade da proposta (Lei 14.133, art. 90, §3º) e lembrete de cobrança por dias parados
@@ -116,3 +117,15 @@ garantida.
 - Mapa etapa → fonte, com o que já foi confirmado: `estudo-de-caso-inside-solutions.md` (fora do repositório)
 - Fluxograma das fases e protótipo da Torre: artefatos "Fases do Compras.gov" e "Licita v1.0"
 - Códigos do Compras.gov: `comprasnet-fase-externa/v1/enums` (público)
+
+## Depois do deploy
+
+Para trazer as vitórias na hora, sem esperar as 8h do dia seguinte (no EC2):
+
+```bash
+cd /opt/licita && sudo docker compose exec backend python manage.py sincronizar_pncp
+```
+
+A API de Dados Abertos aceita no máximo 365 dias por consulta; o cliente
+divide o período sozinho.
+

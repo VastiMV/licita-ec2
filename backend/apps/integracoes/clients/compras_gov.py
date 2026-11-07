@@ -20,6 +20,7 @@ especificação OpenAPI real da API (`api-spec.json` no branch do protótipo).
 
 from __future__ import annotations
 
+import datetime as dt
 import json
 import unicodedata
 from typing import Any
@@ -31,6 +32,9 @@ from config.settings.environment import env
 # A API rejeita paginação fora desta faixa com HTTP 400.
 TAMANHO_PAGINA_MIN = 10
 TAMANHO_PAGINA_MAX = 500
+
+# Intervalo máximo de datas que os módulos aceitam numa consulta.
+PERIODO_MAX_DIAS = 365
 
 
 def _pagina_valida(tamanho: int) -> int:
@@ -180,6 +184,74 @@ class ComprasGovClient:
         )
         resultado = payload.get("resultado") or []
         return _normalizar_contratacao(resultado[0]) if resultado else None
+
+    def _paginar(self, caminho: str, params: dict[str, Any]) -> list[dict[str, Any]]:
+        """Todas as páginas de uma consulta. O módulo responde **404** quando
+        não há nada no filtro (e às vezes em instabilidade, ver o Comunicado
+        nº 18/26): para quem lê, é lista vazia, não erro."""
+
+        registros: list[dict[str, Any]] = []
+        pagina = 1
+        while True:
+            try:
+                payload = self._get(caminho, {**params, "pagina": pagina, "tamanhoPagina": TAMANHO_PAGINA_MAX})
+            except ComprasGovClientError as exc:
+                if " 404 " in str(exc):
+                    return registros
+                raise
+            registros.extend(payload.get("resultado") or [])
+            if not payload.get("paginasRestantes"):
+                return registros
+            pagina += 1
+
+    def _paginar_por_periodo(
+        self,
+        caminho: str,
+        params: dict[str, Any],
+        nomes: tuple[str, str],
+        inicio: str,
+        fim: str,
+    ) -> list[dict[str, Any]]:
+        """Como `_paginar`, mas quebrando o período em pedaços de até
+        `PERIODO_MAX_DIAS`: a API responde 400 ("Período inicial e final maior
+        que 365 dias") a um intervalo maior."""
+
+        de = dt.date.fromisoformat(inicio)
+        ate = dt.date.fromisoformat(fim)
+        registros: list[dict[str, Any]] = []
+        while de <= ate:
+            fim_do_pedaco = min(ate, de + dt.timedelta(days=PERIODO_MAX_DIAS - 1))
+            registros.extend(
+                self._paginar(caminho, {**params, nomes[0]: de.isoformat(), nomes[1]: fim_do_pedaco.isoformat()})
+            )
+            de = fim_do_pedaco + dt.timedelta(days=1)
+        return registros
+
+    def resultados_do_fornecedor(self, ni_fornecedor: str, inicio: str, fim: str) -> list[dict[str, Any]]:
+        """Itens homologados para o fornecedor (CNPJ só dígitos) entre `inicio`
+        e `fim` (AAAA-MM-DD, data do resultado no PNCP). Cada registro traz
+        `idContratacaoPNCP` ("cnpj-1-sequencial/ano"), a chave da compra."""
+
+        return self._paginar_por_periodo(
+            "/modulo-contratacoes/3_consultarResultadoItensContratacoes_PNCP_14133",
+            {"niFornecedor": ni_fornecedor},
+            ("dataResultadoPncpInicial", "dataResultadoPncpFinal"),
+            inicio,
+            fim,
+        )
+
+    def itens_de_ata_do_fornecedor(self, ni_fornecedor: str, inicio: str, fim: str) -> list[dict[str, Any]]:
+        """Itens de atas de registro de preços do fornecedor com vigência
+        iniciada entre `inicio` e `fim`. Traz vigência, quantidade homologada
+        e **quantidade já empenhada** — o saldo da ata."""
+
+        return self._paginar_por_periodo(
+            "/modulo-arp/2_consultarARPItem",
+            {"niFornecedor": ni_fornecedor},
+            ("dataVigenciaInicialMin", "dataVigenciaInicialMax"),
+            inicio,
+            fim,
+        )
 
     def listar_itens(self, id_compra: str) -> list[dict[str, Any]]:
         """Lista os itens de uma contratação — o que efetivamente é precificado."""

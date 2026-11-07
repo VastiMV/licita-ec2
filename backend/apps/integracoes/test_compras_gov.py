@@ -215,3 +215,72 @@ class ComprasGovClientTests(SimpleTestCase):
         self.assertEqual(capturado["params"]["codigoPdm"], "999")
         self.assertEqual(capturado["params"]["dataInclusaoPncpInicial"], "2026-07-01")
         self.assertEqual(itens[0]["id_compra"], "X")
+
+
+class ResultadosEAtasDoFornecedorTests(SimpleTestCase):
+    """Os dois métodos da sincronia com o PNCP (apps/licitacoes/sincronia_pncp.py)."""
+
+    def test_resultados_percorre_todas_as_paginas_com_o_cnpj_e_as_datas(self):
+        paginas = []
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            params = dict(request.url.params)
+            params["caminho"] = request.url.path
+            paginas.append(params)
+            pagina = int(params["pagina"])
+            return httpx.Response(
+                200,
+                json={"resultado": [{"numeroItemPncp": pagina}], "paginasRestantes": 2 - pagina},
+            )
+
+        with _client_falso(handler) as client:
+            registros = client.resultados_do_fornecedor("22015414000127", "2025-11-08", "2026-11-07")
+
+        self.assertEqual([r["numeroItemPncp"] for r in registros], [1, 2])
+        self.assertEqual(paginas[0]["niFornecedor"], "22015414000127")
+        self.assertEqual(paginas[0]["dataResultadoPncpInicial"], "2025-11-08")
+        self.assertEqual(paginas[0]["dataResultadoPncpFinal"], "2026-11-07")
+        self.assertEqual(paginas[0]["caminho"], "/modulo-contratacoes/3_consultarResultadoItensContratacoes_PNCP_14133")
+
+    def test_404_do_modulo_e_lista_vazia_e_nao_erro(self):
+        def handler(request: httpx.Request) -> httpx.Response:
+            return httpx.Response(404, json={"statusCode": 404, "message": "Resource not found"})
+
+        with _client_falso(handler) as client:
+            self.assertEqual(client.itens_de_ata_do_fornecedor("22015414000127", "2025-11-08", "2026-11-07"), [])
+
+    def test_atas_usam_o_modulo_arp_com_vigencia(self):
+        capturado = {}
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            capturado["caminho"] = request.url.path
+            capturado["params"] = dict(request.url.params)
+            return httpx.Response(200, json={"resultado": [], "paginasRestantes": 0})
+
+        with _client_falso(handler) as client:
+            client.itens_de_ata_do_fornecedor("22015414000127", "2025-11-08", "2026-11-07")
+
+        self.assertEqual(capturado["caminho"], "/modulo-arp/2_consultarARPItem")
+        self.assertEqual(capturado["params"]["dataVigenciaInicialMin"], "2025-11-08")
+        self.assertEqual(capturado["params"]["dataVigenciaInicialMax"], "2026-11-07")
+
+    def test_outro_erro_continua_sendo_erro(self):
+        def handler(request: httpx.Request) -> httpx.Response:
+            return httpx.Response(500, text="falhou")
+
+        with _client_falso(handler) as client, self.assertRaises(ComprasGovClientError):
+            client.resultados_do_fornecedor("22015414000127", "2025-11-08", "2026-11-07")
+
+    def test_periodo_maior_que_365_dias_vira_varias_consultas(self):
+        periodos = []
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            params = dict(request.url.params)
+            periodos.append((params["dataResultadoPncpInicial"], params["dataResultadoPncpFinal"]))
+            return httpx.Response(200, json={"resultado": [{"x": len(periodos)}], "paginasRestantes": 0})
+
+        with _client_falso(handler) as client:
+            registros = client.resultados_do_fornecedor("22015414000127", "2025-10-03", "2026-11-07")
+
+        self.assertEqual(periodos, [("2025-10-03", "2026-10-02"), ("2026-10-03", "2026-11-07")])
+        self.assertEqual(len(registros), 2)
