@@ -43,6 +43,10 @@ import {
 /** Período que a tela abre consultando — o usuário muda antes de pesquisar. */
 const JANELA_PADRAO_DIAS = 90;
 
+/** Valores especiais do campo Período (os outros são meses `aaaa-mm`). */
+const PADRAO = 'ultimos';
+const PERSONALIZADO = 'datas';
+
 export const ROTULO_ETAPA: Record<EtapaDescarte, string> = {
   oportunidade: 'Oportunidade',
   cotacao: 'Cotação',
@@ -170,12 +174,19 @@ export class DescartadasPage implements OnInit {
 
   protected readonly colunas = COLUNAS;
   protected readonly motivos = MOTIVOS_DESCARTE;
-  protected readonly meses = ultimosMeses(hojeIso());
+  /** Um campo só para o período — mantém os filtros numa linha. "Escolher
+   * datas…" é o único que mostra o "de"/"até". */
+  protected readonly periodos = [
+    { value: PADRAO, label: `Últimos ${JANELA_PADRAO_DIAS} dias` },
+    ...ultimosMeses(hojeIso()),
+    { value: PERSONALIZADO, label: 'Escolher datas…' },
+  ];
+  protected readonly escolhendoDatas = signal(false);
   protected readonly ufs = UFS;
 
   protected readonly filtros = this.fb.nonNullable.group({
-    /** Atalho: escolher um mês preenche "de" e "até". Não vai para a API. */
-    mes: '',
+    /** Escolha da tela que preenche "de" e "até". Não vai para a API. */
+    periodo: PADRAO,
     data_inicial: somarDias(hojeIso(), -JANELA_PADRAO_DIAS),
     data_final: hojeIso(),
     motivo: '',
@@ -184,10 +195,17 @@ export class DescartadasPage implements OnInit {
   });
 
   constructor() {
-    this.filtros.controls.mes.valueChanges.pipe(takeUntilDestroyed()).subscribe((mes) => {
-      if (!mes) return;
-      const { inicio, fim } = limitesDoMes(mes);
-      this.filtros.patchValue({ data_inicial: inicio, data_final: fim });
+    this.filtros.controls.periodo.valueChanges.pipe(takeUntilDestroyed()).subscribe((periodo) => {
+      this.escolhendoDatas.set(periodo === PERSONALIZADO);
+      if (periodo === PADRAO) {
+        this.filtros.patchValue({
+          data_inicial: somarDias(hojeIso(), -JANELA_PADRAO_DIAS),
+          data_final: hojeIso(),
+        });
+      } else if (periodo !== PERSONALIZADO) {
+        const { inicio, fim } = limitesDoMes(periodo);
+        this.filtros.patchValue({ data_inicial: inicio, data_final: fim });
+      }
     });
   }
 
@@ -250,7 +268,7 @@ export class DescartadasPage implements OnInit {
 
   private carregar(): void {
     const estado = this.estado();
-    const { mes: _mes, ...filtros } = this.filtros.getRawValue();
+    const { periodo: _periodo, ...filtros } = this.filtros.getRawValue();
     this.carregando.set(true);
     this.erro.set(false);
 

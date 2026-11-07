@@ -128,16 +128,27 @@ describe('DescartadasPage', () => {
     );
   });
 
-  it('escolher um mês preenche "de" e "até" e o mês não vai para a API', () => {
+  it('escolher um mês no Período manda o mês inteiro, e o Período não vai para a API', () => {
     montar();
-    pagina().filtros.patchValue({ mes: '2026-02' });
+    pagina().filtros.patchValue({ periodo: '2026-02' });
     pagina().pesquisar();
 
     const params = service.descartadas.mock.lastCall![0];
     expect(params).toEqual(
       expect.objectContaining({ data_inicial: '2026-02-01', data_final: '2026-02-28' }),
     );
-    expect(params).not.toHaveProperty('mes');
+    expect(params).not.toHaveProperty('periodo');
+  });
+
+  it('"de" e "até" só aparecem em "Escolher datas…"', () => {
+    montar();
+    const datas = () => fixture.debugElement.queryAll(By.css('app-date-picker')).length;
+    expect(datas()).toBe(0);
+
+    pagina().filtros.patchValue({ periodo: 'datas' });
+    fixture.detectChanges();
+
+    expect(datas()).toBe(2);
   });
 
   it('motivo é texto normal, sem destaque em vermelho', () => {
