@@ -42,7 +42,7 @@ export class TorreAcoesService {
     }
     if (cartao.cotacao_id !== null && cartao.salva) return this.cotar(cartao);
     if (cartao.link_plataforma) {
-      window.open(cartao.link_plataforma, '_blank', 'noopener');
+      abrirNoCompras(cartao.link_plataforma);
       return of(false);
     }
     return EMPTY;
@@ -58,4 +58,18 @@ export class TorreAcoesService {
       .abrir<unknown, CotadorModalData>(CotadorModalComponent, dados)
       .pipe(concatMap(() => of(true)));
   }
+}
+
+/**
+ * Abre a compra no Compras.gov. A sessão de lá vale **por aba**: uma aba nova
+ * cai no login. Com a Sentinela no Chrome (ela marca a página com
+ * `data-sentinela`), quem abre é ela, numa cópia da aba já logada — a aba
+ * original não é tocada. Sem Sentinela, aba nova como antes.
+ */
+export function abrirNoCompras(url: string): void {
+  if (document.documentElement.dataset['sentinela']) {
+    window.postMessage({ licita: true, tipo: 'abrir_no_compras', url }, location.origin);
+    return;
+  }
+  window.open(url, '_blank', 'noopener');
 }

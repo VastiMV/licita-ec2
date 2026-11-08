@@ -22,6 +22,12 @@ Plano, limites e o que cada endereço do Compras.gov traz:
 a cada minuto, tem o botão ↻ (atualizar agora) e mostra a hora da última
 atualização — antes ele lia uma vez só, ao abrir a compra.
 
+**0.1.3 (08/11/2026):** o "Abrir" da Torre abre a compra numa **cópia da aba
+do Compras.gov que já está logada** — a sessão do Compras.gov vale por aba,
+e uma aba nova cairia no login. A aba original não é tocada. Sem Sentinela,
+o Licita abre aba nova como antes (`licita.js` marca a página do Licita com
+`data-sentinela`; `abrirNoCompras` em `torre-acoes.service.ts`).
+
 ## O que ela nunca faz
 
 - Resolver, gerar ou burlar captcha.
