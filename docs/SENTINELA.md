@@ -38,6 +38,15 @@ Construída em 08/11/2026. Código da extensão em [`sentinela/`](../sentinela/)
 - A sessão vive na **aba** do Compras.gov (token da página, não cookie):
   precisa de uma aba aberta e logada — uma só, não uma por licitação.
 
+**Em uso desde 08/11/2026** no PC do Carlinhos (endereço do Licita **sem**
+`www`: o `www.` redireciona e o Chrome troca o POST por GET → 405).
+
+**Pedido em aberto (08/11/2026):** "desfavoritar" a compra no Compras.gov
+quando ele descarta no Licita. Seria a **primeira escrita** da Sentinela no
+Compras.gov — só com o clique dele, uma compra por vez, e só depois de um HAR
+mostrando o endereço que o próprio Compras.gov usa. Ver "Onde paramos" em
+`Tarefas/feat-torre-de-controle.md`.
+
 **Ainda não feito:** ler a caixa de mensagens sozinha a cada 3 min; avisar
 quando o lance digitado ficar abaixo do piso (precisa ver a tela real de
 disputa); Telegram; o sino com as mensagens.

@@ -3,37 +3,50 @@
 > **Como funciona hoje:** [`docs/TORRE.md`](../TORRE.md). Este arquivo é o
 > plano: o que foi feito e o que falta.
 
-## Onde paramos (08/11/2026)
+## Onde paramos (08/11/2026, fim do dia)
 
-- **No ar:** Passos 0, 1, 2 e 4. A Torre é a tela inicial, com o visual do
-  protótipo. PNCP (8h) e Portal da Transparência (8h10) rodam sozinhos.
-- **Depois do deploy de 08/11, falta fazer no servidor** (uma vez):
-  1. Pôr `PORTAL_TRANSPARENCIA_CHAVE` no `/opt/licita/.env` e reiniciar
-     `backend worker beat` (`deploy/ec2/README.md`, "Sincronias diárias").
-  2. Rodar `sincronizar_pncp` e `sincronizar_transparencia` à mão para
-     trazer as vitórias na hora.
-- **Próximo:** Passo 5 (Sentinela beta) — combinado com a dona para logo
-  depois desta versão. Depois o Passo 3 (Telegram), que depende dela.
-- **Esperando a operação:** o modelo atualizado do PDF da proposta (vai
-  virar ação dentro de Julgamento).
+**No ar** (`https://insidelicitacoes.com.br`):
+- Torre de Controle com o visual do protótipo v2; Homologado em Contratar.
+- Sincronias do PNCP (8h) e do Portal da Transparência (8h10), de segunda a
+  sexta. Chave do Portal no `.env`; Empresa com o CNPJ certo cadastrada.
+- **Sentinela beta 0.1 instalada no PC do Carlinhos** e funcionando
+  (endereço **sem** `www`). Trouxe as participações reais na primeira leitura.
 
-Decisões (07/11/2026, com a operação):
+**Falta o Carlinhos fazer:** abrir os **"Meus itens"** de cada compra que já
+passou da sessão (56, 55, 59, 61). Até lá elas ficam em Aguardando
+julgamento com o aviso "abrir “meus itens” no Compras.gov".
 
-- **Torre de Controle** substitui o nome "Ciclo de Licitação". O quadro tem
-  **4 estágios** lado a lado, cada um com as suas **etapas**; o menu mostra
-  as 13 etapas, cada uma abre a lista daquela etapa.
-- **A etapa continua calculada, nunca gravada** (mesma regra de `ciclo.py`).
-  O que muda são as entradas: além de cotação e proposta, passam a contar a
-  **participação no Compras.gov** (por item), o **PNCP** e o **Portal da
-  Transparência**.
-- **A etapa é do item.** O cartão da licitação fica na etapa do item da
-  empresa que está mais adiante, e mostra a etapa de cada item.
-- **O PDF da proposta deixa de ser etapa.** É a **proposta ajustada**, pedida
-  depois de ganhar (convocação de anexo): uma ação dentro de Julgamento.
-- **Construir ao lado.** A tela atual continua funcionando até a Torre ser
-  aprovada. Migrações só **acrescentam**; nada é apagado nesta feat.
-- **Deploy direto em produção**, em passos pequenos, nunca em dia ou hora de
-  sessão. O `atualizar.sh` faz backup do banco antes de cada deploy.
+**Decisões em aberto (perguntar à operação antes de fazer):**
+1. **Origem no card** — etiqueta "Licita", "Compras.gov" ou "PNCP". O
+   Carlinhos não sabe de onde veio cada card. (Proposto; não confirmado.)
+2. **Lixeirinha** nos cards de Preparar e Disputar, com confirmação. Proposto:
+   Preparar → Descartadas ("Descartada por …"); Disputar → Encerradas
+   ("Desistiu"), exceto sem proposta (→ Descartadas). **Falta confirmar** o
+   destino em Disputar.
+   - Junto: **a Sentinela não pode recriar o que foi descartado.** Hoje
+     `ingestao._salva_da_compra` só procura entre as ativas: uma compra tirada
+     da lista volta na próxima leitura de participações. Corrigir antes da
+     lixeirinha.
+3. **Desfavoritar no Compras.gov** pela Sentinela — seria a primeira escrita
+   dela no Compras.gov: só com o clique dele, uma compra por vez. Precisa de
+   um HAR (sanitized) do Carlinhos desfavoritando **uma** compra, para saber o
+   endereço. Desfavoritar não retira proposta.
+4. **Regra de Cadastro de proposta** — proposto: compra nas participações,
+   sessão ainda não aberta e prazo não vencido → Cadastro de proposta (hoje
+   cai em Oportunidade/Cotação porque "meus itens" só existe depois da
+   sessão). **Falta confirmar.** Mudar `torre.avaliar` e `encerradas.py`
+   juntos (`test_saidas.py`).
+5. A mensagem da operação cortou em "E as oportunidades que ele…" — perguntar
+   o resto.
+6. Guarulhos: o card mostra **Pregão 461/2026** (prazo 09/11); a disputa de
+   terça é o **387/2026**. Conferir se são duas compras diferentes.
+
+**Próximo (combinado):** a Sentinela ler **sozinha**, a cada 3 min, a caixa
+de mensagens (sem captcha) → sino → Telegram. Depois, aviso de lance abaixo
+do piso (precisa de um HAR da tela real de disputa — a do 387, terça 9h).
+
+**Antes de terça (387, Guarulhos):** cotação salva no Cotador, senão a camada
+de disputa mostra "Sem cotação".
 
 ## Estágios e etapas
 
