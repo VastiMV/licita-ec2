@@ -36,7 +36,12 @@
               ><b>{{ etapa.total }}</b>
             </a>
             @for (cartao of cartoesDa(etapa.chave); track cartao.id) {
-              <app-torre-cartao [cartao]="cartao" [semEtapa]="true" (abrir)="abrir($event)" />
+              <app-torre-cartao
+                [cartao]="cartao"
+                [semEtapa]="true"
+                (abrir)="abrir($event)"
+                (descartar)="descartar($event)"
+              />
             } @empty {
               <p class="vazio">Nenhuma aqui.</p>
             }

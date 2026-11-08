@@ -370,12 +370,16 @@ class DescartadaSerializer(OportunidadeSalvaSerializer):
     valor_cotado = serializers.SerializerMethodField()
     removida_em = serializers.DateTimeField(read_only=True)
     removida_por = serializers.SerializerMethodField()
+    # Lixeira: "Descartada manualmente por Carlinhos em 09/11/2026, na etapa
+    # Aguardando julgamento. Tinha preço no item 2 (…)". Vazio nos outros motivos.
+    motivo_detalhe = serializers.SerializerMethodField()
 
     class Meta(OportunidadeSalvaSerializer.Meta):
         fields = OportunidadeSalvaSerializer.Meta.fields + [
             "descartada_em",
             "motivo",
             "motivo_label",
+            "motivo_detalhe",
             "estava_em",
             "cotacao_id",
             "valor_cotado",
@@ -390,6 +394,11 @@ class DescartadaSerializer(OportunidadeSalvaSerializer):
         from .encerradas import MOTIVOS_DESCARTE
 
         return MOTIVOS_DESCARTE[obj.motivo]
+
+    def get_motivo_detalhe(self, obj: OportunidadeSalva) -> str:
+        if obj.motivo != "descartada_manual":
+            return ""
+        return getattr(obj, "motivo_detalhe", "") or ""
 
     def get_estava_em(self, obj: OportunidadeSalva) -> str:
         return "cotacao" if obj.tem_cotacao else "oportunidade"

@@ -4,6 +4,7 @@
 // ex.: convocação em andamento), amarela (aviso, ex.: recurso aberto).
 // A etiqueta embaixo diz o porquê — a cor nunca é a única pista.
 .cartao {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
@@ -155,4 +156,41 @@
     background: var(--color-danger-bg);
     color: var(--color-danger);
   }
+}
+
+// A lixeira: pequena, no canto, sem competir com o conteúdo do cartão.
+.lixeira {
+  appearance: none;
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--color-muted);
+  cursor: pointer;
+
+  app-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  &:hover {
+    border-color: var(--color-danger);
+    color: var(--color-danger);
+    background: var(--color-danger-bg);
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+// O texto do cartão não passa por baixo da lixeira.
+.cartao-abrir {
+  padding-right: 28px;
 }

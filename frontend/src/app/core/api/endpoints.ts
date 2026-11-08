@@ -30,6 +30,8 @@ export const ENDPOINTS = {
     /** Tiradas da lista antes do prazo — tela própria, fora de Encerradas. */
     descartadas: 'licitacoes/descartadas/',
     salva: (id: number) => `licitacoes/salvas/${id}/`,
+    /** A lixeira da Torre: GET a pergunta, POST descarta. */
+    salvaDescartar: (id: number) => `licitacoes/salvas/${id}/descartar/`,
     /** Histórico cru de uma salva (o log). */
     salvaEventos: (id: number) => `licitacoes/salvas/${id}/eventos/`,
     /** A história no formato do modal do processo: etapa de cada evento,

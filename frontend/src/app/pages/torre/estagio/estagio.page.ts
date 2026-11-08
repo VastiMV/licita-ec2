@@ -6,6 +6,7 @@ import { map } from 'rxjs';
 
 import { CartaoTorre, TorreResponse } from '../../../contracts/licitacoes/torre.contracts';
 import { TorreService } from '../../../services/licitacoes/torre.service';
+import { ContagemDoMenuService } from '../../../layout/sidebar/contagem-do-menu.service';
 import { TorreAcoesService } from '../torre-acoes.service';
 import { TorreCartaoComponent } from '../torre-cartao/torre-cartao.component';
 import { rotaDaEtapa, rotaDoEstagio } from '../torre.utils';
@@ -26,6 +27,7 @@ import { rotaDaEtapa, rotaDoEstagio } from '../torre.utils';
 export class EstagioPage implements OnInit {
   private readonly servico = inject(TorreService);
   private readonly acoes = inject(TorreAcoesService);
+  private readonly contagens = inject(ContagemDoMenuService);
 
   protected readonly chave = toSignal(
     inject(ActivatedRoute).paramMap.pipe(map((params) => params.get('estagio') ?? '')),
@@ -71,6 +73,14 @@ export class EstagioPage implements OnInit {
 
   protected cartoesDa(etapa: string): readonly CartaoTorre[] {
     return this.estagio()?.cartoes.filter((c) => c.etapa === etapa) ?? [];
+  }
+
+  protected descartar(cartao: CartaoTorre): void {
+    this.acoes.descartar(cartao).subscribe((recarregar) => {
+      if (!recarregar) return;
+      this.carregar();
+      this.contagens.atualizar();
+    });
   }
 
   protected abrir(cartao: CartaoTorre): void {

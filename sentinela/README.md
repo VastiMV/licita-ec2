@@ -1,4 +1,4 @@
-# Sentinela — a extensão do Chrome (beta 0.1)
+# Sentinela — a extensão do Chrome (beta 0.2)
 
 Lê o Compras.gov.br **na sessão do próprio Carlinhos** e manda para o Licita.
 Plano, limites e o que cada endereço do Compras.gov traz:
@@ -18,12 +18,22 @@ Plano, limites e o que cada endereço do Compras.gov traz:
    aba do Compras.gov aberta). O botão "Sentinela" do topo do Licita fica
    verde, âmbar ou vermelho.
 
+4. **Ronda (0.2).** A cada 10 minutos, em dia útil das 8h às 18h, confere
+   sozinha, na aba do Compras.gov, a proposta, o **recurso** e as diligências
+   de cada item em que vocês têm preço — só telas sem captcha. Botão "Fazer a
+   ronda agora" nas opções.
+5. **Tarefas (0.2).** Quando alguém descarta uma licitação pela lixeira do
+   Licita, ela tira o favorito no Compras.gov (em até 1 minuto, com a aba
+   aberta).
+
 ## O que ela nunca faz
 
 - Resolver, gerar ou burlar captcha.
 - Guardar senha (gov.br ou Compras.gov).
-- Enviar qualquer coisa ao Compras.gov (lance, proposta, anexo).
-- Ler token de login: ela só copia respostas que a página já recebeu.
+- Enviar lance, proposta ou anexo ao Compras.gov. A única escrita é **tirar o
+  favorito** de uma compra que alguém descartou no Licita.
+- Guardar a sessão: ela usa a sessão **da aba**, só na memória, do mesmo
+  jeito que a página; nunca grava, nunca manda ao Licita.
 
 ## Instalar (no computador do Carlinhos)
 
@@ -57,13 +67,13 @@ no ícone de recarregar da Sentinela.
 
 ## Para quem mexe no código
 
-| Arquivo | O que faz |
-|---|---|
-| `pagina.js` | roda dentro da página do Compras.gov; copia as respostas que interessam (e avisa se a renovação da sessão falhar) |
-| `ponte.js` | leva o que a página copiou até o fundo da extensão |
-| `fundo.js` | manda ao Licita (`/api/sentinela/captura/`, `pulso/`, `camada/<código>/`) com a chave |
-| `camada.js`, `camada.css` | o painel da camada de disputa |
-| `opcoes.html`, `opcoes.js` | endereço do Licita, chave, teste de conexão |
+| Arquivo                    | O que faz                                                                                                         |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `pagina.js`                | roda dentro da página do Compras.gov; copia as respostas que interessam (e avisa se a renovação da sessão falhar) |
+| `ponte.js`                 | leva o que a página copiou até o fundo da extensão                                                                |
+| `fundo.js`                 | manda ao Licita (`/api/sentinela/captura/`, `pulso/`, `camada/<código>/`) com a chave                             |
+| `camada.js`, `camada.css`  | o painel da camada de disputa                                                                                     |
+| `opcoes.html`, `opcoes.js` | endereço do Licita, chave, teste de conexão                                                                       |
 
 **Toda a interpretação mora no backend** (`backend/apps/sentinela/ingestao.py`),
 testada com respostas reais (`backend/apps/sentinela/exemplos/`). Se o

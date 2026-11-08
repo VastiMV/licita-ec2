@@ -91,6 +91,25 @@ export interface EstagioDaTorre {
   readonly cartoes: readonly CartaoTorre[];
 }
 
+/** O que a lixeira mostra antes de confirmar (`GET salvas/<id>/descartar/`). */
+export interface DescarteResumo {
+  readonly etapa: EtapaTorre | null;
+  readonly etapa_rotulo: string;
+  /** A Sentinela já leu os itens desta compra? */
+  readonly conferido: boolean;
+  readonly itens_com_preco: readonly {
+    readonly numero: string;
+    readonly descricao: string;
+    readonly marca: string;
+    readonly valor: string | null;
+    readonly classificacao: number | null;
+  }[];
+  /** Pronta para mostrar: "Você tem preço cadastrado no item 2 (…). Deseja prosseguir?" */
+  readonly pergunta: string;
+  /** Compra do Compras.gov: a Sentinela vai tirar o favorito. */
+  readonly tira_favorito: boolean;
+}
+
 export interface TorreResponse {
   readonly hoje: string;
   readonly estagios: readonly EstagioDaTorre[];

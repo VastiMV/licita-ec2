@@ -16,7 +16,8 @@ from .autenticacao import ChaveDaSentinela
 from .camada import numeros_da_compra
 from .estado import estado_atual
 from .ingestao import CapturaInvalida, receber
-from .models import Pulso
+from .models import Pulso, Tarefa
+from .ronda import consultas
 
 logger = logging.getLogger(__name__)
 
@@ -70,6 +71,36 @@ class CamadaView(_DaExtensao):
         if numeros is None:
             return Response({"compra": codigo, "conhecida": False, "itens": []})
         return Response({"conhecida": True, **numeros})
+
+
+class TarefasView(_DaExtensao):
+    """`GET tarefas/` — o que o Licita pediu (hoje: tirar favoritos)."""
+
+    def get(self, request):
+        pendentes = Tarefa.objects.filter(estado=Tarefa.Estado.PENDENTE)[:20]
+        return Response([{"id": t.pk, "tipo": t.tipo, "compra": t.compra} for t in pendentes])
+
+
+class TarefaView(_DaExtensao):
+    """`POST tarefas/<id>/` — `{"ok": true|false, "detalhe": "..."}`."""
+
+    def post(self, request, pk: int):
+        from django.shortcuts import get_object_or_404
+        from django.utils import timezone
+
+        tarefa = get_object_or_404(Tarefa, pk=pk)
+        tarefa.estado = Tarefa.Estado.FEITA if request.data.get("ok") else Tarefa.Estado.ERRO
+        tarefa.resultado = str(request.data.get("detalhe") or "")[:255]
+        tarefa.feita_em = timezone.now()
+        tarefa.save(update_fields=["estado", "resultado", "feita_em"])
+        return Response({"ok": True})
+
+
+class RondaView(_DaExtensao):
+    """`GET ronda/` — os endereços (sem captcha) que a Sentinela consulta sozinha."""
+
+    def get(self, request):
+        return Response({"consultas": consultas()})
 
 
 class EstadoView(APIView):

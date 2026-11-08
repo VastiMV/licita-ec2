@@ -1,0 +1,36 @@
+{
+ "url": "https://cnetmobile.estaleiro.serpro.gov.br/comprasnet-fase-externa/v1/compras/92667005000562026/itens/22/fase-recursal-fornecedor/1",
+ "dados": {
+  "numeroSessaoJulgHab": 1,
+  "prazos": {
+   "dataHoraLimiteIRJulgamento": "2026-09-23T14:58:03.741118",
+   "dataHoraLimiteIRHabilitacao": "2026-10-01T15:37:55.954092",
+   "dataHoraLimiteRecurso": "2026-10-06T23:59:59",
+   "dataHoraLimiteContrarrazao": "2026-10-09T23:59:59",
+   "dataHoraLimiteDecisao": "2026-10-30T23:59:59"
+  },
+  "julgHabEncerrada": true,
+  "participacoes": [
+   {
+    "identificacaoParticipante": "42418039000173",
+    "nomeParticipante": "BRAVA SUL COMERCIO DE EQUIPAMENTOS DE ESCRITORIO LTDA",
+    "tipoParticipante": "J",
+    "situacaoCadastroRecurso": "C",
+    "nomeAnexo": "RECURSO - ITEM 22 - BRAVA SUL.pdf",
+    "dataHoraCadastro": "2026-10-05T11:54:58.358864"
+   }
+  ],
+  "decisao": {
+   "fundamentacao": "Decisão n.º 67/2026 - PMDF/DSAP/DPGC/SP/SSSPFE/NPL\n\nBrasília-DF, 13 de outubro de 2026.\n\nAssunto: Decisão sobre a interposição de Recurso Administrativo nos autos do Pregão Eletrônico 56/2026.\n\nReferência: Razões da empresa BRAVA SUL COMERCIO DE EQUIPAMENTOS DE ESCRITORIO LTDA (216308775).\n\n \n\nINTRO […]",
+   "situacao": "N",
+   "dataHora": "2026-10-13T15:40:33.419966",
+   "responsavel": "FABRICIO DE ARAUJO SILVA"
+  },
+  "revisaoDecisao": {
+   "fundamentacao": "1. RELATÓRIO\nA empresa BRAVA SUL interpôs recurso administrativo contra a aceitação da proposta da\nINSIDE SOLUTIONS LTDA para o Item 22 (Multiestação de Musculação, marca MOVEMENT, modelo\nW2). Alega que o equipamento não possui a funcionalidade de leg extension, exigida no Termo de\nReferência. Reque […]",
+   "situacao": "M",
+   "dataHora": "2026-10-26T16:33:00.292794",
+   "responsavel": "SINESIO SILVA SOUZA"
+  }
+ }
+}

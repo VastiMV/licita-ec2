@@ -148,10 +148,11 @@ def etapa_do_item(item, documentos, entregas, hoje: dt.date) -> EtapaDoItem:
             item.recurso_ate is not None and item.recurso_ate >= hoje
         )
         if recurso_aberto:
+            # Recurso é vermelho (pedido da operação, 08/11/2026).
             etiqueta = (
-                Etiqueta("aviso", f"recurso até {item.recurso_ate:%d/%m}")
+                Etiqueta("alerta", f"recurso até {item.recurso_ate:%d/%m}")
                 if item.recurso_ate
-                else Etiqueta("aviso", "em fase de recurso")
+                else Etiqueta("alerta", "em fase de recurso")
             )
             return EtapaDoItem("julgado_habilitado", etiquetas=(etiqueta,))
         return EtapaDoItem("aguardando_adjudicacao")
@@ -166,15 +167,49 @@ def etapa_do_item(item, documentos, entregas, hoje: dt.date) -> EtapaDoItem:
     return EtapaDoItem("cadastro_proposta")
 
 
-def _avisos_do_item(item) -> list[Etiqueta]:
-    """O que o pregoeiro está pedindo agora, item a item (Sentinela)."""
+# SituacaoRecursalEnum: P procede, N não procede, M mantida (não procede),
+# R revertida (passou a proceder).
+RECURSO_INDEFERIDO = {"N", "M"}
+RECURSO_PROCEDENTE = {"P", "R"}
 
+
+def _avisos_do_item(item, agora: dt.datetime | None = None) -> list[Etiqueta]:
+    """O que pede ação agora, item a item (Sentinela). Tudo que pede
+    resposta da empresa é vermelho: convocação, pedido de desconto, recurso,
+    diligência."""
+
+    agora = agora or timezone.now()
+    n = item.numero_item
     avisos = []
     if item.negociacao and item.negociacao != "E":
-        avisos.append(Etiqueta("alerta", f"pedido de desconto · item {item.numero_item}"))
+        avisos.append(Etiqueta("alerta", f"pedido de desconto · item {n}"))
     if item.anexo_solicitado == "S":
-        avisos.append(Etiqueta("alerta", f"enviar anexo · item {item.numero_item}"))
+        avisos.append(Etiqueta("alerta", f"convocação: enviar anexo · item {n}"))
+    if item.diligencias_abertas:
+        avisos.append(Etiqueta("alerta", f"diligência · item {n}"))
+    if item.recursos:
+        nomes = item.recursos[0].get("nome") or "outra empresa"
+        if len(item.recursos) > 1:
+            nomes += f" e mais {len(item.recursos) - 1}"
+        if item.decisao_recurso in RECURSO_INDEFERIDO:
+            avisos.append(Etiqueta("info", f"recurso indeferido · item {n}"))
+        elif item.decisao_recurso in RECURSO_PROCEDENTE:
+            avisos.append(Etiqueta("alerta", f"recurso procedente · item {n}"))
+        elif item.prazo_contrarrazao and item.prazo_contrarrazao >= agora:
+            prazo = timezone.localtime(item.prazo_contrarrazao)
+            avisos.append(
+                Etiqueta("alerta", f"recurso de {_curto(nomes)} · item {n} · contrarrazões até {prazo:%d/%m %H:%M}")
+            )
+        else:
+            avisos.append(Etiqueta("alerta", f"recurso de {_curto(nomes)} · item {n} · aguardando decisão"))
     return avisos
+
+
+def _curto(nome: str) -> str:
+    """"BRAVA SUL COMERCIO DE EQUIPAMENTOS…" → "Brava Sul"."""
+
+    palavras = [p for p in nome.replace(",", " ").split() if p]
+    return " ".join(palavras[:2]).title() if palavras else nome
 
 
 def _valor_unitario(item) -> Decimal | None:

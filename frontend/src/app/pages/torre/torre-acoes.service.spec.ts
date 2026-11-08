@@ -1,7 +1,9 @@
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 
+import { TorreService } from '../../services/licitacoes/torre.service';
 import { ModalService } from '../../shared/overlay/modal.service';
+import { ToastService } from '../../shared/ui/toast/toast.service';
 import { CotadorModalComponent } from '../oportunidades/cotador-modal/cotador-modal.component';
 import { OportunidadeModalComponent } from '../oportunidades/salvas/oportunidade-modal/oportunidade-modal.component';
 import { TorreAcoesService } from './torre-acoes.service';
@@ -48,5 +50,63 @@ describe('TorreAcoesService', () => {
     expect(abrirJanela).toHaveBeenCalledWith(FARROUPILHA.link_plataforma, '_blank', 'noopener');
     expect(recargas).toEqual([false]);
     abrirJanela.mockRestore();
+  });
+
+  describe('lixeira', () => {
+    function comLixeira(confirmou: boolean) {
+      const modal = { abrir: vi.fn(), confirmar: vi.fn(() => of(confirmou)) };
+      const torre = {
+        resumoDoDescarte: vi.fn(() =>
+          of({
+            pergunta:
+              'Você tem preço cadastrado no item 22 (R$ 11.999,00, 1º lugar). Deseja prosseguir?',
+            tira_favorito: true,
+          }),
+        ),
+        descartar: vi.fn(() => of({ descricao: 'ok' })),
+      };
+      const toast = { sucesso: vi.fn(), erro: vi.fn() };
+      TestBed.configureTestingModule({
+        providers: [
+          { provide: ModalService, useValue: modal },
+          { provide: TorreService, useValue: torre },
+          { provide: ToastService, useValue: toast },
+        ],
+      });
+      return { acoes: TestBed.inject(TorreAcoesService), modal, torre, toast };
+    }
+
+    it('pergunta mostrando o preço lançado e, confirmado, descarta e pede recarga', () => {
+      const { acoes, modal, torre, toast } = comLixeira(true);
+      const recargas: boolean[] = [];
+
+      acoes.descartar(FARROUPILHA).subscribe((r) => recargas.push(r));
+
+      expect(modal.confirmar).toHaveBeenCalledWith(
+        expect.objectContaining({
+          titulo: 'Descartar Pregão 61/2026?',
+          mensagem: expect.stringContaining('item 22'),
+          confirmarLabel: 'Descartar',
+        }),
+      );
+      expect(modal.confirmar).toHaveBeenCalledWith(
+        expect.objectContaining({
+          mensagem: expect.stringContaining('a Sentinela tira o favorito'),
+        }),
+      );
+      expect(torre.descartar).toHaveBeenCalledWith(FARROUPILHA.id);
+      expect(toast.sucesso).toHaveBeenCalled();
+      expect(recargas).toEqual([true]);
+    });
+
+    it('cancelou: não descarta nem recarrega', () => {
+      const { acoes, torre } = comLixeira(false);
+      const recargas: boolean[] = [];
+
+      acoes.descartar(FARROUPILHA).subscribe((r) => recargas.push(r));
+
+      expect(torre.descartar).not.toHaveBeenCalled();
+      expect(recargas).toEqual([false]);
+    });
   });
 });

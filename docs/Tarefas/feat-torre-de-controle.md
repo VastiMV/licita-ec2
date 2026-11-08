@@ -164,8 +164,16 @@ Beta 0.1 (08/11/2026):
 - [x] Camada de disputa: teto, ideal, piso, custo e lucro de cada item, da cotação
 - [x] Vigia: sinal de vida a cada 3 min; o botão do topo mostra o estado real (verde / âmbar / vermelho)
 
+Beta 0.2 (08/11/2026) — lixeira e recurso:
+- [x] Lixeira em todo cartão de Preparar e Disputar: pergunta com o preço lançado, Descartadas com motivo completo (quem, quando, etapa, preço), tira o favorito no Compras.gov
+- [x] A Sentinela não traz de volta o descartado; convocação traz de volta em vermelho
+- [x] Sessão da aba (só na memória) + consultas sozinhas, lista fechada sem captcha
+- [x] Ronda a cada 10 min: proposta, fase recursal e diligências de cada item com proposta
+- [x] Recurso, contrarrazões, diligência, convocação e pedido de desconto em vermelho
+- [x] Itens antes da sessão (142 com preço, 387 sem) lidos quando ele abre a compra
+
 Próximo:
-- [ ] Ler sozinha, a cada 3 min (8h–18h), o que **não** pede captcha: caixa de mensagens, proposta de cada item conhecido, participação de cada compra
+- [ ] Ler sozinha a caixa de mensagens (sem captcha)
 - [ ] Aviso de lance abaixo do piso na tela de disputa (precisa de um HAR/tela real de disputa — a próxima é a do Pregão 387, Guarulhos)
 - [ ] Sino do Licita com as mensagens; Telegram (Passo 3)
 - [ ] Captcha apareceu → avisar o Carlinhos (hoje só a sessão caída é detectada, pela renovação que falha)

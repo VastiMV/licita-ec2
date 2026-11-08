@@ -78,6 +78,8 @@ MOTIVOS: dict[str, str] = {
 MOTIVO_DA_SITUACAO = {"RE": "revogada", "AN": "anulada", "FR": "fracassada", "DE": "deserta"}
 
 MOTIVOS_DESCARTE = {
+    # A lixeira da Torre: vale sobre qualquer outra regra (ver lixeira.py).
+    "descartada_manual": "Descartada manualmente",
     "descartada": "Tirada da lista",
     "prazo_oportunidade": "Prazo venceu sem cotação",
     "prazo_cotacao": "Prazo venceu com cotação",
@@ -183,11 +185,21 @@ def descartadas(hoje: dt.date | None = None) -> OportunidadeSalvaQuerySet:
     venceu = _venceu_antes(hoje)
     sem_proposta = _sem_proposta(hoje) & Q(removida_em__isnull=True)
     tirada_antes = Q(removida_em__isnull=False) & ~venceu
+    # Lixeira: descartada (removida) depois do último "voltou para a Torre".
+    descartes = EventoOportunidadeSalva.objects.filter(
+        oportunidade=OuterRef("pk"), tipo=EventoOportunidadeSalva.Tipo.DESCARTADA
+    ).order_by("-ocorrido_em")
+    manual = Q(removida_em__isnull=False, tem_descarte_manual=True)
     return (
         _com_fatos(OportunidadeSalva.objects.all())
-        .filter(tirada_antes | venceu | sem_proposta)
+        .annotate(
+            tem_descarte_manual=Exists(descartes),
+            motivo_detalhe=Subquery(descartes.values("descricao")[:1]),
+        )
+        .filter(tirada_antes | venceu | sem_proposta | manual)
         .annotate(
             motivo=Case(
+                When(manual, then=Value("descartada_manual")),
                 When(sem_proposta, then=Value("sem_proposta")),
                 When(venceu & Q(tem_cotacao=True), then=Value("prazo_cotacao")),
                 When(venceu, then=Value("prazo_oportunidade")),
@@ -195,6 +207,7 @@ def descartadas(hoje: dt.date | None = None) -> OportunidadeSalvaQuerySet:
                 output_field=CharField(),
             ),
             descartada_em=Case(
+                When(manual, then=TruncDate("removida_em")),
                 When(sem_proposta, then=TruncDate("participacao__atualizada_em")),
                 When(venceu, then=F("data_encerramento_proposta")),
                 default=TruncDate("removida_em"),
@@ -274,6 +287,9 @@ def montar_processo(salva: OportunidadeSalva, hoje: dt.date | None = None) -> di
             item |= {"tipo": "prazo_encerrado", "texto": f"Prazo de proposta encerrado {sem}"}
         elif evento.tipo == Tipo.REMOVIDA:
             item |= {"tipo": "removida", "texto": "Removida da lista"}
+        elif evento.tipo in (Tipo.DESCARTADA, Tipo.VOLTOU):
+            # O texto completo (quem, quando, etapa, preço) é a própria descrição.
+            item |= {"tipo": evento.tipo, "texto": evento.descricao}
         else:
             item |= {"tipo": evento.tipo, "texto": evento.get_tipo_display()}
         eventos.append({**item, "etapa": etapa})
@@ -293,6 +309,14 @@ def montar_processo(salva: OportunidadeSalva, hoje: dt.date | None = None) -> di
 
 
 def _desfecho(salva, eventos: list[dict]) -> dict:
+    if salva.motivo == "descartada_manual":
+        por = salva.removida_por_nome or "Alguém"
+        return {
+            "tipo": "descartada_manual",
+            "data": salva.removida_em,
+            "por": por,
+            "porque": salva.motivo_detalhe or f"{por} descartou pela lixeira da Torre.",
+        }
     if salva.motivo == "sem_proposta":
         porque = (
             "A sessão pública abriu e a empresa estava sem proposta cadastrada no Compras.gov.br."

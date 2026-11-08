@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { CartaoTorre, TorreResponse } from '../../contracts/licitacoes/torre.contracts';
 import { TorreService } from '../../services/licitacoes/torre.service';
 import { IconComponent } from '../../shared/ui/icon/icon.component';
+import { ContagemDoMenuService } from '../../layout/sidebar/contagem-do-menu.service';
 import { TorreAcoesService } from './torre-acoes.service';
 import { TorreCartaoComponent } from './torre-cartao/torre-cartao.component';
 import { rotaDaEtapa, rotaDoEstagio } from './torre.utils';
@@ -27,6 +28,7 @@ import { rotaDaEtapa, rotaDoEstagio } from './torre.utils';
 export class TorrePage implements OnInit {
   private readonly servico = inject(TorreService);
   private readonly acoes = inject(TorreAcoesService);
+  private readonly contagens = inject(ContagemDoMenuService);
 
   protected readonly torre = signal<TorreResponse | null>(null);
   protected readonly carregando = signal(true);
@@ -67,6 +69,14 @@ export class TorrePage implements OnInit {
         this.carregando.set(false);
         this.erro.set(true);
       },
+    });
+  }
+
+  protected descartar(cartao: CartaoTorre): void {
+    this.acoes.descartar(cartao).subscribe((recarregar) => {
+      if (!recarregar) return;
+      this.carregar();
+      this.contagens.atualizar();
     });
   }
 

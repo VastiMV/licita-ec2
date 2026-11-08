@@ -1,0 +1,11 @@
+{
+ "url": "https://cnetmobile.estaleiro.serpro.gov.br/comprasnet-fase-externa/v1/compras/92667005000562026/itens/6/fase-recursal-fornecedor/1",
+ "dados": {
+  "numeroSessaoJulgHab": 1,
+  "prazos": {
+   "dataHoraLimiteIRJulgamento": "2026-09-24T15:16:48.467052",
+   "dataHoraLimiteIRHabilitacao": "2026-09-30T14:20:20.24998"
+  },
+  "julgHabEncerrada": true
+ }
+}

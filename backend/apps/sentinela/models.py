@@ -44,3 +44,43 @@ class Pulso(models.Model):
 
     def __str__(self) -> str:
         return f"{self.recebido_em:%d/%m %H:%M} {self.estado} {self.captura}".strip()
+
+
+class Tarefa(models.Model):
+    """O que o Licita pede à Sentinela fazer no Compras.gov.br.
+
+    A Sentinela pergunta a cada minuto se há tarefa (`GET tarefas/`). Hoje
+    só existe uma: **tirar o favorito** de uma compra — pedida pela lixeira,
+    sempre por um clique de alguém, uma compra por vez.
+    """
+
+    class Tipo(models.TextChoices):
+        DESFAVORITAR = "desfavoritar", "Tirar o favorito no Compras.gov"
+
+    class Estado(models.TextChoices):
+        PENDENTE = "pendente", "Pendente"
+        FEITA = "feita", "Feita"
+        ERRO = "erro", "Erro"
+
+    tipo = models.CharField("tipo", max_length=20, choices=Tipo.choices)
+    compra = models.CharField("código da compra", max_length=17, help_text="UASG + modalidade + número + ano.")
+    oportunidade = models.ForeignKey(
+        "licitacoes.OportunidadeSalva",
+        verbose_name="oportunidade",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="tarefas_sentinela",
+    )
+    estado = models.CharField("estado", max_length=10, choices=Estado.choices, default=Estado.PENDENTE)
+    resultado = models.CharField("resultado", max_length=255, blank=True)
+    criada_em = models.DateTimeField("criada em", auto_now_add=True)
+    feita_em = models.DateTimeField("feita em", null=True, blank=True)
+
+    class Meta:
+        verbose_name = "tarefa da Sentinela"
+        verbose_name_plural = "tarefas da Sentinela"
+        ordering = ["criada_em"]
+
+    def __str__(self) -> str:
+        return f"{self.get_tipo_display()} {self.compra} ({self.estado})"

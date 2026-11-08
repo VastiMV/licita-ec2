@@ -327,6 +327,11 @@ class EventoOportunidadeSalva(models.Model):
         PROPOSTA_GERADA = "proposta_gerada", "Cotação salva"
         # Gerar proposta no Cotador (`apps.propostas`).
         PROPOSTA = "proposta", "Proposta gerada"
+        # A lixeira da Torre (08/11/2026): quem, quando, em que etapa e com
+        # que preço — a operação esquece e pergunta depois.
+        DESCARTADA = "descartada", "Descartada manualmente"
+        # Descartada que voltou sozinha porque houve convocação.
+        VOLTOU = "voltou", "Voltou para a Torre"
 
     oportunidade = models.ForeignKey(
         OportunidadeSalva,
@@ -491,6 +496,28 @@ class ItemParticipado(models.Model):
     negociacao_texto = models.TextField(
         "pedido do pregoeiro", blank=True, help_text='Ex.: "Solicito um desconto para o Item 22".'
     )
+
+    # Fase recursal do item (`fase-recursal-fornecedor/<sessão>`, lida pela
+    # Sentinela). Caso real: Pregão 56/2026, item 22 — recurso da Brava Sul que
+    # ninguém viu a tempo de responder (08/11/2026).
+    sessao_julgamento = models.PositiveSmallIntegerField(
+        "sessão de julgamento", default=1, help_text="numeroSessaoJulgHab: entra no endereço da fase recursal."
+    )
+    recursos = models.JSONField(
+        "recursos cadastrados",
+        default=list,
+        blank=True,
+        help_text='[{"cnpj", "nome", "em"}] — quem entrou com recurso neste item.',
+    )
+    prazo_contrarrazao = models.DateTimeField("contrarrazões até", null=True, blank=True)
+    decisao_recurso = models.CharField(
+        "decisão do recurso",
+        max_length=1,
+        blank=True,
+        help_text="SituacaoRecursalEnum: P procede · N não procede · M mantida (não procede) · R revertida. "
+        "Vale a revisão da autoridade, se houver.",
+    )
+    diligencias_abertas = models.PositiveSmallIntegerField("diligências em aberto", default=0)
 
     valor_proposta_inicial = models.DecimalField(
         "proposta inicial (unitário)", max_digits=18, decimal_places=4, null=True, blank=True
