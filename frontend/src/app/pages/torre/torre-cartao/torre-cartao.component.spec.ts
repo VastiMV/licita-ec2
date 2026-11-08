@@ -57,6 +57,16 @@ describe('TorreCartaoComponent', () => {
     );
   });
 
+  it('dentro da coluna da etapa, sem a pílula repetida', () => {
+    TestBed.configureTestingModule({ imports: [TorreCartaoComponent] });
+    fixture = TestBed.createComponent(TorreCartaoComponent);
+    fixture.componentRef.setInput('cartao', FARROUPILHA);
+    fixture.componentRef.setInput('semEtapa', true);
+    fixture.detectChanges();
+
+    expect((fixture.nativeElement as HTMLElement).querySelector('.etapa')).toBeNull();
+  });
+
   it('em Preparar mostra o prazo da proposta como etiqueta', () => {
     const el = montar(COTADA);
 

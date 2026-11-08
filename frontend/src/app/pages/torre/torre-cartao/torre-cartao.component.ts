@@ -28,6 +28,10 @@ export class TorreCartaoComponent {
   readonly cartao = input.required<CartaoTorre>();
   readonly abrir = output<CartaoTorre>();
 
+  /** Dentro da coluna da etapa (estágio aberto) a pílula repetiria o nome
+   * da coluna: lá ela some, como no protótipo v2. */
+  readonly semEtapa = input(false);
+
   protected readonly nivel = computed(() => nivelDoCartao(this.cartao()));
   protected readonly local = computed(() => localDoCartao(this.cartao()));
   protected readonly orgao = computed(() => orgaoDoCartao(this.cartao()));
