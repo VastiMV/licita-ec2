@@ -1,0 +1,58 @@
+{
+ "url": "https://cnetmobile.estaleiro.serpro.gov.br/comprasnet-fase-externa/v1/compras/92667005000562026/participacao",
+ "dados": {
+  "numeroUasg": 926670,
+  "modalidade": 5,
+  "numero": 56,
+  "ano": 2026,
+  "chaveCompraPncp": "0894261000011610000912026",
+  "linkPncp": "https://pncp.gov.br/app/editais/08942610000116/2026/000091",
+  "editalDisponivel": false,
+  "nomeUasg": "DEPTO. SAÚDE E ASSIST AO PESSOAL POL MIL - DF",
+  "ufUasg": "DF",
+  "caracteristica": "1",
+  "formaRealizacao": "1",
+  "criterioJulgamento": "7",
+  "fundamentoLegal": "L14133",
+  "equalizacaoIcms": false,
+  "situacaoCompraFaseExterna": "PD",
+  "faseCompraFaseExterna": "4",
+  "homologada": false,
+  "possuiAvisoDeEvento": false,
+  "possuiEventoQueImpedeAcaoNaCompra": false,
+  "modoDisputa": "AF",
+  "tipoObjeto": "5",
+  "dataHoraPrevisaoAbertura": "2026-09-22T14:00:00",
+  "dataHoraInicioPropostas": "2026-09-10T08:00:00",
+  "dataHoraFimPropostas": "2026-09-22T14:00:00",
+  "dataHoraAbertura": "2026-09-22T14:00:11.409922",
+  "emergencial": false,
+  "exigeDeclaracaoProgramasIntegridade": true,
+  "exigeDeclaracaoEquidadeGenero": true,
+  "objeto": "AQUISIÇÃO DE MATERIAIS PERMANENTES, compreendendo aparelhos, equipamentos e utensílios médico-hospitalares, destinados ao aparelhamento, à modernização e ao fortalecimento da infraestrutura das unidades de saúde subordinadas ao Departamento de Saúde e Assistência ao Pessoal da Polícia Militar do Distrito Federal (DSAP/PMDF).",
+  "julgamentoIniciado": true,
+  "configuracao": {
+   "tempoAvisoPrevioAberturaItens": 0,
+   "qtdeMaximaItensEmDisputa": 20,
+   "inicioPeriodoAberturaItem": "08:00:00",
+   "fimPeriodoAberturaItem": "18:00:00",
+   "analisePropostasAutomatica": true,
+   "tempoIntencoesRecurso": 10
+  },
+  "participante": {
+   "identificacao": "22015414000127",
+   "nome": "INSIDE SOLUTIONS LTDA",
+   "tipo": "J",
+   "porteEmpresa": "1",
+   "endereco": {
+    "logradouro": "RUA MARIO H. ALBUQUERQUE MARANHAO, 280 - DO CARMO (CANGUERA)",
+    "municipio": "São Roque",
+    "uf": "SP"
+   }
+  },
+  "declaracaoMeEpp": true,
+  "declaracaoProgramasIntegridade": false,
+  "isFornecedorParticipante": true,
+  "declaracaoEquidadeGenero": "N"
+ }
+}

@@ -1,0 +1,69 @@
+{
+ "url": "https://cnetmobile.estaleiro.serpro.gov.br/comprasnet-fase-externa/v1/compras/15812705000612026/em-selecao-fornecedores/participacoes/22015414000127/itens/22/propostas?filtro=1",
+ "dados": [
+  {
+   "numero": 22,
+   "tipo": "I",
+   "criterioValor": "E",
+   "possuiOrcamentoSigiloso": false,
+   "exigenciaConteudoNacional": false,
+   "identificador": "22",
+   "tipoItemCatalogo": "M",
+   "descricao": "Animal Vivo",
+   "apelido": "",
+   "criterioJulgamento": "1",
+   "homologado": false,
+   "numeroSessaoJulgHab": 1,
+   "tipoTratamentoDiferenciadoMeEpp": "9",
+   "participacaoExclusivaMeEppOuEquiparadas": false,
+   "utilizaMargemPreferencia": false,
+   "situacao": "1",
+   "fase": "E",
+   "quantidadeSolicitada": 20,
+   "valorEstimadoUnitario": 12333.33,
+   "valorEstimadoTotal": 246666.6,
+   "possuiDiligenciaFinalizada": false,
+   "julgHabEncerrada": false,
+   "propostaItem": {
+    "quantidadeOfertada": 20,
+    "marcaFabricante": "Braford",
+    "modeloVersao": "Novilha Braford conforme Termo de Referência",
+    "declaracaoConteudoNacional": false,
+    "valores": {
+     "valorPropostaInicial": {
+      "valorInformado": 12199.0,
+      "valorCalculado": {
+       "valorUnitario": 12199.0,
+       "valorTotal": 243980.0
+      }
+     },
+     "valorPropostaInicialOuLances": {
+      "valorInformado": 11999.0,
+      "valorCalculado": {
+       "valorUnitario": 11999.0,
+       "valorTotal": 239980.0
+      }
+     }
+    },
+    "participante": {
+     "identificacao": "22015414000127",
+     "nome": "INSIDE SOLUTIONS LTDA",
+     "tipo": "J",
+     "endereco": {
+      "uf": "SP"
+     }
+    },
+    "declaracaoMeEpp": true,
+    "declaracaoProgramasIntegridade": false,
+    "declaracaoEquidadeGenero": "N",
+    "canalChatAberto": true,
+    "situacaoUltimaSolicitacaoAnexos": "E",
+    "situacaoNaFaseFechadaModoAbertoFechado": "7",
+    "empatadoComoMelhorClassificado": false,
+    "classificacao": 1
+   },
+   "qtdeParticipantes": 2,
+   "disputaPorValorUnitario": true
+  }
+ ]
+}

@@ -105,7 +105,15 @@ que abre.
 | Configurações | Armazenamento, Usuários | só administrador |
 
 **No topo da tela:** a empresa e o CNPJ, o **Radar** (em breve), o estado da
-**Sentinela** (não instalada) e o **sino** de avisos.
+**Sentinela** (verde lendo, âmbar precisa de você, vermelho parada) e o
+**sino** de avisos.
+
+**Sentinela (beta, 08/11/2026):** extensão do Chrome no computador do
+Carlinhos ([`sentinela/`](sentinela/), guia em
+[`sentinela/README.md`](sentinela/README.md)). Traz para a Torre as compras e
+os itens em que ele participa no Compras.gov, e mostra a **camada de
+disputa** (teto, ideal, piso, custo, lucro) ao lado da tela. Plano e limites:
+[`docs/SENTINELA.md`](docs/SENTINELA.md).
 
 **Sozinho, de segunda a sexta** (Celery Beat): às 8h o **PNCP** traz o que a empresa
 ganhou e as atas; às 8h10 o **Portal da Transparência** traz empenho,
@@ -114,9 +122,9 @@ liquidação e pagamento dos órgãos federais.
 As regras de cada uma estão em [`docs/TORRE.md`](docs/TORRE.md) e
 [`docs/DOMINIO.md`](docs/DOMINIO.md).
 
-**Ainda não existe** (em ordem de prioridade): a **Sentinela** (extensão do
-Chrome que lê o Compras.gov na sessão do Carlinhos — plano em
-[`docs/SENTINELA.md`](docs/SENTINELA.md)), os **avisos no Telegram**, o
+**Ainda não existe** (em ordem de prioridade): a Sentinela ler **sozinha**
+a caixa de mensagens e as propostas (hoje ela lê quando o Carlinhos abre a
+tela), os **avisos no Telegram**, o
 **Radar**, as telas para **lançar à mão** contrato, ordem de fornecimento e
 entrega (a API já existe), e a leitura de **contratos** no PNCP.
 
@@ -125,6 +133,7 @@ entrega (a API já existe), e a leitura de **contratos** no PNCP.
 ```
 backend/         Django/DRF — ver backend/README.md
 frontend/        Angular — ver frontend/README.md
+sentinela/       a extensão do Chrome (Sentinela) — ver sentinela/README.md
 deploy/ec2/      produção no EC2: docker compose, Caddy, scripts e o guia
 k8s/             manifests Kubernetes (alternativa; usados no repositório original)
 docs/            TORRE.md, SENTINELA.md, DOMINIO.md, ARQUITETURA.md, Tarefas/, mockups e atas

@@ -9,6 +9,10 @@ export const ENDPOINTS = {
     refresh: 'auth/refresh/',
     logout: 'auth/logout/',
   },
+  /** O vigia da Sentinela (extensão do Chrome), para o botão do topo. */
+  sentinela: {
+    estado: 'sentinela/estado/',
+  },
   licitacoes: {
     oportunidades: 'licitacoes/oportunidades/',
     compraDetalhe: (cnpj: string, ano: string | number, sequencial: string | number) =>

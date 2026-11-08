@@ -166,6 +166,17 @@ def etapa_do_item(item, documentos, entregas, hoje: dt.date) -> EtapaDoItem:
     return EtapaDoItem("cadastro_proposta")
 
 
+def _avisos_do_item(item) -> list[Etiqueta]:
+    """O que o pregoeiro está pedindo agora, item a item (Sentinela)."""
+
+    avisos = []
+    if item.negociacao and item.negociacao != "E":
+        avisos.append(Etiqueta("alerta", f"pedido de desconto · item {item.numero_item}"))
+    if item.anexo_solicitado == "S":
+        avisos.append(Etiqueta("alerta", f"enviar anexo · item {item.numero_item}"))
+    return avisos
+
+
 def _valor_unitario(item) -> Decimal | None:
     """O valor que vale agora: homologado > negociado > lance > proposta."""
 
@@ -260,6 +271,8 @@ def avaliar(salva: OportunidadeSalva, hoje: dt.date) -> tuple[dict | None, Saida
             entregas_do_item = [e for e in entregas if e.item_id in (None, item.pk)]
             resultado = etapa_do_item(item, docs_do_item, entregas_do_item, hoje)
             etiquetas.extend(resultado.etiquetas)
+            if resultado.etapa:
+                etiquetas.extend(_avisos_do_item(item))
             valor = _valor_unitario(item)
             total = valor * item.quantidade if valor is not None and item.quantidade is not None else valor
             if total is not None:
@@ -289,6 +302,12 @@ def avaliar(salva: OportunidadeSalva, hoje: dt.date) -> tuple[dict | None, Saida
         return None, Saida("descartadas", "Sem proposta cadastrada")
     elif participacao and participacao.proposta_cadastrada:
         etapa = "disputa" if participacao.fase_compra == FASE_COMPRA_EM_DISPUTA else "cadastro_proposta"
+    elif participacao and participacao.fase_compra not in FASES_COMPRA_ANTES_DA_SESSAO:
+        # A Sentinela viu a compra nas participações, já depois da sessão, mas
+        # ainda não leu os itens da empresa: não dá para saber se há proposta.
+        # Fica no quadro, pedindo a leitura (nunca vai sozinha para Descartadas).
+        etapa = "disputa" if participacao.fase_compra == FASE_COMPRA_EM_DISPUTA else "aguardando_julgamento"
+        etiquetas.append(Etiqueta("aviso", "abrir “meus itens” no Compras.gov"))
     elif prazo_vencido:
         if not _cotacao_de(salva):
             return None, Saida("descartadas", "Prazo venceu sem cotação")

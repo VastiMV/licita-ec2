@@ -79,6 +79,27 @@
   .ponto {
     background: #e0a12a;
   }
+
+  // Verde só quando está lendo de verdade (protótipo v2).
+  &[data-estado='ok'] {
+    border-color: #b9dfc9;
+    background: #eaf6ef;
+    color: #1b6b43;
+
+    .ponto {
+      background: #1f9d5c;
+    }
+  }
+
+  &[data-estado='parada'] {
+    border-color: #f1b3aa;
+    background: #fde8e6;
+    color: #8f1f12;
+
+    .ponto {
+      background: #c2381f;
+    }
+  }
 }
 
 .ponto {

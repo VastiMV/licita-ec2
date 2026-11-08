@@ -481,6 +481,16 @@ class ItemParticipado(models.Model):
         help_text="S solicitada · P parcialmente encerrada · E encerrada · vazio = nunca pedida.",
     )
     recurso_ate = models.DateField("recurso aberto até", null=True, blank=True)
+    negociacao = models.CharField(
+        "negociação",
+        max_length=1,
+        blank=True,
+        help_text="situacaoUltimaNegociacao do Compras.gov.br: E = encerrada; outro valor = em andamento "
+        "(o pregoeiro pediu desconto e espera resposta). Vazio = nunca houve.",
+    )
+    negociacao_texto = models.TextField(
+        "pedido do pregoeiro", blank=True, help_text='Ex.: "Solicito um desconto para o Item 22".'
+    )
 
     valor_proposta_inicial = models.DecimalField(
         "proposta inicial (unitário)", max_digits=18, decimal_places=4, null=True, blank=True

@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     "apps.produtos",
     "apps.cotador",
     "apps.propostas",
+    "apps.sentinela",
 ]
 
 MIDDLEWARE = [

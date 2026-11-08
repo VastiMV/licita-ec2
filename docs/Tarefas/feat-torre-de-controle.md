@@ -130,15 +130,21 @@ garantida.
 - [x] Lista por etapa (`/torre/etapa/<etapa>`); Oportunidade e Cotação abrem as listas de hoje
 - [x] Clique no cartão: Preparar abre o modal da oportunidade ou o Cotador; o resto abre a compra na plataforma
 
-### Passo 5 — Sentinela v1.0 (extensão do Chrome) — plano e limites em [`SENTINELA.md`](../SENTINELA.md)
-- [ ] Rota na API para a Sentinela entregar o que leu (token próprio da Sentinela) → `ParticipacaoCompra`/`ItemParticipado` com `fonte="sentinela"`
-- [ ] O botão "Sentinela" do topo passa a mostrar o estado real (verde / amarelo / vermelho)
-- [ ] Caixa de mensagens do Compras.gov (sem captcha) a cada 3 min, 8h–18h
-- [ ] Fases e situação por item a cada leitura da tela de participações (8h, 14h, 18h)
-- [ ] Vigia: sessão caiu, verificação pedida, extensão parada
-- [ ] Só alerta sobre itens em que a empresa tem proposta
-- [ ] Pedido de desconto do pregoeiro = alerta urgente
-- [ ] Captcha apareceu → para e avisa o Carlinhos (nunca resolver sozinha)
+### Passo 5 — Sentinela (extensão do Chrome) — plano e limites em [`SENTINELA.md`](../SENTINELA.md)
+
+Beta 0.1 (08/11/2026):
+- [x] Extensão (`sentinela/`): copia o que a página já recebeu (participações, uma compra, meus itens, proposta do item) — nunca consulta tela com captcha
+- [x] API com chave própria (`SENTINELA_CHAVE`): `captura/`, `pulso/`, `camada/<código>/`, `estado/`
+- [x] Participações criam a compra que não estava no Licita; "meus itens" grava os itens da empresa com a proposta (posição, situação, lances, marca)
+- [x] Pedido de desconto e convocação de anexo viram alerta no cartão; Cubatão (sem proposta) vai para Descartadas sozinho
+- [x] Camada de disputa: teto, ideal, piso, custo e lucro de cada item, da cotação
+- [x] Vigia: sinal de vida a cada 3 min; o botão do topo mostra o estado real (verde / âmbar / vermelho)
+
+Próximo:
+- [ ] Ler sozinha, a cada 3 min (8h–18h), o que **não** pede captcha: caixa de mensagens, proposta de cada item conhecido, participação de cada compra
+- [ ] Aviso de lance abaixo do piso na tela de disputa (precisa de um HAR/tela real de disputa — a próxima é a do Pregão 387, Guarulhos)
+- [ ] Sino do Licita com as mensagens; Telegram (Passo 3)
+- [ ] Captcha apareceu → avisar o Carlinhos (hoje só a sessão caída é detectada, pela renovação que falha)
 
 ### Depois
 - [ ] Telas de lançamento manual (contrato, OF, entrega, ligar documento "sem licitação") — a API já existe

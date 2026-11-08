@@ -1,4 +1,4 @@
-# Sentinela — plano da v1.0 (ainda não construída)
+# Sentinela — plano e o que já existe (beta 0.1, 08/11/2026)
 
 A Sentinela é uma **extensão do Chrome** no computador do Carlinhos. Ela é a
 ponte entre o Compras.gov.br (a sessão **dele**, já logada) e o Licita. Sem
@@ -6,6 +6,41 @@ ela, o estágio Disputar da Torre só anda quando o resultado sai no PNCP.
 
 Este documento junta o que foi pesquisado e decidido (07–08/11/2026) para
 quem for construir.
+
+## O que já existe (beta 0.1)
+
+Construída em 08/11/2026. Código da extensão em [`sentinela/`](../sentinela/)
+(com o passo a passo de instalação); backend em `backend/apps/sentinela/`.
+
+| Parte | Como funciona |
+|---|---|
+| **Participações e itens** | a extensão copia o que **a página já recebeu** quando o Carlinhos abre a tela (participações, uma compra, "meus itens", a proposta de um item) e manda ao Licita (`POST /api/sentinela/captura/`). O backend (`ingestao.py`) cria a compra se ela não estava no Licita e grava `ParticipacaoCompra` e `ItemParticipado` |
+| **Camada de disputa** | painel no canto de qualquer tela de compra: teto, ideal, piso, custo e lucro de cada item, da cotação do Licita (`GET /api/sentinela/camada/<código>/`) |
+| **Vigia** | sinal de vida a cada 3 min (`POST /api/sentinela/pulso/`); o topo do Licita lê `GET /api/sentinela/estado/` |
+| **Autenticação** | a chave `SENTINELA_CHAVE` do servidor, no cabeçalho `X-Sentinela-Chave`. Nunca senha |
+
+**Achados dos HARs que mudaram o plano:**
+
+- **A lista de participações e a lista de itens pedem captcha** (o parâmetro
+  `captcha` vai em cada consulta). Por isso a Sentinela **não consulta
+  essas telas sozinha**: ela só repassa o que a página recebeu quando o
+  Carlinhos abriu. Ler sozinha, de tempos em tempos, só o que não pede
+  captcha (caixa de mensagens, a proposta de um item, a participação numa
+  compra) — isso é a próxima etapa.
+- **Estar em "participações" não prova proposta** (Cubatão estava lá sem
+  proposta). Quem prova é a lista "meus itens" (`filtro=2`): com item, há
+  proposta; vazia, não há (→ Descartadas, "sem proposta cadastrada").
+- **O pedido de desconto vem na proposta do item**
+  (`situacaoUltimaNegociacao` + `justificativaUltimaNegociacao`, ex.:
+  "Solicito um desconto para o Item 22"). Negociação em andamento vira
+  alerta no cartão. Convocação de anexo (`situacaoUltimaSolicitacaoAnexos =
+  S`) também.
+- A sessão vive na **aba** do Compras.gov (token da página, não cookie):
+  precisa de uma aba aberta e logada — uma só, não uma por licitação.
+
+**Ainda não feito:** ler a caixa de mensagens sozinha a cada 3 min; avisar
+quando o lance digitado ficar abaixo do piso (precisa ver a tela real de
+disputa); Telegram; o sino com as mensagens.
 
 ## Por que extensão (e não outra coisa)
 
@@ -41,8 +76,10 @@ Achados dos HARs gravados em 07/11/2026 na sessão do Carlinhos:
 |---|---|---|---|
 | **Caixa de mensagens do fornecedor** — todas as licitações juntas: convocação (830), pregoeiro (840), recurso (850), impugnação (810) | `comprasnet-mensagem/v1/mensagens` | **não** | a cada ~3 min, 8h–18h |
 | Contador de não lidas (leve) | `comprasnet-mensagem/v1/mensagens/quantidade-nao-lidas` | não | junto |
-| Participações (fase da compra, prazo das propostas, proposta cadastrada) | `compras/participacoes` | não | 8h, 14h, 18h |
-| Itens e propostas de cada participação (situação, classificação, fase do item) | `participacoes/{CNPJ}/itens/{n}/propostas` | não | 8h, 14h, 18h |
+| Participações (fase, situação, prazos, diligência) | `comprasnet-fase-externa/v1/compras/participacoes` | **sim** | só quando o Carlinhos abre a tela |
+| Meus itens de uma compra, com a proposta da empresa | `compras/{código}/itens/em-selecao-fornecedores?filtro=2` | **sim** | só quando o Carlinhos abre a tela |
+| Participação numa compra | `compras/{código}/participacao` | não | (próxima etapa: sozinha) |
+| Proposta da empresa num item (situação, classificação, negociação) | `compras/{código}/em-selecao-fornecedores/participacoes/{CNPJ}/itens/{n}/propostas` | não | (próxima etapa: sozinha) |
 | Chat de cada pregão | — | **sim, a cada consulta** | **não usar** |
 
 - A sessão se renova sozinha (`retoken`) quando há uso. Se cair, a

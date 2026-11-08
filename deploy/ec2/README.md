@@ -174,6 +174,27 @@ cd /opt/licita && sudo docker compose exec backend python manage.py sincronizar_
 cd /opt/licita && sudo docker compose exec backend python manage.py sincronizar_transparencia
 ```
 
+## Sentinela (a extensão do Chrome)
+
+A extensão fala com o Licita usando uma **chave** que só existe no servidor
+e nas opções da extensão. Para criar (uma vez só), no terminal do EC2:
+
+```bash
+CHAVE=$(openssl rand -hex 24); echo "SENTINELA_CHAVE=$CHAVE" | sudo tee -a /opt/licita/.env > /dev/null; echo "$CHAVE"
+```
+
+O comando mostra a chave **uma vez**: copie e cole nas opções da extensão
+(nunca em chat ou e-mail). Depois reinicie:
+
+```bash
+cd /opt/licita && sudo docker compose up -d --force-recreate backend worker beat
+```
+
+Sem a chave no servidor, a API da Sentinela recusa tudo. Para trocar a
+chave, apague a linha `SENTINELA_CHAVE` do `.env`, rode de novo o primeiro
+comando e cole a nova na extensão. Instalação da extensão:
+[`sentinela/README.md`](../../sentinela/README.md).
+
 ## Backup do banco (automático)
 
 Todo deploy faz um backup do banco **antes** de rodar as migrações

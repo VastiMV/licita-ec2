@@ -88,7 +88,14 @@ ITEM_PERDIDO = Q(vencedor_e_a_empresa=False) | Q(
     situacao_proposta__in=[*PROPOSTA_DESCLASSIFICADA, FORNECEDOR_INABILITADO]
 )
 COMPRA_ENCERRADA = Q(participacao__situacao_compra__in=list(MOTIVO_DA_SITUACAO))
-PARTICIPOU = Q(tem_itens=True) | Q(participacao__proposta_cadastrada=True) | COMPRA_ENCERRADA
+# A Sentinela viu a compra nas participações depois da sessão, sem ainda ter
+# lido os itens: fica no quadro esperando (mesma regra de `torre.avaliar`).
+ESPERA_OS_ITENS = Q(participacao__isnull=False, participacao__proposta_cadastrada__isnull=True) & ~Q(
+    participacao__fase_compra__in=FASES_COMPRA_ANTES_DA_SESSAO
+)
+PARTICIPOU = (
+    Q(tem_itens=True) | Q(participacao__proposta_cadastrada=True) | COMPRA_ENCERRADA | ESPERA_OS_ITENS
+)
 
 
 def _sem_proposta(hoje: dt.date) -> Q:

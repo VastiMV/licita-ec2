@@ -1,0 +1,212 @@
+{
+ "url": "https://cnetmobile.estaleiro.serpro.gov.br/comprasnet-fase-externa/v1/compras/92667005000562026/itens/em-selecao-fornecedores?tamanhoPagina=10&pagina=0&filtro=2",
+ "dados": [
+  {
+   "numero": 6,
+   "tipo": "I",
+   "criterioValor": "E",
+   "possuiOrcamentoSigiloso": false,
+   "exigenciaConteudoNacional": false,
+   "identificador": "6",
+   "tipoItemCatalogo": "M",
+   "descricao": "Bicicleta Ergométrica",
+   "apelido": "",
+   "criterioJulgamento": "1",
+   "homologado": false,
+   "numeroSessaoJulgHab": 1,
+   "tipoTratamentoDiferenciadoMeEpp": "9",
+   "participacaoExclusivaMeEppOuEquiparadas": false,
+   "utilizaMargemPreferencia": false,
+   "situacao": "1",
+   "fase": "HE",
+   "quantidadeSolicitada": 1,
+   "valorEstimadoUnitario": 15175.5545,
+   "valorEstimadoTotal": 15175.5545,
+   "possuiDiligenciaFinalizada": false,
+   "prazosFaseRecursal": {},
+   "julgHabEncerrada": true,
+   "propostaItem": {
+    "quantidadeOfertada": 1,
+    "marcaFabricante": "Movement",
+    "modeloVersao": "Movement LX U G4",
+    "declaracaoConteudoNacional": false,
+    "valores": {
+     "valorPropostaInicial": {
+      "valorInformado": 14900.0,
+      "valorCalculado": {
+       "valorUnitario": 14900.0,
+       "valorTotal": 14900.0
+      }
+     },
+     "valorPropostaInicialOuLances": {
+      "valorInformado": 13750.0,
+      "valorCalculado": {
+       "valorUnitario": 13750.0,
+       "valorTotal": 13750.0
+      }
+     }
+    },
+    "participante": {
+     "identificacao": "22015414000127",
+     "nome": "INSIDE SOLUTIONS LTDA",
+     "tipo": "J",
+     "endereco": {
+      "uf": "SP"
+     }
+    },
+    "declaracaoMeEpp": true,
+    "declaracaoProgramasIntegridade": false,
+    "declaracaoEquidadeGenero": "N",
+    "canalChatAberto": false,
+    "situacaoNaFaseFechadaModoAbertoFechado": "7",
+    "empatadoComoMelhorClassificado": false,
+    "classificacao": 4
+   },
+   "disputaPorValorUnitario": true
+  },
+  {
+   "numero": 9,
+   "tipo": "I",
+   "criterioValor": "E",
+   "possuiOrcamentoSigiloso": false,
+   "exigenciaConteudoNacional": false,
+   "identificador": "9",
+   "tipoItemCatalogo": "M",
+   "descricao": "Bomba De Infusão",
+   "apelido": "",
+   "criterioJulgamento": "1",
+   "homologado": false,
+   "numeroSessaoJulgHab": 1,
+   "tipoTratamentoDiferenciadoMeEpp": "9",
+   "participacaoExclusivaMeEppOuEquiparadas": false,
+   "utilizaMargemPreferencia": false,
+   "situacao": "1",
+   "fase": "HE",
+   "quantidadeSolicitada": 10,
+   "valorEstimadoUnitario": 9566.291,
+   "valorEstimadoTotal": 95662.91,
+   "possuiDiligenciaFinalizada": false,
+   "prazosFaseRecursal": {},
+   "julgHabEncerrada": true,
+   "propostaItem": {
+    "quantidadeOfertada": 10,
+    "marcaFabricante": "CMOS DRAKE",
+    "modeloVersao": "Yonah Avançada",
+    "declaracaoConteudoNacional": false,
+    "valores": {
+     "valorPropostaInicial": {
+      "valorInformado": 9500.0,
+      "valorCalculado": {
+       "valorUnitario": 9500.0,
+       "valorTotal": 95000.0
+      }
+     },
+     "valorPropostaInicialOuLances": {
+      "valorInformado": 9500.0,
+      "valorCalculado": {
+       "valorUnitario": 9500.0,
+       "valorTotal": 95000.0
+      }
+     }
+    },
+    "participante": {
+     "identificacao": "22015414000127",
+     "nome": "INSIDE SOLUTIONS LTDA",
+     "tipo": "J",
+     "endereco": {
+      "uf": "SP"
+     }
+    },
+    "declaracaoMeEpp": true,
+    "declaracaoProgramasIntegridade": false,
+    "declaracaoEquidadeGenero": "N",
+    "canalChatAberto": false,
+    "situacaoNaFaseFechadaModoAbertoFechado": "11",
+    "empatadoComoMelhorClassificado": false,
+    "classificacao": 13
+   },
+   "disputaPorValorUnitario": true
+  },
+  {
+   "numero": 22,
+   "tipo": "I",
+   "criterioValor": "E",
+   "possuiOrcamentoSigiloso": false,
+   "exigenciaConteudoNacional": false,
+   "identificador": "22",
+   "tipoItemCatalogo": "M",
+   "descricao": "Aparelho / Equipamento Para Condicionamento Físico",
+   "apelido": "",
+   "criterioJulgamento": "1",
+   "homologado": false,
+   "numeroSessaoJulgHab": 1,
+   "tipoTratamentoDiferenciadoMeEpp": "1",
+   "participacaoExclusivaMeEppOuEquiparadas": true,
+   "utilizaMargemPreferencia": false,
+   "situacao": "1",
+   "fase": "HE",
+   "quantidadeSolicitada": 1,
+   "valorEstimadoUnitario": 15763.116,
+   "valorEstimadoTotal": 15763.116,
+   "possuiDiligenciaFinalizada": false,
+   "prazosFaseRecursal": {},
+   "julgHabEncerrada": true,
+   "propostaItem": {
+    "quantidadeOfertada": 1,
+    "marcaFabricante": "Movement",
+    "modeloVersao": "Movement W2",
+    "declaracaoConteudoNacional": false,
+    "valores": {
+     "valorPropostaInicial": {
+      "valorInformado": 15649.0,
+      "valorCalculado": {
+       "valorUnitario": 15649.0,
+       "valorTotal": 15649.0
+      }
+     },
+     "valorPropostaInicialOuLances": {
+      "valorInformado": 15649.0,
+      "valorCalculado": {
+       "valorUnitario": 15649.0,
+       "valorTotal": 15649.0
+      }
+     },
+     "valorSugeridoNegociacao": {
+      "valorInformado": 15600.0,
+      "valorCalculado": {
+       "valorUnitario": 15600.0,
+       "valorTotal": 15600.0
+      }
+     },
+     "valorNegociado": {
+      "valorInformado": 15500.0,
+      "valorCalculado": {
+       "valorUnitario": 15500.0,
+       "valorTotal": 15500.0
+      }
+     }
+    },
+    "participante": {
+     "identificacao": "22015414000127",
+     "nome": "INSIDE SOLUTIONS LTDA",
+     "tipo": "J",
+     "endereco": {
+      "uf": "SP"
+     }
+    },
+    "declaracaoMeEpp": true,
+    "declaracaoProgramasIntegridade": false,
+    "declaracaoEquidadeGenero": "N",
+    "canalChatAberto": false,
+    "situacaoUltimaNegociacao": "E",
+    "situacaoUltimaSolicitacaoAnexos": "E",
+    "justificativaUltimaNegociacao": "Solicito um desconto para o Item 22",
+    "situacao": "4",
+    "situacaoNaFaseFechadaModoAbertoFechado": "5",
+    "empatadoComoMelhorClassificado": false,
+    "classificacao": 1
+   },
+   "disputaPorValorUnitario": true
+  }
+ ]
+}

@@ -84,6 +84,11 @@ class Environment:
     portal_transparencia_chave: str = field(
         default_factory=lambda: os.environ.get("PORTAL_TRANSPARENCIA_CHAVE", "")
     )
+    # Chave da Sentinela (extensão do Chrome no computador da operação): ela
+    # manda no cabeçalho `X-Sentinela-Chave` o que leu no Compras.gov.br. Gerada
+    # no servidor (`openssl rand -hex 24`) e colada nas opções da extensão.
+    # Sem ela, a API da Sentinela recusa tudo.
+    sentinela_chave: str = field(default_factory=lambda: os.environ.get("SENTINELA_CHAVE", ""))
     portal_transparencia_base_url: str = field(
         default_factory=lambda: os.environ.get(
             "PORTAL_TRANSPARENCIA_BASE_URL", "https://api.portaldatransparencia.gov.br/api-de-dados"
