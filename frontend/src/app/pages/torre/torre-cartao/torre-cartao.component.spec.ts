@@ -36,7 +36,6 @@ describe('TorreCartaoComponent', () => {
       '● Aguardando julgamento',
       'Julgado e habilitado',
       'Aguardando adjudicação',
-      'Homologado',
     ]);
   });
 

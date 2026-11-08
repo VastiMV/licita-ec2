@@ -46,7 +46,7 @@ Decisões (07/11/2026, com a operação):
 | Disputar | Aguardando julgamento | item com disputa encerrada, proposta sem situação |
 | Disputar | Julgado e habilitado | proposta **aceita** (3) e depois **fornecedor habilitado** (4) |
 | Disputar | Aguardando adjudicação | habilitado, recurso encerrado, ainda não adjudicado |
-| Disputar | Homologado | proposta **adjudicada** (6) e resultado publicado no **PNCP** |
+| Contratar | Homologado | proposta **adjudicada** (6) e resultado publicado no **PNCP** (era Disputar; foi para Contratar em 08/11/2026, pedido do Carlinhos) |
 | Contratar | Contrato | contrato ou **ata** publicada no PNCP (registro de preços = ata) |
 | Contratar | Empenho / Ordem de Fornecimento | empenho no **Portal da Transparência** (federal) ou OF lançada à mão |
 | Receber | Entrega | lançada à mão |

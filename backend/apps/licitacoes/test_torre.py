@@ -379,6 +379,17 @@ class TorreTests(APITestCase):
         self.assertEqual(etapas["aguardando_adjudicacao"], 1)
         self.assertEqual(estagios["preparar"]["total"], 1)
 
+    def test_homologado_e_a_primeira_etapa_de_contratar(self):
+        from .torre import ESTAGIOS
+
+        etapas = {estagio: [chave for chave, _ in lista] for estagio, _, lista in ESTAGIOS}
+
+        self.assertEqual(
+            etapas["disputar"],
+            ["disputa", "aguardando_julgamento", "julgado_habilitado", "aguardando_adjudicacao"],
+        )
+        self.assertEqual(etapas["contratar"], ["homologado", "contrato", "empenho"])
+
     def test_convocacao_em_andamento_sobe_para_o_topo(self):
         calma = self.salva(prazo_em_dias=-4)
         self.item(calma, classificacao=1, fase_item="E")

@@ -71,9 +71,9 @@ const ETAPAS_DO_ESTAGIO: Record<EstagioTorre, readonly (readonly [EtapaTorre, st
     ['aguardando_julgamento', 'Aguardando julgamento'],
     ['julgado_habilitado', 'Julgado e habilitado'],
     ['aguardando_adjudicacao', 'Aguardando adjudicação'],
-    ['homologado', 'Homologado'],
   ],
   contratar: [
+    ['homologado', 'Homologado'],
     ['contrato', 'Contrato'],
     ['empenho', 'Empenho / OF'],
   ],

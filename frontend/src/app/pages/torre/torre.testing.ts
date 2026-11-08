@@ -117,7 +117,6 @@ export function torre(): TorreResponse {
           { chave: 'aguardando_julgamento', rotulo: 'Aguardando julgamento', total: 1 },
           { chave: 'julgado_habilitado', rotulo: 'Julgado e habilitado', total: 0 },
           { chave: 'aguardando_adjudicacao', rotulo: 'Aguardando adjudicação', total: 1 },
-          { chave: 'homologado', rotulo: 'Homologado', total: 0 },
         ],
         cartoes: [FARROUPILHA, PMDF],
       },
@@ -126,6 +125,7 @@ export function torre(): TorreResponse {
         rotulo: 'Contratar',
         total: 0,
         etapas: [
+          { chave: 'homologado', rotulo: 'Homologado', total: 0 },
           { chave: 'contrato', rotulo: 'Contrato', total: 0 },
           { chave: 'empenho', rotulo: 'Empenho / Ordem de Fornecimento', total: 0 },
         ],

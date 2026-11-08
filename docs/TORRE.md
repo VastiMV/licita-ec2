@@ -25,7 +25,7 @@ São **4 estágios** e **13 etapas**, nesta ordem (a ordem importa: a etapa
 | Disputar | Aguardando julgamento (`aguardando_julgamento`) | disputa encerrada, proposta ainda sem situação | Sentinela |
 | Disputar | Julgado e habilitado (`julgado_habilitado`) | proposta **aceita** e depois **fornecedor habilitado**; com recurso aberto fica aqui com etiqueta | Sentinela |
 | Disputar | Aguardando adjudicação (`aguardando_adjudicacao`) | habilitado, recurso encerrado, ainda não adjudicado | Sentinela |
-| Disputar | Homologado (`homologado`) | proposta adjudicada **ou** resultado homologado no PNCP | Sentinela + PNCP (diário) |
+| Contratar | Homologado (`homologado`) | proposta adjudicada **ou** resultado homologado no PNCP. Abre o estágio Contratar: ganhou, agora é esperar contrato ou empenho (pedido do Carlinhos, 08/11/2026) | Sentinela + PNCP (dias úteis) |
 | Contratar | Contrato (`contrato`) | contrato ou **ata** de registro de preços | PNCP (ata, diário) · contrato à mão |
 | Contratar | Empenho / OF (`empenho`) | empenho ou ordem de fornecimento | Portal da Transparência (federal, diário) · OF e estados/prefeituras à mão |
 | Receber | Entrega (`entrega`) | entrega lançada | à mão |

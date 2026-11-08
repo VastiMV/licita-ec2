@@ -157,7 +157,6 @@ const MENU: readonly Entrada[] = [
         label: 'Aguardando adjudicação',
         icon: 'calendar',
       },
-      { path: '/torre/etapa/homologado', label: 'Homologado', icon: 'check' },
     ],
   },
   {
@@ -165,6 +164,8 @@ const MENU: readonly Entrada[] = [
     label: 'Contratar',
     path: '/torre/estagio/contratar',
     itens: [
+      // Homologado abre Contratar: ganhou, agora é esperar contrato/empenho.
+      { path: '/torre/etapa/homologado', label: 'Homologado', icon: 'check' },
       { path: '/torre/etapa/contrato', label: 'Contrato', icon: 'documentos' },
       { path: '/torre/etapa/empenho', label: 'Empenho / OF', icon: 'empenho' },
     ],

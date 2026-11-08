@@ -226,15 +226,19 @@ class SincroniaPncpTests(TestCase):
         self.assertEqual(fim, "2026-11-07")
         self.assertLessEqual(dt.date.fromisoformat(inicio), HOJE - dt.timedelta(days=365))
 
-    def test_vitoria_aparece_na_torre_como_homologado(self):
+    def test_vitoria_aparece_na_torre_como_homologado_em_contratar(self):
+        """Homologado é o começo de Contratar (pedido do Carlinhos, 08/11/2026):
+        ganhou, agora é esperar contrato ou empenho."""
+
         from .torre import montar_torre
 
         self.rodar(ClienteFalso(resultados=[UFVJM]))
 
         torre = montar_torre(hoje=HOJE)
-        disputar = next(e for e in torre["estagios"] if e["chave"] == "disputar")
-        self.assertEqual([c["etapa"] for c in disputar["cartoes"]], ["homologado"])
-        self.assertEqual(disputar["cartoes"][0]["valor_ganho"], Decimal("14500"))
+        contratar = next(e for e in torre["estagios"] if e["chave"] == "contratar")
+        self.assertEqual([c["etapa"] for c in contratar["cartoes"]], ["homologado"])
+        self.assertEqual(contratar["cartoes"][0]["estagio"], "contratar")
+        self.assertEqual(contratar["cartoes"][0]["valor_ganho"], Decimal("14500"))
 
     def test_com_ata_a_vitoria_vai_para_contrato(self):
         from .torre import montar_torre

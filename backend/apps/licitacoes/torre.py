@@ -49,10 +49,15 @@ ESTAGIOS: list[tuple[str, str, list[tuple[str, str]]]] = [
             ("aguardando_julgamento", "Aguardando julgamento"),
             ("julgado_habilitado", "Julgado e habilitado"),
             ("aguardando_adjudicacao", "Aguardando adjudicação"),
-            ("homologado", "Homologado"),
         ],
     ),
-    ("contratar", "Contratar", [("contrato", "Contrato"), ("empenho", "Empenho / Ordem de Fornecimento")]),
+    # Homologado abre Contratar (pedido do Carlinhos, 08/11/2026): ganhou,
+    # agora é esperar contrato ou empenho. A ordem das etapas não muda.
+    (
+        "contratar",
+        "Contratar",
+        [("homologado", "Homologado"), ("contrato", "Contrato"), ("empenho", "Empenho / Ordem de Fornecimento")],
+    ),
     ("receber", "Receber", [("entrega", "Entrega"), ("liquidado", "Liquidado"), ("recebido", "Recebido")]),
 ]
 
