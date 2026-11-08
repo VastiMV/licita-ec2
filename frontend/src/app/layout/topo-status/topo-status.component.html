@@ -1,0 +1,80 @@
+@if (empresa(); as e) {
+  <span class="empresa">{{ e.nome }} · CNPJ {{ e.cnpj_formatado }}</span>
+}
+
+<div class="botoes">
+  <div class="ancora">
+    <button
+      type="button"
+      class="pilula radar"
+      [attr.aria-expanded]="aberto() === 'radar'"
+      aria-label="Radar: sugestões de licitação. Em breve."
+      (click)="alternar('radar')"
+    >
+      <app-icon name="radar" />
+      <span class="rotulo">Radar</span>
+      <span class="selo">em breve</span>
+    </button>
+    @if (aberto() === 'radar') {
+      <div class="painel" role="dialog" aria-label="Radar">
+        <b>Radar — em breve</b>
+        <p>
+          Vai sugerir licitações novas parecidas com as que vocês já ganharam, sem precisar buscar.
+        </p>
+        <a routerLink="/oportunidades/buscar" (click)="aberto.set(null)"
+          >Buscar oportunidades agora</a
+        >
+      </div>
+    }
+  </div>
+
+  <div class="ancora">
+    <button
+      type="button"
+      class="pilula sentinela"
+      [attr.aria-expanded]="aberto() === 'sentinela'"
+      aria-label="Sentinela: não instalada"
+      (click)="alternar('sentinela')"
+    >
+      <app-icon name="sentinela" />
+      <span class="rotulo">Sentinela</span>
+      <i class="ponto" aria-hidden="true"></i>
+      <span class="estado">não instalada</span>
+    </button>
+    @if (aberto() === 'sentinela') {
+      <div class="painel" role="dialog" aria-label="Sentinela">
+        <b>Sentinela — não instalada</b>
+        <p>
+          É a extensão do Chrome que lê o Compras.gov.br na sessão do Carlinhos: mensagens, fases e
+          situação de cada item. Quando estiver instalada, aqui aparece a última leitura.
+        </p>
+        <ul class="legenda">
+          <li><i class="ponto verde"></i>Verde: lendo (ex.: "há 2 min")</li>
+          <li><i class="ponto amarelo"></i>Amarelo: a sessão caiu, precisa entrar de novo</li>
+          <li><i class="ponto vermelho"></i>Vermelho: parada</li>
+        </ul>
+      </div>
+    }
+  </div>
+
+  <div class="ancora">
+    <button
+      type="button"
+      class="sino"
+      [attr.aria-expanded]="aberto() === 'avisos'"
+      aria-label="Avisos: nenhum"
+      (click)="alternar('avisos')"
+    >
+      <app-icon name="sino" />
+    </button>
+    @if (aberto() === 'avisos') {
+      <div class="painel" role="dialog" aria-label="Avisos">
+        <b>Nenhum aviso ainda</b>
+        <p>
+          Convocação, diligência, pedido de desconto, recurso, empenho e pagamento aparecem aqui (e
+          no Telegram) quando a Sentinela estiver ligada.
+        </p>
+      </div>
+    }
+  </div>
+</div>

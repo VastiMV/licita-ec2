@@ -25,6 +25,7 @@ dividem estado. Ver docs/Tarefas/feat-torre-de-controle.md.
 from __future__ import annotations
 
 import datetime as dt
+import re
 from dataclasses import dataclass
 from decimal import Decimal
 
@@ -179,6 +180,30 @@ class Saida:
     motivo: str
 
 
+# Código da compra no Compras.gov: UASG (6) + modalidade (2) + número (5) + ano (4).
+MODALIDADE_COMPRAS_GOV = {
+    "05": "Pregão",
+    "06": "Dispensa",
+    "07": "Inexigibilidade",
+    "03": "Concorrência",
+    "04": "Concorrência",
+    "20": "Concurso",
+}
+_CODIGO_DA_COMPRA = re.compile(r"compra=(\d{6})(\d{2})(\d{5})(\d{4})")
+
+
+def rotulo_da_compra(salva) -> str:
+    """"Pregão 112/2026": como a compra é chamada no dia a dia. Do Compras.gov
+    sai do código no link; dos outros portais, da modalidade e do sequencial."""
+
+    if codigo := _CODIGO_DA_COMPRA.search(salva.link_plataforma or ""):
+        _, modalidade, numero, ano = codigo.groups()
+        nome = MODALIDADE_COMPRAS_GOV.get(modalidade, "Compra")
+        return f"{nome} {int(numero)}/{ano}"
+    nome = (salva.modalidade or "Compra").split(" - ")[0].strip()
+    return f"{nome} {salva.sequencial_compra}/{salva.ano_compra}"
+
+
 def _cotacao_de(salva):
     try:
         return salva.cotacao
@@ -290,6 +315,7 @@ def avaliar(salva: OportunidadeSalva, hoje: dt.date) -> tuple[dict | None, Saida
         "etapa": etapa,
         "etapa_rotulo": ROTULO[etapa],
         "uasg": salva.uasg,
+        "compra": rotulo_da_compra(salva),
         "orgao_nome": salva.orgao_nome,
         "municipio": salva.municipio,
         "uf": salva.uf,

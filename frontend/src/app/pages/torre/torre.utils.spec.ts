@@ -1,5 +1,13 @@
-import { FARROUPILHA, PMDF } from './torre.testing';
-import { localDoCartao, moeda, nivelDoCartao, resumoDoItem, rotaDaEtapa } from './torre.utils';
+import { COTADA, FARROUPILHA, PMDF } from './torre.testing';
+import {
+  localDoCartao,
+  moeda,
+  nivelDoCartao,
+  prazoDoCartao,
+  resumoDoItem,
+  rotaDaEtapa,
+  trilhaDoCartao,
+} from './torre.utils';
 
 describe('torre.utils', () => {
   it('Oportunidade e Cotação abrem as listas que já existiam; as outras, a da Torre', () => {
@@ -32,5 +40,21 @@ describe('torre.utils', () => {
     expect(localDoCartao(FARROUPILHA)).toBe('UASG 158127 · Santa Maria/RS');
     expect(nivelDoCartao(FARROUPILHA)).toBe('alerta');
     expect(nivelDoCartao(PMDF)).toBe('neutro');
+  });
+
+  it('prazo: aviso quando faltam 3 dias ou menos; fora de Preparar, nada', () => {
+    expect(prazoDoCartao(COTADA, new Date(2026, 10, 14))).toEqual({
+      texto: 'Proposta até 17/11',
+      urgente: true,
+    });
+    expect(prazoDoCartao(COTADA, new Date(2026, 10, 7))?.urgente).toBe(false);
+    expect(prazoDoCartao(FARROUPILHA)).toBeNull();
+  });
+
+  it('a trilha de Preparar começa na etapa de agora', () => {
+    expect(trilhaDoCartao(COTADA).map((p) => p.rotulo)).toEqual([
+      'Cotação',
+      'Cadastro de proposta',
+    ]);
   });
 });

@@ -35,7 +35,7 @@
   // Mais escuro que --color-surface de propósito — é o que faz a navbar e
   // os cards (ambos --color-surface) se destacarem do fundo em vez de se
   // misturar (o #f4f7fa antigo tinha contraste quase nenhum com branco).
-  --color-bg: #dde5ef;
+  --color-bg: #e9edf5;
   --color-surface: #ffffff;
   --color-fg: #16294d;
   --color-muted: #66788f;
@@ -55,7 +55,7 @@
   --shadow-modal: 0 20px 48px rgba(22, 41, 77, 0.24);
 
   // ---------- Tipografia ----------
-  --font-family-base: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-family-base: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
   --font-size-xs: 0.72rem;
   --font-size-sm: 0.85rem;

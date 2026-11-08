@@ -126,6 +126,33 @@ class TorreTests(APITestCase):
         self.assertEqual(cartao_cotada["salva"]["id"], cotada.pk)
         self.assertIsNone(cartao_ganha["salva"])
 
+    def test_cartao_diz_a_compra_como_o_carlinhos_fala(self):
+        """O número do pregão vem do código da compra no link do Compras.gov
+        (UASG + modalidade + número + ano) — o sequencial do PNCP é outro."""
+
+        from .torre import rotulo_da_compra
+
+        ibama = OportunidadeSalva(
+            sequencial_compra="75",
+            ano_compra="2026",
+            link_plataforma="https://x/acompanhamento-compra?compra=19309905001122026",
+        )
+        dispensa = OportunidadeSalva(
+            sequencial_compra="9",
+            ano_compra="2026",
+            link_plataforma="https://x/acompanhamento-compra?compra=98637106000092026",
+        )
+        outro_portal = OportunidadeSalva(
+            sequencial_compra="12", ano_compra="2026", modalidade="Concorrência - Eletrônica"
+        )
+
+        self.assertEqual(rotulo_da_compra(ibama), "Pregão 112/2026")
+        self.assertEqual(rotulo_da_compra(dispensa), "Dispensa 9/2026")
+        self.assertEqual(rotulo_da_compra(outro_portal), "Concorrência 12/2026")
+
+        salva = self.salva()
+        self.assertIn("compra", self.cartao(self.torre(), salva))
+
     def test_proposta_cadastrada_no_compras_gov_e_cadastro_de_proposta(self):
         salva = self.salva()
         self.cotar(salva)

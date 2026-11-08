@@ -4,6 +4,7 @@ import { IconComponent } from '../../shared/ui/icon/icon.component';
 import { BrandComponent } from '../brand/brand.component';
 import { ProfileMenuComponent } from '../profile-menu/profile-menu.component';
 import { SidebarStateService } from '../sidebar/sidebar-state.service';
+import { TopoStatusComponent } from '../topo-status/topo-status.component';
 
 /**
  * Topbar das páginas de módulo — em mobile mostra o hamburguer (abre a
@@ -14,7 +15,7 @@ import { SidebarStateService } from '../sidebar/sidebar-state.service';
  */
 @Component({
   selector: 'app-navbar',
-  imports: [BrandComponent, IconComponent, ProfileMenuComponent],
+  imports: [BrandComponent, IconComponent, ProfileMenuComponent, TopoStatusComponent],
   templateUrl: './navbar.component.html',
   styleUrl: './navbar.component.scss',
 })

@@ -57,6 +57,8 @@ export interface CartaoTorre {
   readonly etapa: EtapaTorre;
   readonly etapa_rotulo: string;
   readonly uasg: string;
+  /** "Pregão 112/2026" — como a compra é chamada no dia a dia. */
+  readonly compra: string;
   readonly orgao_nome: string;
   readonly municipio: string;
   readonly uf: string;

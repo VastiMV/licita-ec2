@@ -41,7 +41,10 @@ export type IconName =
   | 'empenho'
   | 'encerradas'
   | 'cadastros'
-  | 'produtos';
+  | 'produtos'
+  | 'radar'
+  | 'sentinela'
+  | 'sino';
 
 /**
  * Catálogo de ícones inline (SVG) do projeto — único lugar que sabe

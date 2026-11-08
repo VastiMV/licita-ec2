@@ -10,43 +10,37 @@
     </span>
     <span class="local">{{ local() }}</span>
     <span class="orgao">{{ orgao() }}</span>
-    @if (cartao().orgao_nome) {
-      <span class="obj">{{ titulo() }}</span>
+    <span class="compra">{{ compra() }}</span>
+
+    @if (linha(); as texto) {
+      <span class="linha">{{ texto }}</span>
+    }
+    @if (perdendo(); as texto) {
+      <span class="perdendo">{{ texto }}</span>
     }
 
-    @if (itens().length) {
-      <ul class="itens">
-        @for (item of itens(); track item.numero) {
-          <li [class.perdendo]="item.perdendo" [class.perdido]="!!item.perdido">
-            {{ resumoDoItem(item) }}
-          </li>
+    @if (trilha().length > 1) {
+      <span class="trilha" aria-label="Próximas etapas">
+        @for (passo of trilha(); track passo.rotulo; let primeiro = $first) {
+          @if (!primeiro) {
+            <span aria-hidden="true">›</span>
+          }
+          <span [class.atual]="passo.atual">{{ passo.atual ? '● ' : '' }}{{ passo.rotulo }}</span>
         }
-        @if (itensOcultos() > 0) {
-          <li class="mais">+{{ itensOcultos() }} itens</li>
-        }
-      </ul>
-    }
-
-    @if (valorGanho(); as valor) {
-      <span class="valor">{{ valor }}</span>
-    }
-    @if (prazo(); as data) {
-      <span class="prazo">propostas até {{ data }}</span>
+      </span>
     }
   </button>
 
-  @if (cartao().etiquetas.length) {
+  @if (prazo() || cartao().etiquetas.length) {
     <div class="etiquetas">
+      @if (prazo(); as p) {
+        <span class="etiqueta" [attr.data-nivel]="p.urgente ? 'aviso' : 'neutro'">{{
+          p.texto
+        }}</span>
+      }
       @for (etiqueta of cartao().etiquetas; track etiqueta.texto) {
         <span class="etiqueta" [attr.data-nivel]="etiqueta.nivel">{{ etiqueta.texto }}</span>
       }
     </div>
-  }
-
-  @if (cartao().link_plataforma) {
-    <a class="no-compras" [href]="cartao().link_plataforma" target="_blank" rel="noopener">
-      Abrir no Compras.gov
-      <app-icon name="external-link" />
-    </a>
   }
 </article>

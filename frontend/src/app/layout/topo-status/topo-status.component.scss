@@ -1,0 +1,167 @@
+@use 'mixins' as *;
+
+:host {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.empresa {
+  font-size: var(--font-size-sm);
+  color: var(--color-muted);
+}
+
+.botoes {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-left: auto;
+}
+
+.ancora {
+  position: relative;
+}
+
+// Botões de 44px de altura: alvo fácil de acertar.
+.pilula {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 14px;
+  border-radius: 999px;
+  font: inherit;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  cursor: pointer;
+
+  app-icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+.radar {
+  border: 1px solid #c8d6f4;
+  background: #eef3fd;
+  color: #25469a;
+
+  .selo {
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: #fff;
+    color: #25469a;
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+  }
+}
+
+.sentinela {
+  border: 1px solid var(--color-border);
+  background: #f1f4f9;
+  color: var(--color-fg);
+
+  .estado {
+    font-weight: 500;
+    color: var(--color-muted);
+  }
+}
+
+.ponto {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #8a96ab;
+
+  &.verde {
+    background: #1f9d5c;
+  }
+  &.amarelo {
+    background: #e0a12a;
+  }
+  &.vermelho {
+    background: #c2381f;
+  }
+}
+
+.sino {
+  appearance: none;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+  color: var(--color-navy);
+  cursor: pointer;
+
+  app-icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+.painel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 50;
+  width: 300px;
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-md);
+  font-size: var(--font-size-sm);
+  line-height: 1.45;
+
+  p {
+    margin: var(--space-2) 0;
+    color: var(--color-muted);
+  }
+}
+
+.legenda {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+}
+
+// No celular: só os ícones (o texto está no aria-label e no painel).
+@media (max-width: 640px) {
+  .empresa,
+  .rotulo,
+  .selo,
+  .estado {
+    display: none;
+  }
+
+  .pilula {
+    padding: 0 12px;
+  }
+}

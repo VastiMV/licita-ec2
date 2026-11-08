@@ -58,3 +58,109 @@ export function nivelDoCartao(cartao: CartaoTorre): 'alerta' | 'aviso' | 'neutro
   if (niveis.has('aviso')) return 'aviso';
   return 'neutro';
 }
+
+/** O nome curto de cada etapa, para a trilha do cartão. */
+const ETAPAS_DO_ESTAGIO: Record<EstagioTorre, readonly (readonly [EtapaTorre, string])[]> = {
+  preparar: [
+    ['oportunidade', 'Oportunidade'],
+    ['cotacao', 'Cotação'],
+    ['cadastro_proposta', 'Cadastro de proposta'],
+  ],
+  disputar: [
+    ['disputa', 'Disputa'],
+    ['aguardando_julgamento', 'Aguardando julgamento'],
+    ['julgado_habilitado', 'Julgado e habilitado'],
+    ['aguardando_adjudicacao', 'Aguardando adjudicação'],
+    ['homologado', 'Homologado'],
+  ],
+  contratar: [
+    ['contrato', 'Contrato'],
+    ['empenho', 'Empenho / OF'],
+  ],
+  receber: [
+    ['entrega', 'Entrega'],
+    ['liquidado', 'Liquidado'],
+    ['recebido', 'Recebido'],
+  ],
+};
+
+/** A trilha do cartão: a etapa de agora e as que faltam no estágio
+ * ("● Aguardando julgamento › Julgado e habilitado › …") — o que vem depois,
+ * sem precisar lembrar. */
+export function trilhaDoCartao(cartao: CartaoTorre): { rotulo: string; atual: boolean }[] {
+  const etapas = ETAPAS_DO_ESTAGIO[cartao.estagio];
+  const daqui = etapas.findIndex(([chave]) => chave === cartao.etapa);
+  return etapas.slice(Math.max(daqui, 0)).map(([chave, rotulo]) => ({
+    rotulo,
+    atual: chave === cartao.etapa,
+  }));
+}
+
+/** Os itens que ainda contam (perdidos saem). */
+function itensVivos(cartao: CartaoTorre): ItemTorre[] {
+  return cartao.itens.filter((item) => !item.perdido);
+}
+
+/** O item em que a empresa está à frente, quando é um só. */
+function itemPrincipal(cartao: CartaoTorre): ItemTorre | null {
+  const vivos = itensVivos(cartao);
+  const frente = vivos.filter((item) => !item.perdendo);
+  if (vivos.length === 1) return vivos[0];
+  return frente.length === 1 ? frente[0] : null;
+}
+
+/** "Pregão 61/2026 · item 22". */
+export function compraDoCartao(cartao: CartaoTorre): string {
+  const item = itemPrincipal(cartao);
+  return [cartao.compra, item && `item ${item.numero}`].filter(Boolean).join(' · ');
+}
+
+function numero(valor: string | null): string | null {
+  if (valor == null || valor === '') return null;
+  return Number(valor).toLocaleString('pt-BR', { maximumFractionDigits: 4 });
+}
+
+/** "1º lugar · 20 × R$ 11.999,00 = R$ 239.980,00", ou "17 itens · R$ 53.312,08". */
+export function linhaDoCartao(cartao: CartaoTorre): string | null {
+  const vivos = itensVivos(cartao);
+  if (!vivos.length) return null;
+  const item = itemPrincipal(cartao);
+  if (item && vivos.length === 1) {
+    const lugar = item.classificacao ? `${item.classificacao}º lugar` : '';
+    const qtd = numero(item.quantidade);
+    const unitario = moeda(item.valor_unitario);
+    const conta =
+      qtd && unitario
+        ? `${qtd} × ${unitario} = ${moeda(item.valor_total)}`
+        : moeda(item.valor_total);
+    return [lugar, conta].filter(Boolean).join(' · ');
+  }
+  const frente = vivos.filter((i) => !i.perdendo).length;
+  return [`${frente || vivos.length} ${frente === 1 ? 'item' : 'itens'}`, moeda(cartao.valor_ganho)]
+    .filter(Boolean)
+    .join(' · ');
+}
+
+/** "2 itens perdendo (podem ser chamados)" — em cinza, embaixo da linha. */
+export function perdendoDoCartao(cartao: CartaoTorre): string | null {
+  const n = itensVivos(cartao).filter((item) => item.perdendo).length;
+  if (!n) return null;
+  return n === 1
+    ? '1 item perdendo (pode ser chamado)'
+    : `${n} itens perdendo (podem ser chamados)`;
+}
+
+/** "Proposta até 10/11" — só em Preparar. Aviso quando faltam 3 dias ou menos. */
+export function prazoDoCartao(
+  cartao: CartaoTorre,
+  hoje: Date = new Date(),
+): { texto: string; urgente: boolean } | null {
+  const data = cartao.data_encerramento_proposta;
+  if (cartao.estagio !== 'preparar' || !data) return null;
+  const [ano, mes, dia] = data.split('-').map(Number);
+  const prazo = new Date(ano, mes - 1, dia);
+  const inicioDeHoje = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
+  const dias = Math.round((prazo.getTime() - inicioDeHoje.getTime()) / 86_400_000);
+  const ddmm = `${String(dia).padStart(2, '0')}/${String(mes).padStart(2, '0')}`;
+  return { texto: `Proposta até ${ddmm}`, urgente: dias <= 3 };
+}

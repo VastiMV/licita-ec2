@@ -94,46 +94,37 @@
   line-height: 1.3;
 }
 
-.obj {
+.compra {
   font-size: var(--font-size-sm);
   color: var(--color-muted);
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
 }
 
-.itens {
-  margin: 2px 0 0;
-  padding: 0;
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+.linha {
   font-size: var(--font-size-sm);
-
-  .perdendo,
-  .perdido {
-    color: var(--color-muted);
-  }
-
-  .perdido {
-    text-decoration: line-through;
-  }
-
-  .mais {
-    color: var(--color-muted);
-  }
-}
-
-.valor {
-  font-weight: 700;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 
-.prazo {
-  font-size: var(--font-size-sm);
+.perdendo {
+  font-size: var(--font-size-xs);
   color: var(--color-muted);
+}
+
+// "● Aguardando julgamento › Julgado e habilitado › …": a etapa de agora em
+// destaque e as que faltam, apagadas.
+.trilha {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--color-muted);
+
+  .atual {
+    font-weight: 700;
+    color: var(--color-etapa-disputar);
+  }
 }
 
 .etiquetas {
@@ -150,31 +141,18 @@
   background: var(--color-blue-soft);
   color: var(--color-blue);
 
+  &[data-nivel='neutro'] {
+    background: #eef1f6;
+    color: var(--color-muted);
+  }
+
   &[data-nivel='aviso'] {
-    background: var(--color-warn-bg);
-    color: var(--color-warn);
+    background: #fff1d6;
+    color: #7a4a00;
   }
 
   &[data-nivel='alerta'] {
     background: var(--color-danger-bg);
     color: var(--color-danger);
-  }
-}
-
-.no-compras {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  align-self: flex-start;
-  font-size: var(--font-size-sm);
-  color: var(--color-blue);
-
-  app-icon {
-    width: 14px;
-    height: 14px;
-  }
-
-  &:focus-visible {
-    @include focus-ring;
   }
 }
