@@ -44,7 +44,7 @@ manifests já usam esse nome; o valor `licita` que aparecia aqui antes nunca foi
 |---|---|
 | `accounts` | usuários, autenticação (JWT), perfil |
 | `catalogo` | model `Pdm`, sincronização do catálogo de materiais |
-| `licitacoes` | busca de oportunidades (live, cruza PNCP + catálogo) e os models `OportunidadeSalva`/`EventoOportunidadeSalva` (lista salva + histórico) |
+| `licitacoes` | busca de oportunidades (live, cruza PNCP + catálogo), os models `OportunidadeSalva`/`EventoOportunidadeSalva` (lista salva + histórico) e a **Torre de Controle**: `torre.py` (etapas), `encerradas.py` (saídas), os models `ParticipacaoCompra`/`ItemParticipado`/`DocumentoFinanceiro`/`Entrega` e as sincronias diárias `sincronia_pncp.py`/`sincronia_transparencia.py` — ver [`TORRE.md`](TORRE.md) |
 | `tenants` | model `Tenant` (uma linha só hoje) e `tenant_atual()`, o único ponto que resolve de quem é a requisição — ver `DOMINIO.md` |
 | `empresas` | model `Empresa` — os CNPJs com que a equipe disputa (não confundir com `fornecedores`, que é de quem ela compra) |
 | `documentos` | dossiê de habilitação da empresa: catálogo da Lei 14.133, a vaga de cada documento, as versões com validade e o histórico — ver `DOMINIO.md` |
@@ -53,20 +53,22 @@ manifests já usam esse nome; o valor `licita` que aparecia aqui antes nunca foi
 | `propostas` | a etapa depois do Cotador: a proposta em Word (modelo do cliente), os documentos de habilitação conferidos e os arquivos da licitação |
 | `capag` | nota CAPAG (Tesouro) de municípios e estados — o selo do card |
 | `cotador` | formação de preço de uma oportunidade (`Cotacao`/`ItemCotacao`/`OfertaFornecedor`), a conta em `formulas.py` e a proposta em .xlsx (`planilha.py`). App próprio, e não um campo novo no cotador antigo de `licitacoes`: os dois respondem perguntas diferentes e os nomes de campo colidiriam — ver a docstring de `apps/cotador/models.py` |
-| `filtros` | **ainda não existe** — model `Filtro` (dono = usuário autenticado) |
-| `alertas` | **ainda não existe** — model `Alerta`, geração e disparo de notificação |
-| `integracoes` | clients HTTP para PNCP e compras.gov.br, isolados do resto (mockáveis nos testes) |
+| `filtros`, `alertas` | **saíram do plano** (`feat-remover-legado`, 20/09/2026). O aviso ao usuário passa a ser o sino do Licita e o Telegram, alimentados pela Sentinela e pelas sincronias — ver `TORRE.md` |
+| `integracoes` | clients HTTP para PNCP, compras.gov.br (inclusive Dados Abertos: resultados e atas por fornecedor) e Portal da Transparência (`clients/transparencia.py`), isolados do resto (mockáveis nos testes) |
 | `armazenamento` | onde os arquivos ficam — interface única, drivers registráveis (Cloudflare R2, AWS S3, disco local) e a configuração que o cliente edita na tela; ver a seção "Armazenamento de arquivos" |
 | `config/` (não é app) | settings (`environment.py` é a única porta para variável de ambiente), ASGI, Celery e rotas |
 
 ### Frontend — organização Angular
 
-- Standalone components (padrão atual do Angular), lazy-loaded por feature:
-  `oportunidades/` (com os submódulos `pesquisar/` e `salvas/`), `empresas/`
-  (com dois modais: o cadastro e o dossiê de documentos), `fornecedores/`,
-  `configuracoes/`, `filtros/`, `alertas/`, `auth/`.
-  Sinaliza-se aqui a intenção; a estrutura definitiva de módulos é detalhada
-  quando o harness de código for gerado.
+- Standalone components (padrão atual do Angular), lazy-loaded por feature,
+  em `pages/`: `torre/` (a tela inicial: quadro, estágio aberto, lista por
+  etapa e o cartão — ver [`TORRE.md`](TORRE.md), seção 9), `oportunidades/`
+  (busca e salvas), `ciclo/` (Cotador, Propostas, Encerradas, Descartadas),
+  `empresas/`, `fornecedores/`, `produtos/`, `configuracoes/`, `auth/`.
+- `layout/`: o menu (`sidebar/`, com a contagem por etapa), o topo
+  (`navbar/` + `topo-status/`: empresa, Radar, Sentinela, sino) e o `shell/`.
+- Cores, espaçamentos e letra só em `src/styles/_tokens.scss` (nenhum
+  componente declara cor solta). O visual segue o protótipo "Licita v1.0".
 - Um `ApiService`/`HttpInterceptor` central cuida do token JWT e do refresh.
 - Consome só a API DRF — nenhuma lógica de negócio (matching de filtro,
   parsing de catálogo) duplicada no frontend.
@@ -143,8 +145,8 @@ task Celery, com RabbitMQ como broker:
 | Task | Gatilho | Frequência |
 |---|---|---|
 | `sincronizar_catalogo_pdm` | Celery Beat | diária (ou sob demanda via endpoint admin) |
-| `verificar_filtros_ativos` | Celery Beat | a definir (ex.: a cada 15–30 min) — varre `Filtro.objects.filter(ativo=True)`, consulta PNCP/compras.gov.br, cria `Alerta` |
-| `enviar_email_alerta` | disparada por `verificar_filtros_ativos` | por alerta criado |
+| `licitacoes.sincronizar_pncp` | Celery Beat | todo dia às 8h (Brasília) — vitórias e atas da empresa; ver `TORRE.md` |
+| `licitacoes.sincronizar_transparencia` | Celery Beat | todo dia às 8h10 — empenho, liquidação, pagamento federais |
 | chamadas à API do PNCP/compras.gov.br feitas por busca interativa do usuário | request síncrono da `licitacoes` view | -- ficam síncronas mesmo, são a resposta da busca; só o que não bloqueia a resposta ao usuário vira task |
 
 Agendamento via `django-celery-beat` (schedule editável no banco/admin, não
@@ -251,8 +253,8 @@ alternativo por preferência pessoal:
 | Backend (models, serializers, regras) | `django.test.TestCase` (test runner padrão do Django, via `manage.py test`) | toda regra de `docs/DOMINIO.md` (matching de filtro, fallback catálogo↔PNCP, geração de `Alerta`) tem teste antes de existir código |
 | Backend (endpoints DRF) | `rest_framework.test.APITestCase` (extensão do `TestCase` padrão, já pensada para DRF) | autenticação (login, refresh, 401 sem token, logout invalida refresh), permissão (dono só vê seu próprio `Filtro`), contrato de cada endpoint |
 | Clients de integração (`integracoes/`) | `TestCase` + `unittest.mock`/`requests-mock` | **sem rede real nos testes** — mesma disciplina do protótipo (`tests/conftest.py` já desligava a busca do PNCP por padrão); contrato mockado a partir do `api-spec.json` e dos comportamentos documentados em `DOMINIO.md` (paginação 10–500, `/api/search/` etc.) |
-| Tasks Celery | `TestCase` com `CELERY_TASK_ALWAYS_EAGER=True` | `sincronizar_catalogo_pdm`, `verificar_filtros_ativos`, `enviar_email_alerta` rodam síncronas no teste, sem broker real |
-| Frontend (Angular) | Karma/Jasmine gerado pelo próprio `ng generate` (`*.spec.ts` ao lado de cada arquivo, `ng test`) | `AuthService`/interceptor (refresh automático, fila de requests em 401, logout limpa estado), guards de rota, componentes de `oportunidades`/`filtros`/`alertas` |
+| Tasks Celery | `TestCase` com `CELERY_TASK_ALWAYS_EAGER=True` | `sincronizar_catalogo_pdm`, `sincronizar_pncp`, `sincronizar_transparencia` rodam síncronas no teste, sem broker nem rede real (clients falsos com o formato real das APIs) |
+| Frontend (Angular) | Vitest via `ng test` (`*.spec.ts` ao lado de cada arquivo) | `AuthService`/interceptor (refresh automático, fila de requests em 401, logout limpa estado), guards de rota, telas da Torre, menu e topo |
 | Frontend (fluxo ponta a ponta) | a definir (Playwright é o candidato natural — não tem padrão nativo do Angular CLI para e2e desde a remoção do Protractor) | login → criar filtro → alerta aparece — pelo menos o caminho feliz, antes de considerar uma feature "pronta" |
 
 ### CI
@@ -268,8 +270,10 @@ harness de código for gerado.
 - Provedor de e-mail transacional para `enviar_email_alerta`.
 - Domínio: `insidelicitacoes.com.br` registrado; falta o DNS (registro.br)
   apontar para o EC2. Até lá, endereço provisório `16-59-20-70.sslip.io`.
-- **Backup do Postgres de produção: não existe.** Prioridade — hoje, se o
-  EC2 for perdido, os dados vão junto.
+- **Backup do Postgres fora da máquina:** todo deploy faz `pg_dump` antes
+  de migrar (10 mais recentes, em `/opt/licita/backups/`), mas eles ficam
+  no próprio EC2. Se a máquina for perdida, vão junto. Falta copiar para
+  fora (S3, por exemplo).
 
 ## CI e imagens
 
@@ -318,8 +322,8 @@ imperativamente no cluster.
 [`DOMINIO.md`](DOMINIO.md) para o estado detalhado e os achados contra a
 API real). Falta:
 
-1. `filtros`/`alertas` — dependem da busca de oportunidades já funcionando,
-   que é o caso.
+1. **Torre de Controle:** Sentinela, Telegram, Radar, telas de lançamento
+   manual — lista e ordem em [`TORRE.md`](TORRE.md), seção 11.
 2. Fechar a causa raiz da desconexão do PNCP (mitigada com retry, não
    resolvida — ver `DOMINIO.md`) e a lentidão da busca textual por termo
    genérico (~2min observados).

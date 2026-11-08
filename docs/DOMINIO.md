@@ -192,8 +192,9 @@ Regras:
   registro existente, sem novo evento).
 - **Prazo vencido sai da lista de Salvas.** Salvas mostra só o que ainda
   está no prazo (`OportunidadeSalvaQuerySet.no_prazo`). Vencida, a
-  licitação sai do ciclo e aparece em **Descartadas** (ver "Ciclo de
-  Licitação" abaixo). O card (na busca e no modal) continua dizendo em
+  licitação segue a regra da Torre de Controle: vai para **Descartadas**,
+  ou fica em Cadastro de proposta esperando a Sentinela confirmar, se tiver
+  cotação e for do Compras.gov.br (ver [`TORRE.md`](TORRE.md), seção 2). O card (na busca e no modal) continua dizendo em
   texto que o prazo encerrou e que não é mais possível gerar proposta —
   `expirada` é o que bloqueia a ação.
 - **Dados voláteis não vêm do snapshot**: documentos do edital, plataforma
@@ -213,8 +214,8 @@ Endpoints (`apps/licitacoes/urls.py`, todos `IsAuthenticated`):
 | `GET /api/licitacoes/salvas/<id>/eventos/` | o histórico (ver abaixo) |
 | `GET /api/licitacoes/salvas/<id>/processo/` | a história no formato do modal "Ver processo": etapa de cada evento e o desfecho — vale também para removidas |
 
-Frontend: **"Oportunidades" virou menu de primeiro nível**, com "Pesquisar"
-(a busca ao vivo, antigo módulo "Oportunidades") e "Salvas". A tela de
+Frontend: a busca é "Buscar oportunidades", no topo do menu; Salvas é a
+etapa **Preparar › Oportunidade** da Torre. A tela de
 salvas é uma tabela (`shared/ui/data-table`) com busca, ordenação por
 qualquer coluna e paginação — todas integradas ao endpoint, nunca em
 memória. Vencidas não aparecem (estão em Descartadas).
@@ -253,59 +254,34 @@ a lista do que aconteceu, no estilo de um extrato de ligação.
 | `removida` | na exclusão (individual ou em lote pelas vencidas) |
 | `proposta_gerada` | **ainda não produzido** — declarado porque o log já é escrito no formato final; entra junto com o módulo de propostas |
 
-### Ciclo de Licitação — etapas e saída do ciclo
+### Torre de Controle — etapas e saída do quadro
 
-Implementado em `apps/licitacoes/ciclo.py` (etapas) e
-`apps/licitacoes/encerradas.py` (saída do ciclo). **Nada disso é gravado:**
-etapa e saída são calculadas do que existe (cotação, proposta, prazo,
-remoção). Ninguém escolhe etapa num select nem arrasta cartão.
+**Tudo sobre isso está em [`TORRE.md`](TORRE.md)**: os 4 estágios e as 13
+etapas, a regra de cada uma (por item), de onde vem cada fato, Encerradas ×
+Descartadas, registro de preços, sincronias e API.
 
-**Etapas** (colunas da Visão Geral):
+Resumo para quem está só passando:
 
-| Etapa | Quando a licitação está nela |
-|---|---|
-| Oportunidade | salva, no prazo, sem cotação |
-| Cotação | com cotação salva no Cotador, no prazo |
-| Proposta | com proposta gerada (`apps.propostas`) — o prazo vencer aqui é o caminho normal |
-| Disputa | **ainda não existe** (coluna vazia) |
-| Empenho | **ainda não existe** (coluna vazia) |
+- **A etapa é calculada, nunca gravada** (`apps/licitacoes/torre.py`).
+  Ninguém escolhe etapa nem arrasta cartão.
+- **A etapa é do item**; o cartão fica na etapa do item mais adiante.
+- **Cotar não é participar.** Encerradas = participou e saiu; Descartadas =
+  saiu antes de participar. Uma licitação nunca está em dois lugares
+  (`encerradas.py` + `test_saidas.py`).
+- O quadro antigo (`ciclo.py`, `GET ciclo/`, colunas Oportunidade, Cotação,
+  Proposta, Disputa, Empenho) foi substituído pela Torre em 08/11/2026. O
+  código ainda está no repositório, sem tela, até `feat-remover-legado`.
 
-**Saída do ciclo — Encerradas × Descartadas** (decisão da operação,
-07/11/2026). A regra é: **cotar não é participar**.
-
-| Situação | Vai para | Motivo exibido |
-|---|---|---|
-| Tirada de Salvas antes do prazo, **sem** cotação | Descartadas | Tirada da lista |
-| Tirada de Salvas antes do prazo, **com** cotação | Descartadas | Tirada da lista |
-| Prazo venceu **sem** cotação | Descartadas | Prazo venceu sem cotação |
-| Prazo venceu **com** cotação (sem proposta) | Descartadas | Prazo venceu com cotação |
-| Participou do certame (perdeu a disputa, falhou no empenho, concluída) | **Encerradas** | chegam com as etapas Disputa e Empenho |
-
-- **Uma licitação nunca aparece nas duas listas.** A regra mora num lugar
-  só (`encerradas.py`), usada pelas duas telas e pelo modal do processo.
-- **Encerradas fica vazia até Disputa/Empenho existirem** — de propósito,
-  com aviso apontando para Descartadas.
-- **Tirada da lista depois do prazo vencer: vale o prazo**, que veio
-  primeiro (a remoção foi só limpeza). A data mostrada é a do que veio
-  primeiro: a remoção ou o prazo.
-- **Nada é apagado.** A remoção é lógica; "Ver processo" mostra quem tirou
-  da lista, quando e onde a licitação estava (Oportunidade ou Cotação).
-
-Telas: **Ciclo › Descartadas** — filtros Período (últimos 90 dias, um dos
-últimos 12 meses, ou datas livres), Motivo, UASG (parte do código basta) e
-UF; colunas UASG, cidade, data, motivo, onde estava, valor cotado e
-estimado. **Ciclo › Encerradas** — mesma tabela, para quem participou.
+Telas de saída: **Encerradas** e **Encerradas › Descartadas** — filtros
+Período (últimos 90 dias, um dos últimos 12 meses, ou datas livres), Motivo,
+UASG (parte do código basta) e UF; colunas UASG, cidade, data, motivo, onde
+estava, valor cotado e estimado.
 
 | Rota | O quê |
 |---|---|
-| `GET /api/licitacoes/ciclo/` | o quadro da Visão Geral, com a etapa já calculada |
+| `GET /api/licitacoes/torre/` | o quadro da Torre, com a etapa já calculada |
 | `GET /api/licitacoes/descartadas/` | `data_inicial`/`data_final`, `motivo`, `uasg`, `uf`, `busca`, `ordering` |
-| `GET /api/licitacoes/encerradas/` | mesmos filtros (hoje sempre vazia) |
-
-Pendência conhecida: o resumo da Visão Geral ainda mostra a contagem
-"vencidas — prazo de proposta perdido" (todas as vencidas, com ou sem
-cotação), anterior à regra acima. Decidir se continua assim na revisão do
-ciclo.
+| `GET /api/licitacoes/encerradas/` | mesmos filtros |
 
 ### `Cotacao` — a formação de preço de um edital
 
@@ -517,6 +493,9 @@ de verdade no catálogo.
 | `compras.gov.br` (`dadosabertos.compras.gov.br`) | catálogo de materiais (PDM), contratações/itens |
 | PNCP (`pncp.gov.br/api/...`) | busca textual de editais, itens/documentos/detalhe da contratação |
 | Tesouro Transparente (`tesourotransparente.gov.br/ckan/...`) | notas CAPAG (município/estado) — `apps/capag` |
+| Dados Abertos do Compras.gov (resultados e atas por `niFornecedor`) | o que a empresa ganhou e as atas de registro de preços — sincronia diária às 8h (`sincronia_pncp.py`), ver [`TORRE.md`](TORRE.md) |
+| Portal da Transparência (`api.portaldatransparencia.gov.br`, `despesas/documentos-por-favorecido`) | empenho, liquidação e pagamento federais — sincronia diária às 8h10 (`sincronia_transparencia.py`). Precisa da chave `PORTAL_TRANSPARENCIA_CHAVE` (header `chave-api-dados`) |
+| Compras.gov.br na sessão do fornecedor | **planejado:** lido pela Sentinela (extensão), ver [`SENTINELA.md`](SENTINELA.md) |
 | E-mail (provedor a definir) | notificação de `Alerta` |
 
 O sync do catálogo (~41 páginas de 500 registros) roda **sequencial, com um
@@ -719,3 +698,10 @@ acima parecer estranha, a razão costuma estar aqui.
 | 07/11/2026 | **Cotar não é participar:** tudo que saiu do ciclo antes do certame (tirada da lista ou prazo vencido, com ou sem cotação) é Descartada; Encerradas é só quem participou |
 | 07/11/2026 | Motivos em Descartadas em texto normal (sem vermelho); filtros por período/mês, motivo e UASG, numa linha só |
 | 07/11/2026 | Logo novo da Inside Solutions, sobre faixa escura (`--color-marca-fundo`) |
+| 07/11/2026 | **Sem Integra Compras (Serpro):** cobra por requisição, fora do orçamento. A leitura do Compras.gov será pela Sentinela, na sessão do próprio Carlinhos. **Nunca burlar captcha, nunca guardar senha gov.br** |
+| 07/11/2026 | **Torre de Controle** substitui "Ciclo de Licitação": 4 estágios, 13 etapas definidas com o Carlinhos; a etapa é do item; o PDF da proposta não é etapa (é a proposta ajustada, depois de ganhar); Recurso e Suspensa são etiquetas |
+| 07/11/2026 | Vitória homologada no PNCP que não estava salva no Licita é **criada** sozinha (nenhuma vitória fica de fora) |
+| 07/11/2026 | Participou sem cadastrar proposta (Cubatão, 55/2026) → Descartadas (`sem_proposta`) |
+| 07/11/2026 | Prazo vencido com cotação no Compras.gov.br não é descartado: espera a Sentinela confirmar ("confirmar com a Sentinela") |
+| 08/11/2026 | Torre publicada direto em produção (sem ambiente de teste), à noite, fora de sessão. **A Torre é a tela inicial** |
+| 08/11/2026 | Visual do protótipo "Licita v1.0": menu azul escuro com o número de cada etapa, Radar/Sentinela/sino no topo **mostrando o estado verdadeiro** (em breve / não instalada), letra Plus Jakarta Sans |

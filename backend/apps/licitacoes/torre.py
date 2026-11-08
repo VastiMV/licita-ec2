@@ -18,8 +18,9 @@ licitação sai para Encerradas.
 **O PDF da proposta não define etapa.** Ele é a proposta ajustada, enviada
 depois de ganhar, durante o julgamento (convocação de anexo).
 
-Esta tela fica **ao lado** do `ciclo.py` até ser aprovada; as duas não
-dividem estado. Ver docs/Tarefas/feat-torre-de-controle.md.
+Desde 08/11/2026 é a tela inicial e substitui o quadro do `ciclo.py` (que
+sai em `feat-remover-legado`). A explicação completa, para quem chega, está
+em docs/TORRE.md.
 """
 
 from __future__ import annotations

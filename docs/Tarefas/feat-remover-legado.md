@@ -80,3 +80,16 @@ dentro do processo.
   *Teste antes:* `POST /api/cotador/cotacoes/` com o payload `oportunidade`
   (sem `oportunidade_id`) é recusado com 400; o card da Pesquisar mostra só
   "Salvar"; o Cotador continua abrindo das salvas.
+
+- [ ] **6. O quadro antigo do Ciclo de Licitação**
+  A Torre de Controle o substituiu em 08/11/2026 (`docs/TORRE.md`). Hoje
+  `/ciclo` e `/ciclo/visao-geral` já redirecionam para `/torre`; o código
+  continua no repositório sem tela. Saem: `pages/ciclo/quadro/`,
+  `services/licitacoes/ciclo.service.ts` (+ contrato), `CicloView` e a rota
+  `GET ciclo/`, e `apps/licitacoes/ciclo.py` — **menos**
+  `situacao_da_cotacao`, que o serializer de Cotação usa (mudar para
+  `torre.py` ou `cotador`). Cotador, Propostas, Encerradas e Descartadas
+  continuam em `pages/ciclo/` (são telas vivas: renomear a pasta é opcional).
+  *Teste antes:* nenhum teste da Torre ou de `test_saidas.py` pode depender
+  de `ciclo.py`; os testes do quadro antigo saem junto.
+

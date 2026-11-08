@@ -46,17 +46,19 @@ config/
                       (ConfigMap/Secret no Kubernetes). Nenhum outro módulo lê os.environ.
     base.py           settings do Django, montado em cima de Environment
   asgi.py             Daphne + Channels (roteador de websocket vazio por enquanto)
-  celery.py           app Celery (tasks em catalogo e capag; agenda no banco, django-celery-beat)
+  celery.py           app Celery (tasks em catalogo, capag e licitacoes; agenda no banco, django-celery-beat)
   urls.py
 apps/
   accounts/           User (login por e-mail) — primeiro model, AUTH_USER_MODEL
-  integracoes/        Clients HTTP (compras.gov.br, PNCP) — isolados, mockáveis nos testes
+  integracoes/        Clients HTTP (compras.gov.br, PNCP, Portal da Transparência) — isolados, mockáveis nos testes
   catalogo/           Model Pdm, sync assíncrono (Celery) e busca por similaridade
   capag/              Nota CAPAG (Tesouro) de municípios/estados — selo do card
   licitacoes/         Busca de oportunidades (ao vivo, sem persistir), oportunidades
-                      salvas e o histórico de cada uma (models.py), o Ciclo de
-                      Licitação (ciclo.py) e a saída do ciclo — Encerradas ×
-                      Descartadas (encerradas.py)
+                      salvas e o histórico de cada uma (models.py), a Torre de
+                      Controle (torre.py — ver docs/TORRE.md), a saída do quadro —
+                      Encerradas × Descartadas (encerradas.py) — e as sincronias
+                      diárias com PNCP e Portal da Transparência (sincronia_*.py).
+                      ciclo.py é o quadro antigo, sem tela (sai em feat-remover-legado)
   tenants/            Tenant — de quem são os registros (uma linha só hoje)
   empresas/           Os CNPJs com que a equipe disputa
   documentos/         Dossiê de habilitação da empresa (certidões, validade, versões)
@@ -70,7 +72,10 @@ apps/
 Cada `models.py` começa com uma docstring explicando as decisões daquele
 domínio — é o primeiro lugar a ler antes de mexer num app.
 
-Ainda não existem: `filtros` e `alertas` (ver `docs/ARQUITETURA.md`).
+`filtros` e `alertas` saíram do plano (ver `docs/Tarefas/feat-remover-legado.md`).
+
+Rodar as sincronias à mão (sem esperar o Celery Beat):
+`python manage.py sincronizar_pncp` e `python manage.py sincronizar_transparencia`.
 
 ## Variáveis de ambiente
 

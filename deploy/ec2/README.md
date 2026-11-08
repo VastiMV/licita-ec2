@@ -17,7 +17,8 @@ São 4 etapas, **feitas uma vez só**. Depois disso, atualizar é um botão.
 | Senhas | `/opt/licita/.env` (produção) e `/opt/licita-teste/.env` (teste) — só no servidor; a dona guarda cópia fora dele |
 | Acesso ao terminal | AWS → EC2 → `licita` → Connect → EC2 Instance Connect |
 | Segredos do GitHub | `EC2_HOST`, `EC2_SSH_KEY` (chave `licita.pem`) |
-| Backup do banco | **não existe ainda** |
+| Backup do banco | automático a cada deploy, em `/opt/licita/backups/` (ver "Backup do banco") — **só dentro da máquina** |
+| Chave do Portal da Transparência | `PORTAL_TRANSPARENCIA_CHAVE` em `/opt/licita/.env` (ver "Sincronias diárias") |
 
 O sslip.io é um serviço gratuito em que o nome já contém o IP — serve para
 ter HTTPS antes do DNS do domínio estar pronto. É provisório.

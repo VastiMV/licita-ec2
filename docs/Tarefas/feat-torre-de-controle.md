@@ -1,5 +1,22 @@
 # feat/torre-de-controle — o ciclo inteiro, da oportunidade ao dinheiro
 
+> **Como funciona hoje:** [`docs/TORRE.md`](../TORRE.md). Este arquivo é o
+> plano: o que foi feito e o que falta.
+
+## Onde paramos (08/11/2026)
+
+- **No ar:** Passos 0, 1, 2 e 4. A Torre é a tela inicial, com o visual do
+  protótipo. PNCP (8h) e Portal da Transparência (8h10) rodam sozinhos.
+- **Depois do deploy de 08/11, falta fazer no servidor** (uma vez):
+  1. Pôr `PORTAL_TRANSPARENCIA_CHAVE` no `/opt/licita/.env` e reiniciar
+     `backend worker beat` (`deploy/ec2/README.md`, "Sincronias diárias").
+  2. Rodar `sincronizar_pncp` e `sincronizar_transparencia` à mão para
+     trazer as vitórias na hora.
+- **Próximo:** Passo 5 (Sentinela beta) — combinado com a dona para logo
+  depois desta versão. Depois o Passo 3 (Telegram), que depende dela.
+- **Esperando a operação:** o modelo atualizado do PDF da proposta (vai
+  virar ação dentro de Julgamento).
+
 Decisões (07/11/2026, com a operação):
 
 - **Torre de Controle** substitui o nome "Ciclo de Licitação". O quadro tem
@@ -100,7 +117,7 @@ garantida.
 - [ ] Prazo de validade da proposta (Lei 14.133, art. 90, §3º) e lembrete de cobrança por dias parados
 
 ### Passo 3 — Telegram
-- [ ] Bot e configuração do chat; envio pelo Celery
+- [ ] Bot e configuração do chat; envio pelo Celery (o token do bot fica no `.env`, nunca no código)
 - [ ] Avisos: convocação, diligência, pedido de desconto, recurso, empenho, pagamento, cobrança, prazo de desistência
 
 ### Passo 4 — Torre de Controle (frontend), ao lado da tela atual
@@ -113,15 +130,26 @@ garantida.
 - [x] Lista por etapa (`/torre/etapa/<etapa>`); Oportunidade e Cotação abrem as listas de hoje
 - [x] Clique no cartão: Preparar abre o modal da oportunidade ou o Cotador; o resto abre a compra na plataforma
 
-### Passo 5 — Sentinela v1.0 (extensão do Chrome)
+### Passo 5 — Sentinela v1.0 (extensão do Chrome) — plano e limites em [`SENTINELA.md`](../SENTINELA.md)
+- [ ] Rota na API para a Sentinela entregar o que leu (token próprio da Sentinela) → `ParticipacaoCompra`/`ItemParticipado` com `fonte="sentinela"`
+- [ ] O botão "Sentinela" do topo passa a mostrar o estado real (verde / amarelo / vermelho)
 - [ ] Caixa de mensagens do Compras.gov (sem captcha) a cada 3 min, 8h–18h
 - [ ] Fases e situação por item a cada leitura da tela de participações (8h, 14h, 18h)
 - [ ] Vigia: sessão caiu, verificação pedida, extensão parada
 - [ ] Só alerta sobre itens em que a empresa tem proposta
+- [ ] Pedido de desconto do pregoeiro = alerta urgente
+- [ ] Captcha apareceu → para e avisa o Carlinhos (nunca resolver sozinha)
+
+### Depois
+- [ ] Telas de lançamento manual (contrato, OF, entrega, ligar documento "sem licitação") — a API já existe
+- [ ] Radar: sugestões parecidas com o que a empresa ganhou
+- [ ] Faixas laterais no estágio aberto, como no protótipo (hoje é a barra no topo, para as 5 colunas de Disputar caberem)
+- [ ] "Hoje" e "Mensagens" no menu (dependem da Sentinela)
+- [ ] Remover o quadro antigo: ver `feat-remover-legado.md`, tarefa 6
 
 ## Referências
 
-- Mapa etapa → fonte, com o que já foi confirmado: `estudo-de-caso-inside-solutions.md` (fora do repositório)
+- Mapa etapa → fonte, com o que já foi confirmado: `docs/TORRE.md` (seção 1) e `docs/SENTINELA.md`
 - Fluxograma das fases e protótipo da Torre: artefatos "Fases do Compras.gov" e "Licita v1.0"
 - Códigos do Compras.gov: `comprasnet-fase-externa/v1/enums` (público)
 

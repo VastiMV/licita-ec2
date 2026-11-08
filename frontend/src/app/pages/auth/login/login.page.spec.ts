@@ -41,14 +41,14 @@ describe('LoginPage', () => {
     expect(erros.length).toBeGreaterThan(0);
   });
 
-  it('em sucesso, autentica e navega para /oportunidades', () => {
+  it('em sucesso, autentica e abre a Torre de Controle', () => {
     auth.login.mockReturnValue(of({ access: 'token-abc' }));
 
     fixture.componentInstance['form'].setValue({ email: 'user@licita.dev', password: 'segredo' });
     submeter();
 
     expect(auth.login).toHaveBeenCalledWith({ email: 'user@licita.dev', password: 'segredo' });
-    expect(router.navigateByUrl).toHaveBeenCalledWith('/oportunidades');
+    expect(router.navigateByUrl).toHaveBeenCalledWith('/torre');
   });
 
   it('em falha, mostra mensagem de erro e não navega', () => {

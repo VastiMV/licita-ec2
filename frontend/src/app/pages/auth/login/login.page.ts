@@ -42,7 +42,7 @@ export class LoginPage {
     this.auth.login(this.form.getRawValue()).subscribe({
       next: () => {
         this.enviando.set(false);
-        this.router.navigateByUrl('/oportunidades');
+        this.router.navigateByUrl('/torre');
       },
       error: () => {
         this.enviando.set(false);

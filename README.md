@@ -3,14 +3,19 @@
 Plataforma da **Inside Solutions** para encontrar, cotar e acompanhar
 licitações públicas (Lei 14.133), integrando com o PNCP e o compras.gov.br.
 A equipe busca oportunidades, salva as que interessam, monta a cotação
-(Cotador), gera a proposta e acompanha cada uma pelo **Ciclo de Licitação**.
+(Cotador) e acompanha cada uma pela **Torre de Controle** — da oportunidade
+até o pagamento.
 
 > **Chegou agora para mexer no sistema?** Leia nesta ordem:
 > 1. este README (o que é, onde roda, como trabalhar);
-> 2. [`docs/DOMINIO.md`](docs/DOMINIO.md) — as regras de negócio (o "porquê");
-> 3. [`docs/ARQUITETURA.md`](docs/ARQUITETURA.md) — como o código se organiza;
-> 4. [`deploy/ec2/README.md`](deploy/ec2/README.md) — o servidor e os botões
->    de deploy e de teste.
+> 2. [`docs/TORRE.md`](docs/TORRE.md) — a Torre de Controle, o coração do
+>    sistema: etapas, de onde vem cada dado, em que arquivo está cada regra;
+> 3. [`docs/DOMINIO.md`](docs/DOMINIO.md) — as outras regras de negócio (o "porquê");
+> 4. [`docs/ARQUITETURA.md`](docs/ARQUITETURA.md) — como o código se organiza;
+> 5. [`deploy/ec2/README.md`](deploy/ec2/README.md) — o servidor, os botões
+>    de deploy e de teste, o backup e como voltar um deploy;
+> 6. [`docs/Tarefas/feat-torre-de-controle.md`](docs/Tarefas/feat-torre-de-controle.md)
+>    — **onde paramos** e o que vem depois.
 
 ## Dois repositórios
 
@@ -56,6 +61,17 @@ como recriar a máquina: [`deploy/ec2/README.md`](deploy/ec2/README.md).
 Depois do merge a branch está encerrada: correção posterior é **branch nova**.
 Documentação (como esta) não precisa de teste nem de deploy.
 
+**Antes de qualquer deploy:**
+
+- **Nunca em dia ou hora de sessão pública** (o Carlinhos pode estar dando
+  lance). Pergunte. Noite e fim de semana são seguros.
+- O deploy faz **backup do banco sozinho** antes de mexer (`atualizar.sh`).
+  Deu errado? `deploy/ec2/README.md`, "Voltar um deploy que deu errado".
+- Exceção registrada: a Torre de Controle (08/11/2026) foi direto para a
+  produção, sem passar pelo Teste e sem pull request, por decisão da dona
+  (o banco estava quase vazio e o sistema antigo segue em outra instância).
+  Não é o fluxo normal.
+
 ## Stack
 
 | Camada | Tecnologia |
@@ -70,29 +86,39 @@ Documentação (como esta) não precisa de teste nem de deploy.
 
 ## O que existe hoje
 
-**Telas (menu):**
+**A tela inicial é a Torre de Controle** (`/torre`). Depois do login, é ela
+que abre.
+
+**Telas (menu, de cima para baixo):**
 
 | Menu | Tela | O que faz |
 |---|---|---|
-| Ciclo de Licitação | Visão Geral | quadro com uma coluna por etapa (Oportunidade, Cotação, Proposta, Disputa, Empenho) |
-| | Oportunidades › Buscar | busca ao vivo no PNCP/compras.gov.br, por palavra-chave ou UASG |
-| | Oportunidades › Salvas | a lista da equipe — só o que ainda está no prazo |
-| | Cotador | formação de preço por item, com comparação de fornecedores; exporta .xlsx |
-| | Propostas | a proposta gerada a partir da cotação (Word + arquivos) |
-| | Disputas, Empenhos | **ainda não existem** (a coluna aparece vazia) |
-| | Encerradas | só o que **participou** do certame — vazia até Disputa/Empenho existirem |
-| | Descartadas | tudo que saiu do ciclo antes de participar (tirada da lista ou prazo vencido, com ou sem cotação) |
-| Cadastros | Empresas | os CNPJs com que a equipe disputa, e o dossiê de documentos de habilitação |
-| | Fornecedores | de quem a equipe compra para revender |
-| | Produtos | Fabricante › Marca › Modelo e quem vende cada fabricante |
-| Configurações | Armazenamento | onde os arquivos ficam (R2, S3 ou disco) — só administrador |
-| | Usuários | quem acessa o sistema — só administrador |
+| Buscar oportunidades | busca | busca ao vivo no PNCP/compras.gov.br, por palavra-chave ou UASG |
+| Torre de Controle | quadro | os 4 estágios lado a lado (Preparar, Disputar, Contratar, Receber), um cartão por licitação na etapa em que ela está — ver [`docs/TORRE.md`](docs/TORRE.md) |
+| Preparar › Oportunidade | Salvas | a lista da equipe — só o que ainda está no prazo |
+| Preparar › Cotação | Cotador | formação de preço por item, com comparação de fornecedores; exporta .xlsx |
+| Preparar, Disputar, Contratar, Receber › (cada etapa) | lista da etapa | as licitações naquela etapa agora, com o número ao lado no menu |
+| Encerradas | lista | quem **participou** e saiu (perdeu, revogada, anulada, fracassada, deserta) |
+| Encerradas › Descartadas | lista | quem saiu **antes** de participar (tirada da lista, prazo vencido, sem proposta cadastrada) |
+| Propostas (PDF) | lista | a proposta comercial ajustada, pedida depois de ganhar (Word + arquivos) |
+| Cadastros | Empresas, Fornecedores, Produtos | os CNPJs com que a equipe disputa (e o dossiê de habilitação); de quem compra; Fabricante › Marca › Modelo |
+| Configurações | Armazenamento, Usuários | só administrador |
 
-As regras de cada uma estão em [`docs/DOMINIO.md`](docs/DOMINIO.md).
+**No topo da tela:** a empresa e o CNPJ, o **Radar** (em breve), o estado da
+**Sentinela** (não instalada) e o **sino** de avisos.
 
-**Ainda não existe:** filtros salvos e alertas por e-mail (o objetivo
-original do produto), as etapas Disputa e Empenho, backup automático do
-banco de produção.
+**Sozinho, todo dia** (Celery Beat): às 8h o **PNCP** traz o que a empresa
+ganhou e as atas; às 8h10 o **Portal da Transparência** traz empenho,
+liquidação e pagamento dos órgãos federais.
+
+As regras de cada uma estão em [`docs/TORRE.md`](docs/TORRE.md) e
+[`docs/DOMINIO.md`](docs/DOMINIO.md).
+
+**Ainda não existe** (em ordem de prioridade): a **Sentinela** (extensão do
+Chrome que lê o Compras.gov na sessão do Carlinhos — plano em
+[`docs/SENTINELA.md`](docs/SENTINELA.md)), os **avisos no Telegram**, o
+**Radar**, as telas para **lançar à mão** contrato, ordem de fornecimento e
+entrega (a API já existe), e a leitura de **contratos** no PNCP.
 
 ## Estrutura do repositório
 
@@ -101,7 +127,7 @@ backend/         Django/DRF — ver backend/README.md
 frontend/        Angular — ver frontend/README.md
 deploy/ec2/      produção no EC2: docker compose, Caddy, scripts e o guia
 k8s/             manifests Kubernetes (alternativa; usados no repositório original)
-docs/            DOMINIO.md, ARQUITETURA.md, mockups e atas
+docs/            TORRE.md, SENTINELA.md, DOMINIO.md, ARQUITETURA.md, Tarefas/, mockups e atas
 .github/workflows/
   build-image.yml      gera as imagens (chamado pelos outros dois)
   deploy-ec2.yml       botão "Deploy EC2" — produção

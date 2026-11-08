@@ -34,15 +34,22 @@ src/
                            icon, data-table (tabela com busca/ordenação/paginação integradas
                            ao endpoint) e toast (avisos flutuantes)
       overlay/             modal-shell + aviso-modal + question-modal, abertos via ModalService
-    layout/shell/          topbar + router-outlet + rodapé (identidade Inside Solutions)
+    layout/shell/          menu + topo + router-outlet + rodapé (identidade Inside Solutions)
+    layout/sidebar/        o menu azul escuro: Buscar, a Torre com as 13 etapas e o número de
+                           licitações em cada uma (contagem-do-menu.service.ts), saídas, Cadastros
+    layout/topo-status/    o topo: empresa e CNPJ, Radar, Sentinela e sino (estado verdadeiro)
     pages/                 uma pasta por tela, monta átomos/modais/serviços — não redeclara nada deles
+      torre/               a Torre de Controle, TELA INICIAL: o quadro (4 estágios), estagio/
+                           (um estágio aberto), etapa/ (lista da etapa), torre-cartao/ (o
+                           cartão), torre.utils.ts (as frases do cartão) e
+                           torre-acoes.service.ts (o que o clique abre) — ver docs/TORRE.md
       oportunidades/       pesquisar/ (busca ao vivo) + salvas/ (lista da equipe) e o
                            edital-card/ que as duas compartilham; cotador-modal/ é o
                            Cotador (fórmulas em cotador.model.ts, funções puras)
-      ciclo/               o Ciclo de Licitação: quadro/ (Visão Geral), cotador/,
-                           propostas/, encerradas/ (com o processo-modal/ que mostra
-                           a história), descartadas/ e etapa-a-construir/ (Disputa,
-                           Empenho — telas que ainda não existem)
+      ciclo/               o que a Torre usa do Ciclo antigo: cotador/, propostas/,
+                           encerradas/ (com o processo-modal/ que mostra a história) e
+                           descartadas/. quadro/ é o quadro antigo, sem rota (sai em
+                           feat-remover-legado)
       empresas/, fornecedores/, produtos/   os cadastros
       configuracoes/       armazenamento/ e usuarios/ (só administrador)
       auth/login/          login (a única tela fora do shell)

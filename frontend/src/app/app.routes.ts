@@ -30,10 +30,11 @@ export const routes: Routes = [
     // de repetir `canActivate` nela).
     canActivate: [authGuard],
     children: [
-      { path: '', pathMatch: 'full', redirectTo: 'oportunidades' },
-      // "Oportunidades" é um grupo do Ciclo de Licitação, não uma tela: quem
-      // abre é "Buscar" (a busca ao vivo, tela inicial do app) ou "Salvas"
-      // (a lista que a equipe montou a partir dela).
+      // A tela inicial é a Torre de Controle: é o que a operação abre
+      // primeiro no dia (decisão de 08/11/2026).
+      { path: '', pathMatch: 'full', redirectTo: 'torre' },
+      // "Oportunidades" não é uma tela: quem abre é "Buscar" (a busca ao
+      // vivo) ou "Salvas" (a lista que a equipe montou a partir dela).
       {
         path: 'oportunidades',
         children: [
@@ -74,17 +75,16 @@ export const routes: Routes = [
           },
         ],
       },
-      // O Ciclo de Licitação: o quadro e uma lista por etapa. As listas ainda
-      // não existem — cada rota troca `EtapaAConstruirPage` pela dela.
+      // O que sobrou do Ciclo de Licitação e a Torre ainda usa: Cotador,
+      // Propostas (PDF), Encerradas e Descartadas.
       {
         path: 'ciclo',
         children: [
-          { path: '', pathMatch: 'full', redirectTo: 'visao-geral' },
-          {
-            path: 'visao-geral',
-            loadComponent: () =>
-              import('./pages/ciclo/quadro/quadro.page').then((m) => m.QuadroPage),
-          },
+          // O quadro antigo (Visão Geral) deu lugar à Torre de Controle em
+          // 08/11/2026: link salvo para ele cai na Torre, para ninguém ver
+          // duas verdades. O código antigo sai em feat-remover-legado.
+          { path: '', pathMatch: 'full', redirectTo: '/torre' },
+          { path: 'visao-geral', redirectTo: '/torre' },
           {
             path: 'cotador',
             loadComponent: () =>
@@ -152,5 +152,5 @@ export const routes: Routes = [
       },
     ],
   },
-  { path: '**', redirectTo: 'oportunidades/buscar' },
+  { path: '**', redirectTo: 'torre' },
 ];
