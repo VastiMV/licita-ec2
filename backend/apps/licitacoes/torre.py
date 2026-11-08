@@ -209,6 +209,18 @@ MODALIDADE_COMPRAS_GOV = {
 _CODIGO_DA_COMPRA = re.compile(r"compra=(\d{6})(\d{2})(\d{5})(\d{4})")
 
 
+def link_do_fornecedor(link: str) -> str:
+    """Na Torre o "Abrir" vai para a página **do fornecedor** (logada), que
+    tem "Itens em que estou participando", a proposta da empresa — e é onde a
+    Sentinela lê. A página pública (`/public/compras/`) não tem nada disso
+    (pedido da operação, 08/11/2026). A busca continua com o link público."""
+
+    return (link or "").replace(
+        "/comprasnet-web/public/compras/acompanhamento-compra",
+        "/comprasnet-web/seguro/fornecedor/acompanhamento-compra",
+    )
+
+
 def rotulo_da_compra(salva) -> str:
     """"Pregão 112/2026": como a compra é chamada no dia a dia. Do Compras.gov
     sai do código no link; dos outros portais, da modalidade e do sequencial."""
@@ -347,7 +359,7 @@ def avaliar(salva: OportunidadeSalva, hoje: dt.date) -> tuple[dict | None, Saida
         "objeto": salva.objeto,
         "data_encerramento_proposta": prazo,
         "valor_total_estimado": salva.valor_total_estimado,
-        "link_plataforma": salva.link_plataforma,
+        "link_plataforma": link_do_fornecedor(salva.link_plataforma),
         "cotacao_id": cotacao.pk if (cotacao := _cotacao_de(salva)) else None,
         # Em Preparar o cartão abre os modais que já existem (visualizador da
         # oportunidade e Cotador), que precisam do registro inteiro.
