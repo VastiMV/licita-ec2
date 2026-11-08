@@ -11,9 +11,8 @@
   // caberem sem reticências; em tela estreita o rótulo ainda corta com "…".
   width: 264px;
   height: 100vh;
-  background: var(--color-surface);
-  border-right: 1px solid var(--color-border);
-  box-shadow: var(--shadow-sm);
+  // Azul escuro como o logo (protótipo "Licita v1.0").
+  background: var(--color-menu);
   transition: width var(--transition-fast);
   z-index: var(--z-sidebar);
 
@@ -28,8 +27,8 @@
   justify-content: space-between;
   gap: var(--space-2);
   padding: var(--space-4) var(--space-4) var(--space-3);
-  // Faixa da cor do fundo do logo: o logo é claro, feito para fundo escuro.
-  background: var(--color-marca-fundo);
+  // O logo é claro: fica direto sobre o azul do menu.
+  background: var(--color-menu);
 
   .collapse-toggle {
     border-color: rgb(255 255 255 / 25%);
@@ -73,9 +72,37 @@
 nav {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
-  padding: var(--space-3);
+  gap: 2px;
+  padding: var(--space-2) var(--space-3) var(--space-5);
   overflow-y: auto;
+}
+
+// Título de estágio (PREPARAR, DISPUTAR…): leva ao estágio aberto.
+.secao {
+  margin-top: var(--space-3);
+  padding: 2px 0.75rem;
+  color: var(--color-menu-apagado);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  text-decoration: none;
+
+  &:is(a):hover {
+    color: #fff;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+  }
+}
+
+hr {
+  width: calc(100% - 1rem);
+  margin: var(--space-3) auto;
+  border: none;
+  border-top: 1px solid var(--color-menu-linha);
 }
 
 .backdrop {

@@ -1,24 +1,25 @@
 @use 'mixins' as *;
 
-// A borda à esquerda diz se o cartão pede atenção: vermelha (alerta, ex.:
-// convocação em andamento), amarela (aviso, ex.: recurso aberto).
+// A borda inteira acende quando o cartão pede atenção: vermelha (alerta,
+// ex.: convocação em andamento), amarela (aviso, ex.: recurso aberto).
+// A etiqueta embaixo diz o porquê — a cor nunca é a única pista.
 .cartao {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
   padding: var(--space-3);
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-left: 3px solid var(--color-border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-coluna-borda);
+  border-radius: 10px;
 
   &[data-nivel='aviso'] {
-    border-left-color: var(--color-warn);
+    border-color: #e0a12a;
+    box-shadow: 0 0 0 1px #e0a12a;
   }
 
   &[data-nivel='alerta'] {
-    border-left-color: var(--color-danger);
+    border-color: var(--color-danger);
+    box-shadow: 0 0 0 1px var(--color-danger);
   }
 }
 
@@ -64,22 +65,25 @@
   }
 
   &[data-estagio='disputar'] {
-    background: var(--color-warn-bg);
-    color: var(--color-warn);
+    background: var(--color-etapa-disputar-bg);
+    color: var(--color-etapa-disputar);
   }
 
+  // Homologado já é vitória: verde, como Contratar.
+  &[data-etapa='homologado'],
   &[data-estagio='contratar'] {
     background: var(--color-success-bg);
     color: var(--color-success);
   }
 
   &[data-estagio='receber'] {
-    background: var(--color-bg);
-    color: var(--color-fg);
+    background: var(--color-etapa-receber-bg);
+    color: var(--color-etapa-receber);
   }
 }
 
 .local {
+  font-family: ui-monospace, 'JetBrains Mono', Menlo, monospace;
   font-size: var(--font-size-xs);
   color: var(--color-muted);
   font-variant-numeric: tabular-nums;

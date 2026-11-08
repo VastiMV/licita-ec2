@@ -69,8 +69,9 @@
   flex-direction: column;
   gap: var(--space-2);
   padding: var(--space-2);
-  background: var(--color-bg);
-  border-radius: var(--radius-md);
+  background: var(--color-coluna);
+  border: 1px solid var(--color-coluna-borda);
+  border-radius: 12px;
 }
 
 .coluna-topo {

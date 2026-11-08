@@ -16,21 +16,50 @@
   </div>
 
   <nav aria-label="Menu principal" (click)="fecharSeNavegou($event)">
-    @for (link of links(); track link.path) {
-      @if (link.itens; as itens) {
-        <app-nav-group
-          [label]="link.label"
-          [icon]="link.icon"
-          [itens]="itens"
-          [compact]="state.iconOnly()"
-        />
-      } @else {
-        <app-nav-item
-          [path]="link.path"
-          [label]="link.label"
-          [icon]="link.icon"
-          [compact]="state.iconOnly()"
-        />
+    @for (entrada of entradas(); track $index) {
+      @switch (entrada.tipo) {
+        @case ('item') {
+          <app-nav-item
+            [path]="entrada.path"
+            [label]="entrada.label"
+            [icon]="entrada.icon"
+            [exato]="!!entrada.exato"
+            [destaque]="!!entrada.destaque"
+            [recuo]="!!entrada.recuo"
+            [contagem]="contagem(entrada.path)"
+            [compact]="state.iconOnly()"
+          />
+        }
+        @case ('secao') {
+          @if (!state.iconOnly()) {
+            @if (entrada.path) {
+              <a class="secao" [routerLink]="entrada.path">{{ entrada.label }}</a>
+            } @else {
+              <span class="secao">{{ entrada.label }}</span>
+            }
+          }
+          @for (item of entrada.itens; track item.path) {
+            <app-nav-item
+              [path]="item.path"
+              [label]="item.label"
+              [icon]="item.icon"
+              [semIcone]="true"
+              [contagem]="contagem(item.path)"
+              [compact]="state.iconOnly()"
+            />
+          }
+        }
+        @case ('grupo') {
+          <app-nav-group
+            [label]="entrada.label"
+            [icon]="entrada.icon"
+            [itens]="entrada.itens"
+            [compact]="state.iconOnly()"
+          />
+        }
+        @case ('linha') {
+          <hr />
+        }
       }
     }
   </nav>

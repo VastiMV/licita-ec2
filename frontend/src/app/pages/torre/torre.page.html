@@ -5,10 +5,6 @@
       <p class="muted">{{ emAndamento() }} em andamento · {{ hojePorExtenso() }}</p>
     }
   </div>
-  <a class="btn-buscar" routerLink="/oportunidades/buscar">
-    <app-icon name="search" />
-    Buscar oportunidades
-  </a>
 </div>
 
 @if (carregando() && !torre()) {

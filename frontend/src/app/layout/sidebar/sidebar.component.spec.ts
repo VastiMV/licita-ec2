@@ -2,8 +2,11 @@ import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
+import { of, throwError } from 'rxjs';
 
 import { AuthService } from '../../core/auth/auth.service';
+import { torre } from '../../pages/torre/torre.testing';
+import { TorreService } from '../../services/licitacoes/torre.service';
 import { BrandComponent } from '../brand/brand.component';
 import { NavGroupComponent } from '../nav-group/nav-group.component';
 import { NavItemComponent } from '../nav-item/nav-item.component';
@@ -14,9 +17,11 @@ describe('SidebarComponent', () => {
   let fixture: ComponentFixture<SidebarComponent>;
   let state: SidebarStateService;
   const ehSuperusuario = signal(false);
+  let torreService: { torre: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
     ehSuperusuario.set(false);
+    torreService = { torre: vi.fn(() => of(torre())) };
     TestBed.configureTestingModule({
       imports: [SidebarComponent],
       // Rota curinga: o teste clica num link de verdade, e sem rota casada o
@@ -26,6 +31,7 @@ describe('SidebarComponent', () => {
         // Só `ehSuperusuario` interessa aqui, e como signal — o menu reage à
         // troca sem remontar o componente.
         { provide: AuthService, useValue: { ehSuperusuario } },
+        { provide: TorreService, useValue: torreService },
       ],
     });
     fixture = TestBed.createComponent(SidebarComponent);
@@ -33,7 +39,12 @@ describe('SidebarComponent', () => {
     fixture.detectChanges();
   });
 
-  const GRUPOS = ['Torre de Controle', 'Preparar', 'Disputar', 'Contratar', 'Receber', 'Cadastros'];
+  const SECOES = ['Preparar', 'Disputar', 'Contratar', 'Receber', 'Cadastros'];
+
+  const secoes = () =>
+    fixture.debugElement
+      .queryAll(By.css('.secao'))
+      .map((secao) => (secao.nativeElement as HTMLElement).textContent?.trim());
 
   const rotulosDosGrupos = () =>
     fixture.debugElement
@@ -45,13 +56,17 @@ describe('SidebarComponent', () => {
       .queryAll(By.directive(NavItemComponent))
       .map((item) => item.componentInstance as NavItemComponent);
 
-  it('mostra a marca, Buscar no topo e a Torre com os 4 estágios e as 13 etapas', () => {
-    expect(fixture.debugElement.query(By.directive(BrandComponent))).toBeTruthy();
-    expect(rotulosDosGrupos()).toEqual(GRUPOS);
+  const item = (rotulo: string) => itens().find((i) => i.label() === rotulo);
 
-    expect(itens().map((item) => item.label())).toEqual([
+  it('mostra a marca, Buscar em destaque, a Torre e os 4 estágios sempre abertos', () => {
+    expect(fixture.debugElement.query(By.directive(BrandComponent))).toBeTruthy();
+    expect(secoes()).toEqual(SECOES);
+    expect(rotulosDosGrupos()).toEqual([]);
+    expect(item('Buscar oportunidades')?.destaque()).toBe(true);
+
+    expect(itens().map((i) => i.label())).toEqual([
       'Buscar oportunidades',
-      'Visão geral',
+      'Torre de Controle',
       'Oportunidade',
       'Cotação',
       'Cadastro de proposta',
@@ -74,19 +89,54 @@ describe('SidebarComponent', () => {
     ]);
   });
 
+  it('o título de cada estágio leva ao estágio aberto', () => {
+    const links = fixture.debugElement
+      .queryAll(By.css('a.secao'))
+      .map((a) => (a.nativeElement as HTMLAnchorElement).getAttribute('href'));
+
+    expect(links).toEqual([
+      '/torre/estagio/preparar',
+      '/torre/estagio/disputar',
+      '/torre/estagio/contratar',
+      '/torre/estagio/receber',
+    ]);
+  });
+
+  it('cada etapa mostra quantas licitações estão nela, e as saídas também', () => {
+    expect(item('Cotação')?.contagem()).toBe(1);
+    expect(item('Aguardando julgamento')?.contagem()).toBe(1);
+    expect(item('Disputa')?.contagem()).toBe(0);
+    expect(item('Encerradas')?.contagem()).toBe(3);
+    expect(item('Descartadas')?.contagem()).toBe(8);
+    expect(item('Empresas')?.contagem()).toBeNull();
+
+    const numeros = fixture.debugElement
+      .queryAll(By.css('.n:not(.zero)'))
+      .map((n) => (n.nativeElement as HTMLElement).textContent?.trim());
+    expect(numeros).toEqual(['1', '1', '1', '3', '8']);
+  });
+
+  it('sem a Torre (erro), o menu funciona, só sem os números', () => {
+    torreService.torre.mockReturnValue(throwError(() => new Error('fora do ar')));
+    fixture = TestBed.createComponent(SidebarComponent);
+    fixture.detectChanges();
+
+    expect(itens().length).toBe(21);
+  });
+
   it('Configurações só aparece para administrador', () => {
     // Cortesia, não segurança: quem barra é o backend (403). O menu só não
     // oferece o que a pessoa não pode usar.
-    expect(rotulosDosGrupos()).toEqual(GRUPOS);
+    expect(rotulosDosGrupos()).toEqual([]);
 
     ehSuperusuario.set(true);
     fixture.detectChanges();
 
-    expect(rotulosDosGrupos()).toEqual([...GRUPOS, 'Configurações']);
+    expect(rotulosDosGrupos()).toEqual(['Configurações']);
   });
 
   it('cada etapa aponta para a sua lista; Oportunidade e Cotação para as que já existiam', () => {
-    const rotas = itens().map((item) => item.path());
+    const rotas = itens().map((i) => i.path());
 
     expect(rotas.slice(0, 18)).toEqual([
       '/oportunidades/buscar',
@@ -110,12 +160,9 @@ describe('SidebarComponent', () => {
     ]);
   });
 
-  it('a Visão geral só acende no endereço exato (as etapas começam com /torre)', () => {
-    const visaoGeral = itens().find((item) => item.label() === 'Visão geral');
-    const etapa = itens().find((item) => item.label() === 'Disputa');
-
-    expect(visaoGeral?.exato()).toBe(true);
-    expect(etapa?.exato()).toBe(false);
+  it('a Torre de Controle só acende no endereço exato (as etapas começam com /torre)', () => {
+    expect(item('Torre de Controle')?.exato()).toBe(true);
+    expect(item('Disputa')?.exato()).toBe(false);
   });
 
   it('o botão de colapso alterna SidebarStateService.collapsed', () => {
@@ -145,6 +192,7 @@ describe('SidebarComponent', () => {
   });
 
   it('abrir/fechar um grupo não fecha o menu mobile', () => {
+    ehSuperusuario.set(true);
     state.mobileOpen.set(true);
     fixture.detectChanges();
 

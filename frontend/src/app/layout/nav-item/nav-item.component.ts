@@ -22,6 +22,19 @@ export class NavItemComponent {
    * de outros ("Visão geral" em /torre e as etapas em /torre/etapa/...). */
   readonly exato = input(false);
 
+  /** Quantas licitações estão aqui agora (etapas da Torre). `null`: não mostra. */
+  readonly contagem = input<number | null>(null);
+
+  /** O botão azul do topo do menu ("Buscar oportunidades"). */
+  readonly destaque = input(false);
+
+  /** Etapas dentro de um estágio: só o nome, como no protótipo. O ícone
+   * volta com o menu recolhido, onde é a única pista. */
+  readonly semIcone = input(false);
+
+  /** Mais para dentro, embaixo do item anterior (Descartadas › Encerradas). */
+  readonly recuo = input(false);
+
   protected readonly opcoesExato = {
     paths: 'exact',
     queryParams: 'ignored',

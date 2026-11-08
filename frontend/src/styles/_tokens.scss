@@ -10,6 +10,23 @@
   --color-navy: #16294d;
   /* O fundo do logo (public/marca): onde a marca aparece, o fundo é este. */
   --color-marca-fundo: #020e26;
+  /* O menu lateral, azul escuro como o logo (protótipo "Licita v1.0"). */
+  --color-menu: #16233f;
+  --color-menu-texto: #d4dcec;
+  --color-menu-apagado: #9aa9c6;
+  --color-menu-hover: #22355c;
+  --color-menu-ativo: #2c4372;
+  --color-menu-linha: #2a3c63;
+  --color-menu-destaque: #3c74d6;
+  --color-menu-destaque-hover: #2f5fd0;
+  /* Caixa de cada estágio/coluna da Torre: um tom acima do fundo da página. */
+  --color-coluna: #f1f4f9;
+  --color-coluna-borda: #d3dbe8;
+  /* Cor de cada etapa no cartão (o texto sempre diz a etapa). */
+  --color-etapa-disputar: #1d4fb8;
+  --color-etapa-disputar-bg: #e6f0ff;
+  --color-etapa-receber: #0f6b63;
+  --color-etapa-receber-bg: #dff3f0;
   --color-navy-light: #24406f;
   --color-blue: #2b7cc4;
   --color-blue-light: #4ba3dc;
@@ -38,7 +55,7 @@
   --shadow-modal: 0 20px 48px rgba(22, 41, 77, 0.24);
 
   // ---------- Tipografia ----------
-  --font-family-base: "Montserrat", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-family-base: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
   --font-size-xs: 0.72rem;
   --font-size-sm: 0.85rem;

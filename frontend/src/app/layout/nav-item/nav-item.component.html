@@ -2,10 +2,20 @@
   [routerLink]="path()"
   routerLinkActive="active"
   [routerLinkActiveOptions]="exato() ? opcoesExato : opcoesPadrao"
+  [class.destaque]="destaque()"
+  [class.recuo]="recuo() && !compact()"
+  [class.sem-icone]="semIcone() && !compact()"
   [attr.title]="compact() ? label() : null"
 >
-  <app-icon [name]="icon()" />
+  @if (!semIcone() || compact()) {
+    <app-icon [name]="icon()" />
+  }
   @if (!compact()) {
     <span class="label">{{ label() }}</span>
+    @if (contagem(); as n) {
+      <span class="n">{{ n }}</span>
+    } @else if (contagem() === 0) {
+      <span class="n zero">0</span>
+    }
   }
 </a>

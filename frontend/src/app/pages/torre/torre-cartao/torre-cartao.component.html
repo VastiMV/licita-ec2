@@ -5,7 +5,7 @@
     (click)="abrir.emit(cartao())"
     [attr.title]="cartao().objeto"
   >
-    <span class="etapa" [attr.data-estagio]="cartao().estagio">
+    <span class="etapa" [attr.data-estagio]="cartao().estagio" [attr.data-etapa]="cartao().etapa">
       <i aria-hidden="true"></i>{{ cartao().etapa_rotulo }}
     </span>
     <span class="local">{{ local() }}</span>

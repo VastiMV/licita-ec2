@@ -1,14 +1,15 @@
 @use 'mixins' as *;
 
+// Menu azul escuro, como o logo (ver --color-menu em _tokens.scss).
 a {
   display: flex;
   align-items: center;
   gap: 0.65rem;
-  color: var(--color-muted);
+  color: var(--color-menu-texto);
   text-decoration: none;
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
-  padding: 0.55rem 0.85rem;
+  padding: 0.5rem 0.75rem;
   border-radius: var(--radius-sm);
   transition:
     background var(--transition-fast),
@@ -18,26 +19,70 @@ a {
     flex: none;
   }
 
-  // Mesma tinta de azul do :focus-ring (ver mixins.scss) — mais escuro que
-  // --color-blue-soft, que ficava fraco demais pra sinalizar hover.
   &:hover {
-    background: rgba(43, 124, 196, 0.18);
-    color: var(--color-navy);
+    background: var(--color-menu-hover);
+    color: #fff;
   }
 
-  // Mesmo contraste do botão primário (ver ButtonComponent) — o hover sozinho
-  // (fundo claro) não distinguia bem qual item está selecionado.
   &.active {
-    background: var(--color-navy);
+    background: var(--color-menu-ativo);
     color: #fff;
+    font-weight: 700;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: -2px;
+  }
+
+  &.recuo {
+    margin-left: 1.4rem;
+    font-size: var(--font-size-xs);
+  }
+
+  &.sem-icone {
+    padding: 0.4rem 0.75rem 0.4rem 1.4rem;
+  }
+
+  // "Buscar oportunidades": o começo do dia, em destaque.
+  &.destaque {
+    background: var(--color-menu-destaque);
+    color: #fff;
+    font-weight: 700;
+    margin-bottom: var(--space-2);
+
+    &:hover {
+      background: var(--color-menu-destaque-hover);
+    }
   }
 }
 
 // O nome inteiro, em até duas linhas — cortar com reticências ("Aguardando
 // julg…") atrapalha a leitura, ainda mais nas etapas da Torre, que são longas.
 .label {
+  flex: 1;
   line-height: 1.25;
   overflow-wrap: anywhere;
+}
+
+// Quantas licitações estão na etapa agora.
+.n {
+  flex: none;
+  min-width: 1.4em;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--color-menu-hover);
+  color: #fff;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+
+  &.zero {
+    background: transparent;
+    color: var(--color-menu-apagado);
+    font-weight: 500;
+  }
 }
 
 @include reduced-motion {
