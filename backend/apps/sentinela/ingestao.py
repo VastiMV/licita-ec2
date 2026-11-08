@@ -112,10 +112,17 @@ def _ler_participacao(dados, params, codigo, **_) -> dict:
 
 
 def _ler_itens(dados, params, codigo, **_) -> dict:
-    """Só a lista "meus itens" (`filtro=2`) diz o que é da empresa."""
+    """A lista de itens da compra, nos dois filtros da tela:
 
-    if params.get("filtro") != "2":
-        return {"itens": 0, "motivo": "lista de todos os itens (filtro≠2) não diz quais são da empresa"}
+    - **"Itens em que estou participando"** (`filtro=2`): só os itens da
+      empresa. Primeira página vazia = participa sem proposta.
+    - **"Todos os itens"** (`filtro=1`, o padrão ao abrir a compra): traz a
+      proposta da empresa **dentro** de cada item em que ela lançou preço
+      (HARs de 08/11/2026: 61 com os itens 11, 12, 22, 24–27; 56 com 6 e 9;
+      Cubatão com o 2). Só esses entram. Uma página sem proposta não prova
+      nada — a lista vem de 10 em 10.
+    """
+
     if not isinstance(dados, list):
         raise CapturaInvalida("itens: era esperada uma lista")
     salva = _salva_pelo_codigo(codigo)
@@ -123,10 +130,20 @@ def _ler_itens(dados, params, codigo, **_) -> dict:
         return {"itens": 0, "motivo": "compra desconhecida: abra antes as participações"}
 
     cnpjs = _cnpjs_da_empresa()
-    gravados = sum(_gravar_item(salva, item, cnpjs) for item in dados)
+    so_da_empresa = params.get("filtro") == "2"
+    if so_da_empresa:
+        gravados = sum(_gravar_item(salva, item, cnpjs) for item in dados)
+    else:
+        com_proposta = [
+            item
+            for item in dados
+            if isinstance(item, dict)
+            and ((item.get("propostaItem") or {}).get("participante") or {}).get("identificacao") in cnpjs
+        ]
+        gravados = sum(_gravar_item(salva, item, cnpjs) for item in com_proposta)
     primeira_pagina = params.get("pagina", "0") in ("0", "")
-    if gravados or primeira_pagina:
-        # Com item, há proposta. Primeira página vazia: participa sem proposta.
+    if gravados or (so_da_empresa and primeira_pagina):
+        # Com item, há proposta. "Meus itens" vazio na primeira página: sem proposta.
         _marcar_proposta(salva, bool(gravados))
     return {"itens": gravados}
 

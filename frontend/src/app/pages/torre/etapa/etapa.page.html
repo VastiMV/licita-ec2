@@ -39,7 +39,7 @@
                 <div class="orgao">{{ orgao(cartao) }}</div>
                 <div class="local">{{ local(cartao) }}</div>
                 @if (cartao.orgao_nome) {
-                  <div class="obj">{{ titulo(cartao.objeto) }}</div>
+                  <div class="obj" [attr.title]="cartao.objeto">{{ titulo(cartao.objeto) }}</div>
                 }
               </td>
               <td>

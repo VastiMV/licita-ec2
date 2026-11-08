@@ -27,6 +27,10 @@ Construída em 08/11/2026. Código da extensão em [`sentinela/`](../sentinela/)
   Carlinhos abriu. Ler sozinha, de tempos em tempos, só o que não pede
   captcha (caixa de mensagens, a proposta de um item, a participação numa
   compra) — isso é a próxima etapa.
+- **A lista "Todos os itens"** (o padrão ao abrir a compra, `filtro=1`)
+  também traz a proposta da empresa dentro de cada item em que ela lançou
+  preço. Desde 08/11/2026 a Sentinela aproveita as duas listas: basta abrir
+  a compra, sem trocar o filtro.
 - **Estar em "participações" não prova proposta.** Quem prova é a lista
   "meus itens". (O Cubatão, 55/2026, que achávamos estar sem proposta, tem
   proposta no item 2, em 23º lugar — HAR de 08/11/2026. Ninguém lembrava: é

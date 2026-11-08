@@ -128,3 +128,12 @@ tr.clicavel {
     background: var(--color-coluna);
   }
 }
+
+// O objeto em até duas linhas, como nas outras listas (08/11/2026): o texto
+// inteiro fica na dica.
+.obj {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}

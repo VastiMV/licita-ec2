@@ -307,7 +307,7 @@ def avaliar(salva: OportunidadeSalva, hoje: dt.date) -> tuple[dict | None, Saida
         # ainda não leu os itens da empresa: não dá para saber se há proposta.
         # Fica no quadro, pedindo a leitura (nunca vai sozinha para Descartadas).
         etapa = "disputa" if participacao.fase_compra == FASE_COMPRA_EM_DISPUTA else "aguardando_julgamento"
-        etiquetas.append(Etiqueta("aviso", "abrir “meus itens” no Compras.gov"))
+        etiquetas.append(Etiqueta("aviso", "abrir a compra no Compras.gov"))
     elif prazo_vencido:
         if not _cotacao_de(salva):
             return None, Saida("descartadas", "Prazo venceu sem cotação")

@@ -14,7 +14,7 @@
 
 **Falta o Carlinhos fazer:** abrir os **"Meus itens"** de cada compra que já
 passou da sessão (56, 55, 59, 61). Até lá elas ficam em Aguardando
-julgamento com o aviso "abrir “meus itens” no Compras.gov".
+julgamento com o aviso "abrir a compra no Compras.gov" (desde 08/11 basta abrir a compra: a lista "Todos os itens" também traz a proposta).
 
 **08/11 (manhã):** HAR do Cubatão (55/2026): **tem proposta** no item 2
 (cadeira de rodas Dellamed D600, 29 un., R$ 1.200,00, 23º lugar, fase
