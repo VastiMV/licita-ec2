@@ -83,7 +83,36 @@ chrome.alarms.onAlarm.addListener((alarme) => {
   if (alarme.name === "vigia") vigiar();
 });
 
+// "Abrir" do Licita: abre a compra numa cópia da aba do Compras.gov que já
+// está logada (a sessão do Compras.gov vale por aba). Sem aba logada, abre
+// uma aba nova — aí o Compras.gov pede login, como antes.
+async function abrirCompra(url) {
+  const aba = await abaDoCompras();
+  if (!aba) {
+    await chrome.tabs.create({ url });
+    return;
+  }
+  const copia = await chrome.tabs.duplicate(aba.id);
+  await chrome.tabs.update(copia.id, { url, active: true });
+  if (copia.windowId !== undefined)
+    await chrome.windows.update(copia.windowId, { focused: true });
+}
+
+async function abaDoCompras() {
+  const abas = await chrome.tabs.query({ url: COMPRAS });
+  // Prefere a aba logada (área do fornecedor).
+  return (
+    abas.find((a) => (a.url || "").includes("/seguro/")) || abas[0] || null
+  );
+}
+
 chrome.runtime.onMessage.addListener((mensagem, _remetente, responder) => {
+  if (mensagem.tipo === "abrir_compra") {
+    abrirCompra(mensagem.url).catch((erro) =>
+      guardarUltimo("ultimoErro", String(erro.message || erro)),
+    );
+    return false;
+  }
   if (mensagem.tipo === "captura") {
     licita("captura/", {
       method: "POST",

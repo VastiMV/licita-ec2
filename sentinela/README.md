@@ -2,7 +2,8 @@
 
 Lê o Compras.gov.br **na sessão do próprio Carlinhos** e manda para o Licita.
 Plano, limites e o que cada endereço do Compras.gov traz:
-[`docs/SENTINELA.md`](../docs/SENTINELA.md).
+[`docs/SENTINELA.md`](../docs/SENTINELA.md). Mapa de todos os endereços
+(login, captcha, abre direto): [`docs/COMPRAS_GOV.md`](../docs/COMPRAS_GOV.md).
 
 ## O que esta versão faz
 
@@ -17,6 +18,16 @@ Plano, limites e o que cada endereço do Compras.gov traz:
 3. **Vigia.** A cada 3 minutos ela avisa o Licita que está viva (e se há uma
    aba do Compras.gov aberta). O botão "Sentinela" do topo do Licita fica
    verde, âmbar ou vermelho.
+
+**0.1.2 (08/11/2026):** o painel da camada confere a cotação do Licita sozinho
+a cada minuto, tem o botão ↻ (atualizar agora) e mostra a hora da última
+atualização — antes ele lia uma vez só, ao abrir a compra.
+
+**0.1.3 (08/11/2026):** o "Abrir" da Torre abre a compra numa **cópia da aba
+do Compras.gov que já está logada** — a sessão do Compras.gov vale por aba,
+e uma aba nova cairia no login. A aba original não é tocada. Sem Sentinela,
+o Licita abre aba nova como antes (`licita.js` marca a página do Licita com
+`data-sentinela`; `abrirNoCompras` em `torre-acoes.service.ts`).
 
 ## O que ela nunca faz
 

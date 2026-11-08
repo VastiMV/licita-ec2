@@ -5,7 +5,8 @@ ponte entre o Compras.gov.br (a sessão **dele**, já logada) e o Licita. Sem
 ela, o estágio Disputar da Torre só anda quando o resultado sai no PNCP.
 
 Este documento junta o que foi pesquisado e decidido (07–08/11/2026) para
-quem for construir.
+quem for construir. **Todos os endereços do Compras.gov** (o que pede login,
+o que abre direto, o que pede captcha): [`COMPRAS_GOV.md`](COMPRAS_GOV.md).
 
 ## O que já existe (beta 0.1)
 
