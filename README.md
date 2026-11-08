@@ -107,7 +107,7 @@ que abre.
 **No topo da tela:** a empresa e o CNPJ, o **Radar** (em breve), o estado da
 **Sentinela** (não instalada) e o **sino** de avisos.
 
-**Sozinho, todo dia** (Celery Beat): às 8h o **PNCP** traz o que a empresa
+**Sozinho, de segunda a sexta** (Celery Beat): às 8h o **PNCP** traz o que a empresa
 ganhou e as atas; às 8h10 o **Portal da Transparência** traz empenho,
 liquidação e pagamento dos órgãos federais.
 

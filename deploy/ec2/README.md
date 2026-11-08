@@ -140,7 +140,7 @@ cd /opt/licita && sudo docker compose logs --tail 100 backend
 
 ## Sincronias diárias (PNCP e Portal da Transparência)
 
-Todo dia, sozinho (Celery Beat):
+De segunda a sexta, sozinho (Celery Beat) — fim de semana não tem movimentação:
 
 - **8h — PNCP:** traz os itens que a empresa ganhou e as atas de registro de
   preços, para cada CNPJ ativo em Cadastros › Empresas. Licitação ganha que

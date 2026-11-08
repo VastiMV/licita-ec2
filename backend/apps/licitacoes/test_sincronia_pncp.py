@@ -247,10 +247,12 @@ class SincroniaPncpTests(TestCase):
 
 
 class AgendamentoTests(TestCase):
-    def test_sincronia_agendada_todo_dia_as_8h_de_brasilia(self):
+    def test_sincronia_agendada_as_8h_de_brasilia_de_segunda_a_sexta(self):
         from django_celery_beat.models import PeriodicTask
 
         tarefa = PeriodicTask.objects.get(task="licitacoes.sincronizar_pncp")
 
         self.assertEqual((tarefa.crontab.minute, tarefa.crontab.hour), ("0", "8"))
         self.assertEqual(str(tarefa.crontab.timezone), "America/Sao_Paulo")
+        # Fim de semana não tem movimentação (decisão da operação, 08/11/2026).
+        self.assertEqual(tarefa.crontab.day_of_week, "1-5")

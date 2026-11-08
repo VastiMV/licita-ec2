@@ -192,12 +192,13 @@ class SincroniaTransparenciaTests(TestCase):
 
         self.assertIn("recusou a chave", resumo["erro"])
 
-    def test_agendada_todo_dia_as_8h10(self):
+    def test_agendada_as_8h10_de_segunda_a_sexta(self):
         from django_celery_beat.models import PeriodicTask
 
         tarefa = PeriodicTask.objects.get(task="licitacoes.sincronizar_transparencia")
 
         self.assertEqual((tarefa.crontab.minute, tarefa.crontab.hour), ("10", "8"))
+        self.assertEqual(tarefa.crontab.day_of_week, "1-5")
 
 
 class DocumentosSemLicitacaoTests(APITestCase):

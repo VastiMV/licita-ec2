@@ -150,8 +150,9 @@ estão como constantes no topo de `torre.py`. A fonte é a lista pública
 
 ## 7. Sincronias diárias (sozinhas)
 
-Rodam no Celery Beat, no horário de Brasília, todo dia. Agendadas por
-migração (`0007` e `0009`), então já nascem ligadas em qualquer servidor.
+Rodam no Celery Beat, no horário de Brasília, **de segunda a sexta** (fim
+de semana não tem movimentação). Agendadas por migração (`0007`, `0009` e
+`0010`, que passou para dias úteis), então já nascem ligadas em qualquer servidor.
 
 | Hora | O quê | Arquivo | Rodar à mão |
 |---|---|---|---|

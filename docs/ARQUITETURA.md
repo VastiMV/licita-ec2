@@ -145,8 +145,8 @@ task Celery, com RabbitMQ como broker:
 | Task | Gatilho | Frequência |
 |---|---|---|
 | `sincronizar_catalogo_pdm` | Celery Beat | diária (ou sob demanda via endpoint admin) |
-| `licitacoes.sincronizar_pncp` | Celery Beat | todo dia às 8h (Brasília) — vitórias e atas da empresa; ver `TORRE.md` |
-| `licitacoes.sincronizar_transparencia` | Celery Beat | todo dia às 8h10 — empenho, liquidação, pagamento federais |
+| `licitacoes.sincronizar_pncp` | Celery Beat | segunda a sexta, 8h (Brasília) — vitórias e atas da empresa; ver `TORRE.md` |
+| `licitacoes.sincronizar_transparencia` | Celery Beat | segunda a sexta, 8h10 — empenho, liquidação, pagamento federais |
 | chamadas à API do PNCP/compras.gov.br feitas por busca interativa do usuário | request síncrono da `licitacoes` view | -- ficam síncronas mesmo, são a resposta da busca; só o que não bloqueia a resposta ao usuário vira task |
 
 Agendamento via `django-celery-beat` (schedule editável no banco/admin, não
