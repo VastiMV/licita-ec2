@@ -12,8 +12,8 @@ São 4 etapas, **feitas uma vez só**. Depois disso, atualizar é um botão.
 |---|---|
 | Máquina | EC2 `licita`, **t3.small**, Ubuntu 24.04, região **us-east-2 (Ohio)** |
 | IP fixo (Elastic IP) | `16.59.20.70` |
-| Endereço provisório | `https://16-59-20-70.sslip.io` (teste: `https://teste.16-59-20-70.sslip.io`) |
-| Domínio definitivo | `insidelicitacoes.com.br` — **DNS ainda não configurado** (ver "Trocar para o domínio definitivo") |
+| Endereço | **`https://insidelicitacoes.com.br`** (no ar). O `www.` redireciona para ele (`Caddyfile`) — por isso a Sentinela usa o endereço **sem** `www` |
+| Endereço antigo (provisório) | `https://16-59-20-70.sslip.io` (teste: `https://teste.16-59-20-70.sslip.io`) |
 | Senhas | `/opt/licita/.env` (produção) e `/opt/licita-teste/.env` (teste) — só no servidor; a dona guarda cópia fora dele |
 | Acesso ao terminal | AWS → EC2 → `licita` → Connect → EC2 Instance Connect |
 | Segredos do GitHub | `EC2_HOST`, `EC2_SSH_KEY` (chave `licita.pem`) |

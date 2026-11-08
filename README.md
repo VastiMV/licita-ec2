@@ -31,7 +31,7 @@ outro. O trabalho do dia a dia é feito **aqui**.
 
 | Ambiente | Endereço | Roda |
 |---|---|---|
-| **Produção** | `https://16-59-20-70.sslip.io` (provisório) → `https://insidelicitacoes.com.br` quando o DNS do registro.br for configurado | a branch `main` |
+| **Produção** | `https://insidelicitacoes.com.br` (no ar; o `www.` redireciona para ele) | a branch `main` |
 | **Teste** | `https://teste.16-59-20-70.sslip.io` | a branch que estiver em teste (liga e desliga sob demanda) |
 
 Os dois rodam na mesma máquina (EC2 `licita`, região us-east-2, IP fixo

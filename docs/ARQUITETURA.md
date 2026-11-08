@@ -268,8 +268,8 @@ harness de código for gerado.
 - Provisão exata da `StorageClass` (qual cluster/cloud hospeda — impacta
   `provisioner` e parâmetros de zona).
 - Provedor de e-mail transacional para `enviar_email_alerta`.
-- Domínio: `insidelicitacoes.com.br` registrado; falta o DNS (registro.br)
-  apontar para o EC2. Até lá, endereço provisório `16-59-20-70.sslip.io`.
+- (Resolvido) Domínio: `insidelicitacoes.com.br` no ar, apontando para o
+  EC2. O `www.` redireciona para ele.
 - **Backup do Postgres fora da máquina:** todo deploy faz `pg_dump` antes
   de migrar (10 mais recentes, em `/opt/licita/backups/`), mas eles ficam
   no próprio EC2. Se a máquina for perdida, vão junto. Falta copiar para

@@ -35,8 +35,9 @@ Plano, limites e o que cada endereço do Compras.gov traz:
 4. **Carregar sem compactação** → escolha a pasta `sentinela`.
 5. Clique no ícone de quebra-cabeça → fixe a **Sentinela · Licita**. Clique
    nela:
-   - **Endereço do Licita:** `https://16-59-20-70.sslip.io` (ou o domínio
-     definitivo, quando estiver no ar);
+   - **Endereço do Licita:** `https://insidelicitacoes.com.br` — **sem
+     `www`**: o `www.` redireciona, e no redirecionamento o Chrome troca o
+     envio por uma consulta (o Licita responde 405);
    - **Chave da Sentinela:** a `SENTINELA_CHAVE` do servidor (ver
      `deploy/ec2/README.md`, "Sentinela");
    - **Salvar** → **Testar conexão**. Deve aparecer "Último sinal de vida:

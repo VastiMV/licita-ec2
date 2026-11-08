@@ -21,7 +21,7 @@ async function mostrarEstado() {
 
 async function carregar() {
   const salvo = await chrome.storage.local.get({
-    licita: "https://16-59-20-70.sslip.io",
+    licita: "https://insidelicitacoes.com.br",
     chave: "",
   });
   campos.forEach((c) => (document.getElementById(c).value = salvo[c] || ""));

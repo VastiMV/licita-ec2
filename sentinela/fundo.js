@@ -6,7 +6,7 @@
 
 const VERSAO = chrome.runtime.getManifest().version;
 const COMPRAS = "https://cnetmobile.estaleiro.serpro.gov.br/*";
-const PADRAO = { licita: "https://16-59-20-70.sslip.io", chave: "" };
+const PADRAO = { licita: "https://insidelicitacoes.com.br", chave: "" };
 
 async function configuracao() {
   const salvo = await chrome.storage.local.get(PADRAO);
@@ -34,6 +34,12 @@ async function licita(caminho, opcoes = {}) {
       ...(opcoes.headers || {}),
     },
   });
+  if (resposta.redirected) {
+    throw new Error(
+      `O endereço ${licita} redireciona para ${new URL(resposta.url).origin}. ` +
+        'Use esse endereço nas opções (sem "www").',
+    );
+  }
   const corpo = await resposta.json().catch(() => ({}));
   if (!resposta.ok)
     throw new Error(

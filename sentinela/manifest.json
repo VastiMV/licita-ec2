@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Sentinela · Licita",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Lê o Compras.gov.br na sua própria sessão e manda para o Licita. Nunca resolve captcha, nunca guarda senha, nunca escreve no Compras.gov.",
   "permissions": ["storage", "alarms", "tabs"],
   "host_permissions": [
