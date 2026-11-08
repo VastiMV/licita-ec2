@@ -1,0 +1,109 @@
+@use 'mixins' as *;
+
+// O que as três telas da Torre (quadro, estágio aberto e lista da etapa)
+// têm em comum. Mesma cara do topo do quadro antigo (ver ciclo/quadro).
+
+@mixin topo-da-pagina {
+  h1 {
+    font-size: var(--font-size-xl);
+    margin-bottom: var(--space-1);
+  }
+
+  .pagina-topo {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-4);
+    margin-bottom: var(--space-5);
+  }
+
+  .caminho {
+    font-size: var(--font-size-sm);
+    color: var(--color-muted);
+    margin-bottom: var(--space-1);
+
+    a {
+      color: var(--color-blue);
+    }
+  }
+
+  .btn-buscar {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex: none;
+    padding: 0.5rem 0.95rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface);
+    color: var(--color-fg);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    text-decoration: none;
+
+    app-icon {
+      width: 16px;
+      height: 16px;
+    }
+
+    &:hover {
+      background: var(--color-blue-soft);
+    }
+
+    &:focus-visible {
+      @include focus-ring;
+    }
+  }
+
+  .estado {
+    margin-top: var(--space-6);
+  }
+
+  .falha {
+    color: var(--color-danger);
+  }
+
+  .link {
+    appearance: none;
+    border: none;
+    background: none;
+    padding: 0;
+    color: var(--color-blue);
+    font: inherit;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+}
+
+// As etapas do estágio em pílulas, com o total: atalho para a lista.
+@mixin etapas-em-miniatura {
+  .etapas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+
+    a {
+      padding: 2px 9px;
+      border-radius: 999px;
+      background: var(--color-blue-soft);
+      color: var(--color-blue);
+      font-size: var(--font-size-xs);
+      text-decoration: none;
+
+      b {
+        font-variant-numeric: tabular-nums;
+      }
+
+      &.zero {
+        background: var(--color-surface);
+        color: var(--color-muted);
+        border: 1px solid var(--color-border);
+      }
+
+      &:focus-visible {
+        @include focus-ring;
+      }
+    }
+  }
+}

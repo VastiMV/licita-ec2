@@ -15,6 +15,8 @@ export const ENDPOINTS = {
       `licitacoes/compras/${cnpj}/${ano}/${sequencial}/detalhe/`,
     /** O quadro do Ciclo de Licitação, com a etapa já calculada. */
     ciclo: 'licitacoes/ciclo/',
+    /** A Torre de Controle: 4 estágios, a etapa calculada por item. */
+    torre: 'licitacoes/torre/',
     salvas: 'licitacoes/salvas/',
     salvasChaves: 'licitacoes/salvas/chaves/',
     /** A lista do Cotador: as salvas na etapa Cotação. */

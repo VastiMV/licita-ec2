@@ -112,6 +112,20 @@ class TorreTests(APITestCase):
         self.assertEqual(self.etapa(so_salva), "oportunidade")
         self.assertEqual(self.etapa(cotada), "cotacao")
 
+    def test_cartao_de_preparar_traz_a_salva_e_a_cotacao_para_os_modais(self):
+        cotada = self.salva()
+        self.cotar(cotada)
+        ganha = self.salva(prazo_em_dias=-40)
+        self.item(ganha, vencedor_e_a_empresa=True)
+
+        torre = self.torre()
+        cartao_cotada = self.cartao(torre, cotada)
+        cartao_ganha = self.cartao(torre, ganha)
+
+        self.assertEqual(cartao_cotada["cotacao_id"], cotada.cotacao.pk)
+        self.assertEqual(cartao_cotada["salva"]["id"], cotada.pk)
+        self.assertIsNone(cartao_ganha["salva"])
+
     def test_proposta_cadastrada_no_compras_gov_e_cadastro_de_proposta(self):
         salva = self.salva()
         self.cotar(salva)

@@ -1,0 +1,52 @@
+<article class="cartao" [attr.data-nivel]="nivel()">
+  <button
+    type="button"
+    class="cartao-abrir"
+    (click)="abrir.emit(cartao())"
+    [attr.title]="cartao().objeto"
+  >
+    <span class="etapa" [attr.data-estagio]="cartao().estagio">
+      <i aria-hidden="true"></i>{{ cartao().etapa_rotulo }}
+    </span>
+    <span class="local">{{ local() }}</span>
+    <span class="orgao">{{ orgao() }}</span>
+    @if (cartao().orgao_nome) {
+      <span class="obj">{{ titulo() }}</span>
+    }
+
+    @if (itens().length) {
+      <ul class="itens">
+        @for (item of itens(); track item.numero) {
+          <li [class.perdendo]="item.perdendo" [class.perdido]="!!item.perdido">
+            {{ resumoDoItem(item) }}
+          </li>
+        }
+        @if (itensOcultos() > 0) {
+          <li class="mais">+{{ itensOcultos() }} itens</li>
+        }
+      </ul>
+    }
+
+    @if (valorGanho(); as valor) {
+      <span class="valor">{{ valor }}</span>
+    }
+    @if (prazo(); as data) {
+      <span class="prazo">propostas até {{ data }}</span>
+    }
+  </button>
+
+  @if (cartao().etiquetas.length) {
+    <div class="etiquetas">
+      @for (etiqueta of cartao().etiquetas; track etiqueta.texto) {
+        <span class="etiqueta" [attr.data-nivel]="etiqueta.nivel">{{ etiqueta.texto }}</span>
+      }
+    </div>
+  }
+
+  @if (cartao().link_plataforma) {
+    <a class="no-compras" [href]="cartao().link_plataforma" target="_blank" rel="noopener">
+      Abrir no Compras.gov
+      <app-icon name="external-link" />
+    </a>
+  }
+</article>

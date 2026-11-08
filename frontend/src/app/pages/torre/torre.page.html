@@ -1,0 +1,61 @@
+<div class="pagina-topo">
+  <div>
+    <h1>Torre de Controle</h1>
+    @if (torre()) {
+      <p class="muted">{{ emAndamento() }} em andamento · {{ hojePorExtenso() }}</p>
+    }
+  </div>
+  <a class="btn-buscar" routerLink="/oportunidades/buscar">
+    <app-icon name="search" />
+    Buscar oportunidades
+  </a>
+</div>
+
+@if (carregando() && !torre()) {
+  <p class="muted estado">Carregando a Torre…</p>
+} @else if (erro()) {
+  <p class="estado falha">
+    Não foi possível carregar a Torre agora.
+    <button type="button" class="link" (click)="carregar()">Tentar de novo</button>
+  </p>
+} @else if (torre(); as t) {
+  <div class="rolagem">
+    <div class="estagios">
+      @for (estagio of t.estagios; track estagio.chave) {
+        <section class="estagio" [attr.aria-label]="'Estágio ' + estagio.rotulo">
+          <header class="estagio-topo">
+            <h2>{{ estagio.rotulo }}</h2>
+            <span class="total">{{ estagio.total }}</span>
+          </header>
+
+          <nav class="etapas" [attr.aria-label]="'Etapas de ' + estagio.rotulo">
+            @for (etapa of estagio.etapas; track etapa.chave) {
+              <a [routerLink]="rotaDaEtapa(etapa.chave)" [class.zero]="etapa.total === 0">
+                {{ etapa.rotulo }} <b>{{ etapa.total }}</b>
+              </a>
+            }
+          </nav>
+
+          <a class="abrir-estagio" [routerLink]="rotaDoEstagio(estagio.chave)">
+            Abrir estágio
+            <app-icon name="arrow-right" />
+          </a>
+
+          <div class="cartoes">
+            @for (cartao of estagio.cartoes; track cartao.id) {
+              <app-torre-cartao [cartao]="cartao" (abrir)="abrir($event)" />
+            } @empty {
+              <p class="vazio">Nenhuma licitação em {{ estagio.rotulo }}.</p>
+            }
+          </div>
+        </section>
+      }
+    </div>
+  </div>
+
+  <p class="saidas muted">
+    Saíram do ciclo:
+    <a routerLink="/ciclo/encerradas">{{ t.saidas.encerradas }} encerradas</a> ·
+    <a routerLink="/ciclo/descartadas">{{ t.saidas.descartadas }} descartadas</a>
+  </p>
+}

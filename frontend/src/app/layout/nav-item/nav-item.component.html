@@ -1,4 +1,9 @@
-<a [routerLink]="path()" routerLinkActive="active" [attr.title]="compact() ? label() : null">
+<a
+  [routerLink]="path()"
+  routerLinkActive="active"
+  [routerLinkActiveOptions]="exato() ? opcoesExato : opcoesPadrao"
+  [attr.title]="compact() ? label() : null"
+>
   <app-icon [name]="icon()" />
   @if (!compact()) {
     <span class="label">{{ label() }}</span>

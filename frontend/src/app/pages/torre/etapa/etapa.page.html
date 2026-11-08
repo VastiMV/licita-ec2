@@ -1,0 +1,81 @@
+@if (carregando() && !torre()) {
+  <p class="muted estado">Carregando…</p>
+} @else if (erro()) {
+  <p class="estado falha">
+    Não foi possível carregar a Torre agora.
+    <button type="button" class="link" (click)="carregar()">Tentar de novo</button>
+  </p>
+} @else if (estagio(); as e) {
+  <div class="pagina-topo">
+    <div>
+      <nav class="caminho" aria-label="Caminho">
+        <a routerLink="/torre">Torre de Controle</a> ›
+        <a [routerLink]="rotaDoEstagio(e.chave)">{{ e.rotulo }}</a> › {{ rotulo() }}
+      </nav>
+      <h1>
+        {{ rotulo() }} <span class="contagem">{{ cartoes().length }}</span>
+      </h1>
+    </div>
+  </div>
+
+  @if (cartoes().length) {
+    <div class="tabela-rolagem">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Licitação</th>
+            <th scope="col">Itens da empresa</th>
+            <th scope="col">Atenção</th>
+            <th scope="col">Valor</th>
+            <th scope="col"><span class="sr-only">Ações</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (cartao of cartoes(); track cartao.id) {
+            <tr>
+              <td>
+                <div class="orgao">{{ orgao(cartao) }}</div>
+                <div class="local">{{ local(cartao) }}</div>
+                @if (cartao.orgao_nome) {
+                  <div class="obj">{{ titulo(cartao.objeto) }}</div>
+                }
+              </td>
+              <td>
+                @for (item of cartao.itens; track item.numero) {
+                  <div [class.cinza]="item.perdendo || !!item.perdido">
+                    {{ resumoDoItem(item) }}
+                  </div>
+                } @empty {
+                  @if (data(cartao.data_encerramento_proposta); as prazo) {
+                    <span class="muted">propostas até {{ prazo }}</span>
+                  } @else {
+                    <span class="muted">—</span>
+                  }
+                }
+              </td>
+              <td>
+                @for (etiqueta of cartao.etiquetas; track etiqueta.texto) {
+                  <span class="etiqueta" [attr.data-nivel]="etiqueta.nivel">{{
+                    etiqueta.texto
+                  }}</span>
+                } @empty {
+                  <span class="muted">—</span>
+                }
+              </td>
+              <td class="valor">{{ moeda(cartao.valor_ganho) ?? '—' }}</td>
+              <td class="acoes">
+                <button type="button" class="abrir" (click)="abrir(cartao)">Abrir</button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  } @else {
+    <p class="vazio">Nenhuma licitação em {{ rotulo() }} agora.</p>
+  }
+} @else {
+  <p class="estado">
+    Etapa não encontrada. <a routerLink="/torre">Voltar para a Torre de Controle</a>
+  </p>
+}

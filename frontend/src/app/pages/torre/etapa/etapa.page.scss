@@ -1,0 +1,122 @@
+@use 'mixins' as *;
+@use '../torre-comum' as *;
+
+@include topo-da-pagina;
+
+.contagem {
+  font-size: var(--font-size-md);
+  color: var(--color-muted);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.tabela-rolagem {
+  overflow-x: auto;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+}
+
+th {
+  text-align: left;
+  padding: var(--space-3);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  color: var(--color-muted);
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--color-border);
+}
+
+td {
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: top;
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.orgao {
+  font-weight: 700;
+}
+
+.local,
+.obj,
+.cinza {
+  color: var(--color-muted);
+}
+
+.local {
+  font-size: var(--font-size-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.etiqueta {
+  display: inline-block;
+  margin: 0 4px 4px 0;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  background: var(--color-blue-soft);
+  color: var(--color-blue);
+
+  &[data-nivel='aviso'] {
+    background: var(--color-warn-bg);
+    color: var(--color-warn);
+  }
+
+  &[data-nivel='alerta'] {
+    background: var(--color-danger-bg);
+    color: var(--color-danger);
+  }
+}
+
+.valor {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.acoes {
+  text-align: right;
+}
+
+.abrir {
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-blue);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--color-blue-soft);
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+.vazio {
+  padding: var(--space-4);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-muted);
+}
+
+.sr-only {
+  @include visually-hidden;
+}

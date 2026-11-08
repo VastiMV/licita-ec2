@@ -69,31 +69,75 @@ const CONFIGURACOES: NavLink = {
 };
 
 const MENU: readonly NavLink[] = [
-  // O Ciclo de Licitação: "Visão Geral" é o quadro, e cada etapa embaixo é
-  // a lista das licitações que estão nela agora — a licitação sai de uma
-  // lista e aparece na seguinte conforme o trabalho anda.
+  // Onde o dia começa: achar licitação nova.
+  { path: '/oportunidades/buscar', label: 'Buscar oportunidades', icon: 'search' },
+  // A Torre de Controle: a visão geral e as 13 etapas, agrupadas nos 4
+  // estágios. Cada etapa abre a lista das licitações que estão nela agora —
+  // Oportunidade e Cotação abrem as listas que já existiam (Salvas e Cotador).
   {
-    path: '/ciclo',
-    label: 'Ciclo de Licitação',
+    path: '/torre',
+    label: 'Torre de Controle',
     icon: 'ciclo',
     itens: [
-      { path: '/ciclo/visao-geral', label: 'Visão Geral', icon: 'ciclo' },
+      { path: '/torre', label: 'Visão geral', icon: 'ciclo', exato: true },
       {
-        path: '/oportunidades',
-        label: 'Oportunidades',
+        path: '/torre/estagio/preparar',
+        label: 'Preparar',
         icon: 'oportunidades',
         itens: [
-          { path: '/oportunidades/buscar', label: 'Buscar', icon: 'search' },
-          { path: '/oportunidades/salvas', label: 'Salvas', icon: 'bookmark' },
+          { path: '/oportunidades/salvas', label: 'Oportunidade', icon: 'bookmark' },
+          { path: '/ciclo/cotador', label: 'Cotação', icon: 'cotador' },
+          {
+            path: '/torre/etapa/cadastro_proposta',
+            label: 'Cadastro de proposta',
+            icon: 'proposta',
+          },
         ],
       },
-      { path: '/ciclo/cotador', label: 'Cotador', icon: 'cotador' },
-      { path: '/ciclo/propostas', label: 'Propostas', icon: 'proposta' },
-      { path: '/ciclo/disputas', label: 'Disputas', icon: 'disputa' },
-      { path: '/ciclo/empenhos', label: 'Empenhos', icon: 'empenho' },
+      {
+        path: '/torre/estagio/disputar',
+        label: 'Disputar',
+        icon: 'disputa',
+        itens: [
+          { path: '/torre/etapa/disputa', label: 'Disputa', icon: 'disputa' },
+          {
+            path: '/torre/etapa/aguardando_julgamento',
+            label: 'Aguardando julgamento',
+            icon: 'calendar',
+          },
+          { path: '/torre/etapa/julgado_habilitado', label: 'Julgado e habilitado', icon: 'check' },
+          {
+            path: '/torre/etapa/aguardando_adjudicacao',
+            label: 'Aguardando adjudicação',
+            icon: 'calendar',
+          },
+          { path: '/torre/etapa/homologado', label: 'Homologado', icon: 'check' },
+        ],
+      },
+      {
+        path: '/torre/estagio/contratar',
+        label: 'Contratar',
+        icon: 'documentos',
+        itens: [
+          { path: '/torre/etapa/contrato', label: 'Contrato', icon: 'documentos' },
+          { path: '/torre/etapa/empenho', label: 'Empenho / OF', icon: 'empenho' },
+        ],
+      },
+      {
+        path: '/torre/estagio/receber',
+        label: 'Receber',
+        icon: 'empenho',
+        itens: [
+          { path: '/torre/etapa/entrega', label: 'Entrega', icon: 'produtos' },
+          { path: '/torre/etapa/liquidado', label: 'Liquidado', icon: 'spreadsheet' },
+          { path: '/torre/etapa/recebido', label: 'Recebido', icon: 'check' },
+        ],
+      },
       { path: '/ciclo/encerradas', label: 'Encerradas', icon: 'encerradas' },
-      // Tiradas da lista antes do prazo — não são encerradas (ver encerradas.py).
+      // Saíram antes de participar — não são encerradas (ver encerradas.py).
       { path: '/ciclo/descartadas', label: 'Descartadas', icon: 'trash' },
+      // O PDF da proposta comercial (proposta ajustada, enviada depois de ganhar).
+      { path: '/ciclo/propostas', label: 'Propostas (PDF)', icon: 'proposta' },
     ],
   },
   // Os cadastros que o Cotador usa: com quem eu disputo, de quem eu compro

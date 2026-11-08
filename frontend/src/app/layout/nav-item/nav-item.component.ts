@@ -17,4 +17,16 @@ export class NavItemComponent {
 
   /** Modo ícone-só (Sidebar recolhida em desktop) — esconde o rótulo, vira tooltip. */
   readonly compact = input(false);
+
+  /** Acende só no endereço exato — para um item cujo endereço é o começo
+   * de outros ("Visão geral" em /torre e as etapas em /torre/etapa/...). */
+  readonly exato = input(false);
+
+  protected readonly opcoesExato = {
+    paths: 'exact',
+    queryParams: 'ignored',
+    matrixParams: 'ignored',
+    fragment: 'ignored',
+  } as const;
+  protected readonly opcoesPadrao = { exact: false } as const;
 }

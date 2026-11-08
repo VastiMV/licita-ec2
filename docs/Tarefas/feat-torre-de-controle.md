@@ -104,10 +104,12 @@ garantida.
 - [ ] Avisos: convocação, diligência, pedido de desconto, recurso, empenho, pagamento, cobrança, prazo de desistência
 
 ### Passo 4 — Torre de Controle (frontend), ao lado da tela atual
-- [ ] Quadro com os 4 estágios lado a lado, etapa em cada cartão, mais urgente no topo
-- [ ] Estágio aberto (etapas como colunas, os outros estágios recolhidos)
-- [ ] Menu novo: Buscar no topo, 13 etapas, Encerradas > Descartadas, Cadastros, Radar, status da Sentinela, avisos
-- [ ] Lista por etapa (como as listas de hoje)
+- [x] Quadro com os 4 estágios lado a lado, etapa em cada cartão, mais urgente no topo (`/torre`)
+- [x] Estágio aberto: etapas como colunas, barra com os 4 estágios no topo (`/torre/estagio/<estagio>`)
+- [x] Menu novo: Buscar no topo, 13 etapas, Encerradas > Descartadas, Propostas (PDF), Cadastros
+- [ ] No topo: Radar, status da Sentinela e sino de avisos (junto com a Sentinela beta)
+- [x] Lista por etapa (`/torre/etapa/<etapa>`); Oportunidade e Cotação abrem as listas de hoje
+- [x] Clique no cartão: Preparar abre o modal da oportunidade ou o Cotador; o resto abre a compra na plataforma
 
 ### Passo 5 — Sentinela v1.0 (extensão do Chrome)
 - [ ] Caixa de mensagens do Compras.gov (sem captcha) a cada 3 min, 8h–18h

@@ -33,29 +33,41 @@ describe('SidebarComponent', () => {
     fixture.detectChanges();
   });
 
-  it('mostra a marca e o Ciclo de Licitação com Oportunidades e as etapas dentro', () => {
-    expect(fixture.debugElement.query(By.directive(BrandComponent))).toBeTruthy();
+  const GRUPOS = ['Torre de Controle', 'Preparar', 'Disputar', 'Contratar', 'Receber', 'Cadastros'];
 
-    const grupos = fixture.debugElement
+  const rotulosDosGrupos = () =>
+    fixture.debugElement
       .queryAll(By.directive(NavGroupComponent))
       .map((grupo) => (grupo.componentInstance as NavGroupComponent).label());
-    expect(grupos).toEqual(['Ciclo de Licitação', 'Oportunidades', 'Cadastros']);
 
-    // "Visão Geral" é o quadro; Oportunidades é subgrupo, com "Buscar"
-    // antes de "Salvas" (a busca é a tela inicial do app).
+  const itens = () =>
+    fixture.debugElement
+      .queryAll(By.directive(NavItemComponent))
+      .map((item) => item.componentInstance as NavItemComponent);
 
-    const items = fixture.debugElement.queryAll(By.directive(NavItemComponent));
-    const labels = items.map((item) => (item.componentInstance as NavItemComponent).label());
-    expect(labels).toEqual([
-      'Visão Geral',
-      'Buscar',
-      'Salvas',
-      'Cotador',
-      'Propostas',
-      'Disputas',
-      'Empenhos',
+  it('mostra a marca, Buscar no topo e a Torre com os 4 estágios e as 13 etapas', () => {
+    expect(fixture.debugElement.query(By.directive(BrandComponent))).toBeTruthy();
+    expect(rotulosDosGrupos()).toEqual(GRUPOS);
+
+    expect(itens().map((item) => item.label())).toEqual([
+      'Buscar oportunidades',
+      'Visão geral',
+      'Oportunidade',
+      'Cotação',
+      'Cadastro de proposta',
+      'Disputa',
+      'Aguardando julgamento',
+      'Julgado e habilitado',
+      'Aguardando adjudicação',
+      'Homologado',
+      'Contrato',
+      'Empenho / OF',
+      'Entrega',
+      'Liquidado',
+      'Recebido',
       'Encerradas',
       'Descartadas',
+      'Propostas (PDF)',
       'Empresas',
       'Fornecedores',
       'Produtos',
@@ -65,40 +77,45 @@ describe('SidebarComponent', () => {
   it('Configurações só aparece para administrador', () => {
     // Cortesia, não segurança: quem barra é o backend (403). O menu só não
     // oferece o que a pessoa não pode usar.
-    const rotulos = () =>
-      fixture.debugElement
-        .queryAll(By.directive(NavGroupComponent))
-        .map((grupo) => (grupo.componentInstance as NavGroupComponent).label());
-
-    expect(rotulos()).toEqual(['Ciclo de Licitação', 'Oportunidades', 'Cadastros']);
+    expect(rotulosDosGrupos()).toEqual(GRUPOS);
 
     ehSuperusuario.set(true);
     fixture.detectChanges();
 
-    expect(rotulos()).toEqual([
-      'Ciclo de Licitação',
-      'Oportunidades',
-      'Cadastros',
-      'Configurações',
+    expect(rotulosDosGrupos()).toEqual([...GRUPOS, 'Configurações']);
+  });
+
+  it('cada etapa aponta para a sua lista; Oportunidade e Cotação para as que já existiam', () => {
+    const rotas = itens().map((item) => item.path());
+
+    expect(rotas.slice(0, 18)).toEqual([
+      '/oportunidades/buscar',
+      '/torre',
+      '/oportunidades/salvas',
+      '/ciclo/cotador',
+      '/torre/etapa/cadastro_proposta',
+      '/torre/etapa/disputa',
+      '/torre/etapa/aguardando_julgamento',
+      '/torre/etapa/julgado_habilitado',
+      '/torre/etapa/aguardando_adjudicacao',
+      '/torre/etapa/homologado',
+      '/torre/etapa/contrato',
+      '/torre/etapa/empenho',
+      '/torre/etapa/entrega',
+      '/torre/etapa/liquidado',
+      '/torre/etapa/recebido',
+      '/ciclo/encerradas',
+      '/ciclo/descartadas',
+      '/ciclo/propostas',
     ]);
   });
 
-  it('cada item do Ciclo aponta para a sua rota', () => {
-    const rotas = fixture.debugElement
-      .queryAll(By.directive(NavItemComponent))
-      .map((item) => (item.componentInstance as NavItemComponent).path());
+  it('a Visão geral só acende no endereço exato (as etapas começam com /torre)', () => {
+    const visaoGeral = itens().find((item) => item.label() === 'Visão geral');
+    const etapa = itens().find((item) => item.label() === 'Disputa');
 
-    expect(rotas.slice(0, 9)).toEqual([
-      '/ciclo/visao-geral',
-      '/oportunidades/buscar',
-      '/oportunidades/salvas',
-      '/ciclo/cotador',
-      '/ciclo/propostas',
-      '/ciclo/disputas',
-      '/ciclo/empenhos',
-      '/ciclo/encerradas',
-      '/ciclo/descartadas',
-    ]);
+    expect(visaoGeral?.exato()).toBe(true);
+    expect(etapa?.exato()).toBe(false);
   });
 
   it('o botão de colapso alterna SidebarStateService.collapsed', () => {

@@ -1,4 +1,4 @@
-@use "mixins" as *;
+@use 'mixins' as *;
 
 a {
   display: flex;
@@ -10,8 +10,13 @@ a {
   font-weight: var(--font-weight-medium);
   padding: 0.55rem 0.85rem;
   border-radius: var(--radius-sm);
-  transition: background var(--transition-fast), color var(--transition-fast);
-  white-space: nowrap;
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast);
+
+  app-icon {
+    flex: none;
+  }
 
   // Mesma tinta de azul do :focus-ring (ver mixins.scss) — mais escuro que
   // --color-blue-soft, que ficava fraco demais pra sinalizar hover.
@@ -28,9 +33,11 @@ a {
   }
 }
 
+// O nome inteiro, em até duas linhas — cortar com reticências ("Aguardando
+// julg…") atrapalha a leitura, ainda mais nas etapas da Torre, que são longas.
 .label {
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
 }
 
 @include reduced-motion {

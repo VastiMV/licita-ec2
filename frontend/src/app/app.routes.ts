@@ -52,6 +52,28 @@ export const routes: Routes = [
           },
         ],
       },
+      // A Torre de Controle: os 4 estágios, um estágio aberto e a lista de
+      // cada etapa (ver apps/licitacoes/torre.py). Fica ao lado do Ciclo de
+      // Licitação, que continua no ar até a Torre ser aprovada.
+      {
+        path: 'torre',
+        children: [
+          {
+            path: '',
+            pathMatch: 'full',
+            loadComponent: () => import('./pages/torre/torre.page').then((m) => m.TorrePage),
+          },
+          {
+            path: 'estagio/:estagio',
+            loadComponent: () =>
+              import('./pages/torre/estagio/estagio.page').then((m) => m.EstagioPage),
+          },
+          {
+            path: 'etapa/:etapa',
+            loadComponent: () => import('./pages/torre/etapa/etapa.page').then((m) => m.EtapaPage),
+          },
+        ],
+      },
       // O Ciclo de Licitação: o quadro e uma lista por etapa. As listas ainda
       // não existem — cada rota troca `EtapaAConstruirPage` pela dela.
       {

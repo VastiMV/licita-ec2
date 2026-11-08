@@ -1,7 +1,13 @@
 @if (compact()) {
   <!-- Trilho de ícones: sem o pai, os filhos ficam acessíveis por tooltip. -->
   @for (item of planos(); track item.path) {
-    <app-nav-item [path]="item.path" [label]="item.label" [icon]="item.icon" [compact]="true" />
+    <app-nav-item
+      [path]="item.path"
+      [label]="item.label"
+      [icon]="item.icon"
+      [exato]="!!item.exato"
+      [compact]="true"
+    />
   }
 } @else {
   <button
@@ -21,7 +27,12 @@
         @if (item.itens; as filhos) {
           <app-nav-group [label]="item.label" [icon]="item.icon" [itens]="filhos" />
         } @else {
-          <app-nav-item [path]="item.path" [label]="item.label" [icon]="item.icon" />
+          <app-nav-item
+            [path]="item.path"
+            [label]="item.label"
+            [icon]="item.icon"
+            [exato]="!!item.exato"
+          />
         }
       }
     </div>

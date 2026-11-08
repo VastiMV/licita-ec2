@@ -1,0 +1,93 @@
+@use 'mixins' as *;
+@use './torre-comum' as *;
+
+@include topo-da-pagina;
+
+// Os 4 estágios ficam lado a lado sempre: se a tela for estreita, quem rola
+// é esta faixa, não a página — e a ordem dos estágios nunca se embaralha.
+.rolagem {
+  overflow-x: auto;
+  padding-bottom: var(--space-2);
+}
+
+.estagios {
+  display: flex;
+  gap: var(--space-4);
+  align-items: flex-start;
+}
+
+// 4 × 230px cabem lado a lado num monitor comum ao lado do menu; mais
+// estreito que isso, a faixa rola de lado.
+.estagio {
+  box-sizing: border-box;
+  flex: 1 0 230px;
+  max-width: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background: var(--color-bg);
+  border-radius: var(--radius-lg);
+}
+
+.estagio-topo {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+
+  h2 {
+    margin: 0;
+    font-size: var(--font-size-sm);
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .total {
+    font-size: 1.4rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@include etapas-em-miniatura;
+
+.abrir-estagio {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  align-self: flex-start;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-blue);
+
+  app-icon {
+    width: 14px;
+    height: 14px;
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+.cartoes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.vazio {
+  margin: 0;
+  padding: var(--space-3);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  color: var(--color-muted);
+  background: var(--color-surface);
+}
+
+.saidas {
+  margin-top: var(--space-4);
+  font-size: var(--font-size-sm);
+}

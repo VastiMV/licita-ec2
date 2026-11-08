@@ -10,6 +10,8 @@ export interface NavSubItem {
   readonly label: string;
   readonly icon: IconName;
   readonly itens?: readonly NavSubItem[];
+  /** Acende só no endereço exato (ver `NavItemComponent.exato`). */
+  readonly exato?: boolean;
 }
 
 /** Um item do trilho de ícones — os grupos achatados. */
@@ -17,6 +19,7 @@ interface ItemPlano {
   readonly path: string;
   readonly label: string;
   readonly icon: IconName;
+  readonly exato?: boolean;
 }
 
 function achatar(itens: readonly NavSubItem[]): ItemPlano[] {

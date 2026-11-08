@@ -31,6 +31,7 @@ from decimal import Decimal
 from django.utils import timezone
 
 from .models import OportunidadeSalva
+from .serializers import OportunidadeSalvaSerializer
 
 ESTAGIOS: list[tuple[str, str, list[tuple[str, str]]]] = [
     (
@@ -296,6 +297,10 @@ def avaliar(salva: OportunidadeSalva, hoje: dt.date) -> tuple[dict | None, Saida
         "data_encerramento_proposta": prazo,
         "valor_total_estimado": salva.valor_total_estimado,
         "link_plataforma": salva.link_plataforma,
+        "cotacao_id": cotacao.pk if (cotacao := _cotacao_de(salva)) else None,
+        # Em Preparar o cartão abre os modais que já existem (visualizador da
+        # oportunidade e Cotador), que precisam do registro inteiro.
+        "salva": OportunidadeSalvaSerializer(salva).data if ESTAGIO_DA_ETAPA[etapa] == "preparar" else None,
         "itens": cartoes_itens,
         "valor_ganho": sum(ganhos, Decimal(0)) if ganhos else None,
         "etiquetas": [{"nivel": e.nivel, "texto": e.texto} for e in _sem_repetir(etiquetas)],

@@ -1,0 +1,52 @@
+@if (carregando() && !torre()) {
+  <p class="muted estado">Carregando…</p>
+} @else if (erro()) {
+  <p class="estado falha">
+    Não foi possível carregar a Torre agora.
+    <button type="button" class="link" (click)="carregar()">Tentar de novo</button>
+  </p>
+} @else if (estagio(); as e) {
+  <div class="pagina-topo">
+    <div>
+      <nav class="caminho" aria-label="Caminho">
+        <a routerLink="/torre">Torre de Controle</a> › {{ e.rotulo }}
+      </nav>
+      <h1>{{ e.rotulo }}</h1>
+      <p class="muted">{{ e.total }} em andamento. Troque de estágio na barra abaixo.</p>
+    </div>
+  </div>
+
+  <nav class="estagios-nav" aria-label="Estágios">
+    @for (outro of torre()!.estagios; track outro.chave) {
+      <a
+        [routerLink]="rotaDoEstagio(outro.chave)"
+        [class.atual]="outro.chave === e.chave"
+        [attr.aria-current]="outro.chave === e.chave ? 'page' : null"
+      >
+        {{ outro.rotulo }} <b>{{ outro.total }}</b>
+      </a>
+    }
+  </nav>
+
+  <section class="aberto" [attr.aria-label]="'Estágio ' + e.rotulo">
+    <div class="colunas">
+      @for (etapa of e.etapas; track etapa.chave) {
+        <div class="coluna">
+          <a class="coluna-topo" [routerLink]="rotaDaEtapa(etapa.chave)">
+            <span>{{ etapa.rotulo }}</span
+            ><b>{{ etapa.total }}</b>
+          </a>
+          @for (cartao of cartoesDa(etapa.chave); track cartao.id) {
+            <app-torre-cartao [cartao]="cartao" (abrir)="abrir($event)" />
+          } @empty {
+            <p class="vazio">Nenhuma aqui.</p>
+          }
+        </div>
+      }
+    </div>
+  </section>
+} @else {
+  <p class="estado">
+    Estágio não encontrado. <a routerLink="/torre">Voltar para a Torre de Controle</a>
+  </p>
+}
