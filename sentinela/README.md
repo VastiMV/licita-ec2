@@ -18,6 +18,10 @@ Plano, limites e o que cada endereço do Compras.gov traz:
    aba do Compras.gov aberta). O botão "Sentinela" do topo do Licita fica
    verde, âmbar ou vermelho.
 
+**0.1.2 (08/11/2026):** o painel da camada confere a cotação do Licita sozinho
+a cada minuto, tem o botão ↻ (atualizar agora) e mostra a hora da última
+atualização — antes ele lia uma vez só, ao abrir a compra.
+
 ## O que ela nunca faz
 
 - Resolver, gerar ou burlar captcha.
