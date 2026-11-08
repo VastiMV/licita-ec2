@@ -120,3 +120,11 @@ tbody tr:last-child td {
 .sr-only {
   @include visually-hidden;
 }
+
+tr.clicavel {
+  cursor: pointer;
+
+  &:hover td {
+    background: var(--color-coluna);
+  }
+}

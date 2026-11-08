@@ -108,3 +108,24 @@ class PerfilView(APIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
+
+
+class FotoView(APIView):
+    """`PUT /api/usuarios/eu/foto/` `{"foto": "data:image/jpeg;base64,…"}` —
+    troca a própria foto. `DELETE` tira (volta a inicial)."""
+
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request: Request) -> Response:
+        from .serializers import FotoSerializer
+
+        serializer = FotoSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        request.user.foto = serializer.validated_data["foto"]
+        request.user.save(update_fields=["foto"])
+        return Response(PerfilSerializer(request.user).data)
+
+    def delete(self, request: Request) -> Response:
+        request.user.foto = ""
+        request.user.save(update_fields=["foto"])
+        return Response(PerfilSerializer(request.user).data)

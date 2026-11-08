@@ -6,6 +6,8 @@ no corpo da resposta, por que só `/api/auth/refresh/` fica sujeito a CSRF).
 
 from __future__ import annotations
 
+import time
+
 from django.conf import settings
 from django.http import HttpResponse
 from django.middleware.csrf import get_token
@@ -17,6 +19,8 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
+
+from config.settings.environment import env
 
 from .serializers import LoginSerializer
 
@@ -65,6 +69,19 @@ class LoginView(APIView):
         return response
 
 
+def _login_vencido(raw_refresh: str) -> bool:
+    """O login passou de `sessao_maxima_horas` desde a entrada? Token sem a
+    hora da entrada (emitido antes desta regra) também vence: entra de novo."""
+
+    try:
+        login_em = RefreshToken(raw_refresh).payload.get("login_em")
+    except TokenError:
+        return False  # inválido/expirado: o TokenRefreshSerializer responde
+    if not login_em:
+        return True
+    return time.time() - int(login_em) > env.sessao_maxima_horas * 3600
+
+
 class RefreshView(APIView):
     """
     `POST /api/auth/refresh/` — única prova de identidade aqui é o cookie
@@ -86,6 +103,14 @@ class RefreshView(APIView):
         raw_refresh = request.COOKIES.get(REFRESH_COOKIE_NAME)
         if not raw_refresh:
             raise InvalidToken("Sessão expirada.")
+
+        if _login_vencido(raw_refresh):
+            response = Response(
+                {"detail": "Sessão encerrada: o login vale 12 horas. Entre de novo."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+            _clear_refresh_cookie(response)
+            return response
 
         serializer = TokenRefreshSerializer(data={"refresh": raw_refresh})
         try:

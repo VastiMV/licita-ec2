@@ -44,6 +44,10 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     email = models.EmailField("e-mail", unique=True)
     nome = models.CharField("nome", max_length=150, blank=True)
+    # A foto do círculo do topo (pedido da operação, 08/11/2026). Guardada como
+    # `data:image/jpeg;base64,…`, já reduzida a 256×256 no navegador (~30 KB):
+    # aparece sem depender do armazenamento de arquivos. Vazia = a inicial.
+    foto = models.TextField("foto", blank=True)
 
     is_staff = models.BooleanField(
         "acesso ao admin",

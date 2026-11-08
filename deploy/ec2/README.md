@@ -195,6 +195,12 @@ chave, apague a linha `SENTINELA_CHAVE` do `.env`, rode de novo o primeiro
 comando e cole a nova na extensão. Instalação da extensão:
 [`sentinela/README.md`](../../sentinela/README.md).
 
+## Tempo de login
+
+O login vale **12 horas desde a entrada**, mesmo com uso (depois disso o
+Licita pede para entrar de novo). Para mudar, ponha no `.env`
+`SESSAO_MAXIMA_HORAS=<horas>` e reinicie `backend`.
+
 ## Backup do banco (automático)
 
 Todo deploy faz um backup do banco **antes** de rodar as migrações

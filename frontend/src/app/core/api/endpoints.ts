@@ -62,6 +62,8 @@ export const ENDPOINTS = {
     lista: 'usuarios/',
     /** O próprio perfil — qualquer usuário logado. */
     perfil: 'usuarios/eu/',
+    /** A própria foto: PUT `{foto: "data:image/jpeg;base64,…"}`, DELETE tira. */
+    foto: 'usuarios/eu/foto/',
     detalhe: (id: number) => `usuarios/${id}/`,
   },
   /** O dossiê de habilitação da empresa (`apps/documentos`) — certidões,

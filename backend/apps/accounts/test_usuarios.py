@@ -138,3 +138,50 @@ class PerfilTests(APITestCase):
         self.eu.refresh_from_db()
         self.assertFalse(self.eu.is_superuser)
         self.assertFalse(self.eu.is_staff)
+
+
+class FotoTests(APITestCase):
+    """Cada um sobe a própria foto (pedido da operação, 08/11/2026)."""
+
+    PNG = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+
+    def setUp(self):
+        self.usuario = User.objects.create_user(email="vasti@inside.com", password="x", nome="Vasti")
+        self.client.force_authenticate(self.usuario)
+
+    def test_troca_e_tira_a_propria_foto(self):
+        resposta = self.client.put("/api/usuarios/eu/foto/", {"foto": self.PNG}, format="json")
+
+        self.assertEqual(resposta.status_code, 200, resposta.data)
+        self.assertEqual(self.client.get("/api/usuarios/eu/").data["foto"], self.PNG)
+
+        self.client.delete("/api/usuarios/eu/foto/")
+        self.assertEqual(self.client.get("/api/usuarios/eu/").data["foto"], "")
+
+    def test_so_aceita_imagem(self):
+        for invalida in ("data:text/html;base64,PGgxPg==", "https://exemplo.com/foto.png", "javascript:alert(1)"):
+            resposta = self.client.put("/api/usuarios/eu/foto/", {"foto": invalida}, format="json")
+            self.assertEqual(resposta.status_code, 400, invalida)
+
+    def test_foto_grande_demais_e_recusada(self):
+        enorme = "data:image/png;base64," + "A" * 500_000
+
+        self.assertEqual(self.client.put("/api/usuarios/eu/foto/", {"foto": enorme}, format="json").status_code, 400)
+
+    def test_foto_nao_vai_na_lista_de_usuarios(self):
+        self.usuario.is_superuser = True
+        self.usuario.save()
+        self.client.put("/api/usuarios/eu/foto/", {"foto": self.PNG}, format="json")
+
+        lista = self.client.get("/api/usuarios/").data
+        linhas = lista["results"] if isinstance(lista, dict) else lista
+        self.assertNotIn("foto", linhas[0])
+
+    def test_perfil_nao_muda_a_foto_pelo_put_geral(self):
+        self.client.put(
+            "/api/usuarios/eu/",
+            {"nome": "Vasti", "email": "vasti@inside.com", "foto": self.PNG},
+            format="json",
+        )
+
+        self.assertEqual(User.objects.get(pk=self.usuario.pk).foto, "")

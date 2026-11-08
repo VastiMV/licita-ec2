@@ -41,3 +41,27 @@
   font-size: var(--font-size-sm);
   margin: 0;
 }
+
+// O slogan, embaixo do quadro de entrar: a primeira linha forte, a segunda
+// mais leve — lido de relance, sem competir com o formulário.
+.login-slogan {
+  margin-top: var(--space-6);
+  text-align: center;
+
+  p {
+    margin: 0;
+  }
+
+  .slogan-principal {
+    font-size: var(--font-size-lg, 1.25rem);
+    font-weight: 700;
+    color: var(--color-navy);
+    text-wrap: balance;
+  }
+
+  .slogan-apoio {
+    margin-top: var(--space-1);
+    font-size: var(--font-size-base);
+    color: var(--color-muted);
+  }
+}

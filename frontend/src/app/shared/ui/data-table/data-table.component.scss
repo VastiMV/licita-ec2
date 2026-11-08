@@ -400,3 +400,24 @@ tbody tr.destacada:hover td {
   font-size: var(--font-size-xs);
   color: var(--color-muted);
 }
+
+// Linha que abre o registro ao clicar (ver `linhaClicavel`).
+tr.clicavel {
+  cursor: pointer;
+
+  &:hover td {
+    background: var(--color-coluna, #f5f6f8);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-blue);
+    outline-offset: -2px;
+  }
+}
+
+// Texto cortado em N linhas (`limiteLinhas`): nunca aumenta a altura da linha.
+.celula-conteudo.limitada {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

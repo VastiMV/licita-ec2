@@ -32,7 +32,9 @@
         </thead>
         <tbody>
           @for (cartao of cartoes(); track cartao.id) {
-            <tr>
+            <!-- Clicar em qualquer lugar da linha abre (pedido de 08/11/2026);
+                 o botão "Abrir" continua para quem navega por teclado. -->
+            <tr class="clicavel" (click)="abrirLinha(cartao, $event)">
               <td>
                 <div class="orgao">{{ orgao(cartao) }}</div>
                 <div class="local">{{ local(cartao) }}</div>

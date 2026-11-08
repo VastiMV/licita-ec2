@@ -52,6 +52,19 @@ export class DataTableComponent<T> {
   readonly tamanhosPagina = input<readonly number[]>([10, 25, 50]);
 
   readonly estadoMudou = output<EstadoTabela>();
+  /** Clique (ou Enter) em qualquer lugar da linha, menos nas Ações — abre o
+   * registro (pedido da operação, 08/11/2026). Sem quem escute, nada muda. */
+  readonly linhaClicada = output<T>();
+  /** Liga o cursor de mão e o foco por teclado nas linhas. */
+  readonly linhaClicavel = input(false);
+
+  protected clicarLinha(linha: T, evento: Event): void {
+    if (!this.linhaClicavel()) return;
+    const alvo = evento.target as HTMLElement | null;
+    // Botões, links e o menu de Ações continuam fazendo só o deles.
+    if (alvo?.closest('button, a, input, select, textarea, .coluna-acoes')) return;
+    this.linhaClicada.emit(linha);
+  }
 
   protected readonly acoes = contentChild(TabelaAcoesDirective);
 

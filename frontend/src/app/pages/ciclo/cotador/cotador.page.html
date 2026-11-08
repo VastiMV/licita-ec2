@@ -19,6 +19,8 @@
   placeholderBusca="Busca na descrição e nos itens…"
   mensagemVazia="Nenhuma licitação em cotação. Abra a cotação de uma salva (Oportunidades / Salvas)."
   (estadoMudou)="aoMudarEstado($event)"
+  [linhaClicavel]="true"
+  (linhaClicada)="abrirCotacao($event)"
 >
   <ng-template appTabelaAcoes let-linha>
     <app-menu [itens]="acoesDe(linha)" [descricao]="'Ações da cotação ' + linha.chave" />

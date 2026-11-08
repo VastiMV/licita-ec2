@@ -71,6 +71,11 @@ export class EtapaPage implements OnInit {
     });
   }
 
+  protected abrirLinha(cartao: CartaoTorre, evento: Event): void {
+    if ((evento.target as HTMLElement | null)?.closest('button, a')) return;
+    this.abrir(cartao);
+  }
+
   protected abrir(cartao: CartaoTorre): void {
     this.acoes.abrir(cartao).subscribe((recarregar) => {
       if (recarregar) this.carregar();

@@ -125,6 +125,10 @@ class Environment:
     jwt_refresh_lifetime_days: int = field(
         default_factory=lambda: _get_int("JWT_REFRESH_LIFETIME_DAYS", default=30)
     )
+    # Tempo máximo de um login, contado da hora em que a pessoa entrou — a
+    # renovação automática não estica (pedido da operação, 08/11/2026: "pra
+    # não ficar com conexão aberta"). Ver `accounts.views.RefreshView`.
+    sessao_maxima_horas: int = field(default_factory=lambda: _get_int("SESSAO_MAXIMA_HORAS", default=12))
 
     @property
     def database_options(self) -> dict[str, str | int]:

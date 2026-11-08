@@ -32,6 +32,8 @@
   placeholderBusca="Busca no objeto e nos itens…"
   mensagemVazia="Nenhuma licitação encerrada no período. As que saíram antes do certame estão em Descartadas."
   (estadoMudou)="aoMudarEstado($event)"
+  [linhaClicavel]="true"
+  (linhaClicada)="verProcesso($event)"
 >
   <ng-template appTabelaAcoes let-linha>
     <app-menu [itens]="acoesDe(linha)" [descricao]="'Ações do processo ' + linha.chave" />

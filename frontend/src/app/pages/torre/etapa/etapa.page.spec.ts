@@ -47,6 +47,14 @@ describe('EtapaPage', () => {
     expect(acoes.abrir).toHaveBeenCalledWith(PMDF);
   });
 
+  it('clicar em qualquer lugar da linha também abre', () => {
+    const el = montar('aguardando_adjudicacao');
+
+    (el.querySelector('tbody td') as HTMLElement).click();
+
+    expect(acoes.abrir).toHaveBeenCalledWith(PMDF);
+  });
+
   it('etapa sem licitação diz que está vazia', () => {
     const el = montar('homologado');
 

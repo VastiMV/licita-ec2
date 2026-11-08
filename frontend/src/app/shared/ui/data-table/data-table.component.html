@@ -66,7 +66,13 @@
           </tr>
         } @else {
           @for (linha of linhas(); track chaveDe()(linha)) {
-            <tr [class.destacada]="destacada()(linha)">
+            <tr
+              [class.destacada]="destacada()(linha)"
+              [class.clicavel]="linhaClicavel()"
+              [attr.tabindex]="linhaClicavel() ? 0 : null"
+              (click)="clicarLinha(linha, $event)"
+              (keydown.enter)="clicarLinha(linha, $event)"
+            >
               @for (coluna of colunas(); track coluna.chave) {
                 <td
                   [attr.data-rotulo]="coluna.titulo"
@@ -75,7 +81,12 @@
                   [class.uma-linha]="coluna.umaLinha"
                   [class]="classeCelula(coluna, linha)"
                 >
-                  <span class="celula-conteudo">{{ coluna.valor(linha) }}</span>
+                  <span
+                    class="celula-conteudo"
+                    [class.limitada]="!!coluna.limiteLinhas"
+                    [style.-webkit-line-clamp]="coluna.limiteLinhas ?? null"
+                    >{{ coluna.valor(linha) }}</span
+                  >
                   @if (secundarioDe(coluna, linha); as secundario) {
                     <span class="celula-secundaria">{{ secundario }}</span>
                   }

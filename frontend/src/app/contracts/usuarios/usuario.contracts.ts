@@ -14,6 +14,8 @@ export interface UsuarioResponse {
   /** Acessa Configurações: o armazenamento e esta tela. */
   readonly is_superuser: boolean;
   readonly criado_em: string;
+  /** Só no próprio perfil (`usuarios/eu/`): `data:image/…` ou vazio (a inicial). */
+  readonly foto?: string;
 }
 
 export interface UsuarioRequest {

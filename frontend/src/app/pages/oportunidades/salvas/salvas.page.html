@@ -19,6 +19,8 @@
   placeholderBusca="Busca na descrição e nos itens…"
   mensagemVazia="Nenhuma oportunidade salva. Salve uma na busca (Oportunidades / Pesquisar)."
   (estadoMudou)="aoMudarEstado($event)"
+  [linhaClicavel]="true"
+  (linhaClicada)="visualizar($event)"
 >
   <ng-template appTabelaAcoes let-salva>
     <app-menu [itens]="acoesDe(salva)" [descricao]="'Ações da oportunidade ' + salva.chave" />

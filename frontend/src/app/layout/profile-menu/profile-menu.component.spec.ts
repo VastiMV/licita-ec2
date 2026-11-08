@@ -28,6 +28,8 @@ describe('ProfileMenuComponent', () => {
     auth = TestBed.inject(AuthService);
     router = TestBed.inject(Router);
     fixture.detectChanges();
+    // Ao montar, o menu busca o próprio perfil para mostrar a foto.
+    httpMock.expectOne(`/api/${ENDPOINTS.usuarios.perfil}`).flush({ foto: '' });
   });
 
   afterEach(() => httpMock.verify());
@@ -70,6 +72,37 @@ describe('ProfileMenuComponent', () => {
 
     expect(auth.isAuthenticated()).toBe(false);
     expect(navigateSpy).toHaveBeenCalledWith('/login');
+  });
+
+  it('com foto, o círculo mostra a foto em vez da inicial', () => {
+    const png = 'data:image/png;base64,iVBORw0KGgo=';
+    fixture.debugElement.query(By.css('.trigger')).nativeElement.click();
+    fixture.detectChanges();
+    (fixture.componentInstance as unknown as { foto: { set(v: string): void } }).foto.set(png);
+    fixture.detectChanges();
+
+    const imagem = fixture.debugElement.query(By.css('img.foto')).nativeElement as HTMLImageElement;
+    expect(imagem.getAttribute('src')).toBe(png);
+    expect(fixture.nativeElement.textContent).toContain('Tirar foto');
+  });
+
+  it('tirar foto volta para a inicial', () => {
+    (fixture.componentInstance as unknown as { foto: { set(v: string): void } }).foto.set(
+      'data:image/png;base64,iVBORw0KGgo=',
+    );
+    fixture.detectChanges();
+    fixture.debugElement.query(By.css('.trigger')).nativeElement.click();
+    fixture.detectChanges();
+
+    const botoes = fixture.debugElement.queryAll(By.css('button.dropdown-item'));
+    botoes.find((b) => b.nativeElement.textContent.includes('Tirar foto'))!.nativeElement.click();
+    httpMock
+      .expectOne((r) => r.method === 'DELETE' && r.url === `/api/${ENDPOINTS.usuarios.foto}`)
+      .flush({ foto: '' });
+    fixture.detectChanges();
+
+    expect(fixture.debugElement.query(By.css('img.foto'))).toBeNull();
+    expect(fixture.debugElement.query(By.css('.inicial'))).toBeTruthy();
   });
 
   it('editar perfil busca o próprio cadastro e abre o modal sem o super usuário', () => {

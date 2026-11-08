@@ -19,7 +19,7 @@ const LINHAS: Linha[] = [
 ];
 
 const COLUNAS: ColunaTabela<Linha>[] = [
-  { chave: 'nome', titulo: 'Descrição', valor: (l) => l.nome },
+  { chave: 'nome', titulo: 'Descrição', valor: (l) => l.nome, limiteLinhas: 2 },
   {
     chave: 'valor',
     titulo: 'Valor',
@@ -41,7 +41,9 @@ const COLUNAS: ColunaTabela<Linha>[] = [
     [chaveDe]="chaveDe"
     [destacada]="destacada"
     mensagemVazia="Nada aqui."
+    [linhaClicavel]="true"
     (estadoMudou)="aoMudar($event)"
+    (linhaClicada)="aberta.set($event.id)"
   >
     <ng-template appTabelaAcoes let-linha>
       <button type="button" class="acao-teste" (click)="acionada.set(linha.id)">Ação</button>
@@ -56,6 +58,7 @@ class HostComponent {
   readonly estado = signal<EstadoTabela>(estadoInicialTabela());
   readonly ultimoEstado = signal<EstadoTabela | null>(null);
   readonly acionada = signal<number | null>(null);
+  readonly aberta = signal<number | null>(null);
 
   readonly chaveDe = (linha: Linha) => linha.id;
   readonly destacada = (linha: Linha) => linha.vencida;
@@ -203,5 +206,36 @@ describe('DataTableComponent', () => {
     acoes[1].nativeElement.click();
 
     expect(host.acionada()).toBe(2);
+  });
+
+  it('clicar em qualquer lugar da linha abre o registro', () => {
+    (fixture.nativeElement.querySelectorAll('tbody td')[1] as HTMLElement).click();
+
+    expect(host.aberta()).toBe(1);
+  });
+
+  it('clicar em Ações faz só a ação, sem abrir o registro', () => {
+    (fixture.nativeElement.querySelector('.acao-teste') as HTMLButtonElement).click();
+
+    expect(host.acionada()).toBe(1);
+    expect(host.aberta()).toBeNull();
+  });
+
+  it('Enter na linha também abre (teclado)', () => {
+    const linha = fixture.nativeElement.querySelectorAll('tbody tr')[1] as HTMLElement;
+    expect(linha.getAttribute('tabindex')).toBe('0');
+
+    linha.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+
+    expect(host.aberta()).toBe(2);
+  });
+
+  it('limiteLinhas corta o texto sem aumentar a linha', () => {
+    const conteudo = fixture.nativeElement.querySelector(
+      'tbody td .celula-conteudo',
+    ) as HTMLElement;
+
+    expect(conteudo.classList.contains('limitada')).toBe(true);
+    expect(conteudo.style.getPropertyValue('-webkit-line-clamp')).toBe('2');
   });
 });
