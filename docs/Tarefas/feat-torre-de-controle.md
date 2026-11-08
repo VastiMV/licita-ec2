@@ -164,7 +164,11 @@ Beta 0.1 (08/11/2026):
 - [x] Camada de disputa: teto, ideal, piso, custo e lucro de cada item, da cotação
 - [x] Vigia: sinal de vida a cada 3 min; o botão do topo mostra o estado real (verde / âmbar / vermelho)
 
-Beta 0.2 (08/11/2026) — lixeira e recurso:
+Beta 0.2 (08/11/2026) — lixeira e recurso. **⏸️ EM ESPERA: construído e
+testado, só na branch; NÃO publicado.** A operação quer pensar mais o
+sincronismo da lixeira (Licita × Compras.gov) antes do PR e do deploy. Não
+instalar a extensão 0.2 antes do deploy do backend (ela chama `tarefas/` e
+`ronda/`, que ainda não existem em produção).
 - [x] Lixeira em todo cartão de Preparar e Disputar: pergunta com o preço lançado, Descartadas com motivo completo (quem, quando, etapa, preço), tira o favorito no Compras.gov
 - [x] A Sentinela não traz de volta o descartado; convocação traz de volta em vermelho
 - [x] Sessão da aba (só na memória) + consultas sozinhas, lista fechada sem captcha
