@@ -122,7 +122,7 @@ garantida.
 
 ### Passo 4 — Torre de Controle (frontend), ao lado da tela atual
 - [x] Quadro com os 4 estágios lado a lado, etapa em cada cartão, mais urgente no topo (`/torre`)
-- [x] Estágio aberto: etapas como colunas, barra com os 4 estágios no topo (`/torre/estagio/<estagio>`)
+- [x] Estágio aberto: etapas como colunas, os outros estágios em faixas nas laterais, como no protótipo v2 (`/torre/estagio/<estagio>`)
 - [x] Menu novo: Buscar no topo, 13 etapas, Encerradas > Descartadas, Propostas (PDF), Cadastros
 - [x] Identidade do protótipo "Licita v1.0": menu azul escuro com o número de cada etapa, cartão com compra, posição, conta e trilha das próximas etapas, letra Plus Jakarta Sans
 - [x] No topo: empresa, Radar ("em breve"), Sentinela ("não instalada") e sino — com o estado verdadeiro até a Sentinela beta
@@ -143,7 +143,6 @@ garantida.
 ### Depois
 - [ ] Telas de lançamento manual (contrato, OF, entrega, ligar documento "sem licitação") — a API já existe
 - [ ] Radar: sugestões parecidas com o que a empresa ganhou
-- [ ] Faixas laterais no estágio aberto, como no protótipo (hoje é a barra no topo, para as 5 colunas de Disputar caberem)
 - [ ] "Hoje" e "Mensagens" no menu (dependem da Sentinela)
 - [ ] Remover o quadro antigo: ver `feat-remover-legado.md`, tarefa 6
 

@@ -200,7 +200,7 @@ Frontend em `frontend/src/app/pages/torre/`.
 | Rota | Tela | Arquivo |
 |---|---|---|
 | `/torre` | **tela inicial**: os 4 estágios lado a lado, cartões por urgência | `torre.page.*` |
-| `/torre/estagio/<estagio>` | um estágio aberto: as etapas como colunas, barra com os 4 estágios no topo | `estagio/` |
+| `/torre/estagio/<estagio>` | um estágio aberto (como o artboard "v2 · Estágio Disputar aberto"): as etapas como colunas que quebram linha, e os outros estágios recolhidos em faixas nas laterais, na ordem do ciclo | `estagio/` |
 | `/torre/etapa/<etapa>` | a lista de uma etapa (tabela) | `etapa/` |
 
 - **Cartão** (`torre-cartao/`): pílula com a etapa, UASG, órgão, compra e

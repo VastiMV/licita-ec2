@@ -12,39 +12,55 @@
         <a routerLink="/torre">Torre de Controle</a> › {{ e.rotulo }}
       </nav>
       <h1>{{ e.rotulo }}</h1>
-      <p class="muted">{{ e.total }} em andamento. Troque de estágio na barra abaixo.</p>
+      <p class="muted">
+        Os outros estágios ficam recolhidos nas laterais. Clique numa faixa para trocar.
+      </p>
     </div>
   </div>
 
-  <nav class="estagios-nav" aria-label="Estágios">
-    @for (outro of torre()!.estagios; track outro.chave) {
-      <a
-        [routerLink]="rotaDoEstagio(outro.chave)"
-        [class.atual]="outro.chave === e.chave"
-        [attr.aria-current]="outro.chave === e.chave ? 'page' : null"
-      >
-        {{ outro.rotulo }} <b>{{ outro.total }}</b>
-      </a>
+  <div class="palco">
+    @for (outro of antes(); track outro.chave) {
+      <ng-container *ngTemplateOutlet="faixa; context: { $implicit: outro }" />
     }
-  </nav>
 
-  <section class="aberto" [attr.aria-label]="'Estágio ' + e.rotulo">
-    <div class="colunas">
-      @for (etapa of e.etapas; track etapa.chave) {
-        <div class="coluna">
-          <a class="coluna-topo" [routerLink]="rotaDaEtapa(etapa.chave)">
-            <span>{{ etapa.rotulo }}</span
-            ><b>{{ etapa.total }}</b>
-          </a>
-          @for (cartao of cartoesDa(etapa.chave); track cartao.id) {
-            <app-torre-cartao [cartao]="cartao" (abrir)="abrir($event)" />
-          } @empty {
-            <p class="vazio">Nenhuma aqui.</p>
-          }
-        </div>
-      }
-    </div>
-  </section>
+    <section class="aberto" [attr.aria-label]="'Estágio ' + e.rotulo">
+      <header class="aberto-topo">
+        <b>{{ e.rotulo }}</b>
+        <span class="total">{{ e.total }}</span>
+      </header>
+      <div class="colunas">
+        @for (etapa of e.etapas; track etapa.chave) {
+          <div class="coluna">
+            <a class="coluna-topo" [routerLink]="rotaDaEtapa(etapa.chave)">
+              <span>{{ etapa.rotulo }}</span
+              ><b>{{ etapa.total }}</b>
+            </a>
+            @for (cartao of cartoesDa(etapa.chave); track cartao.id) {
+              <app-torre-cartao [cartao]="cartao" (abrir)="abrir($event)" />
+            } @empty {
+              <p class="vazio">Nenhuma aqui.</p>
+            }
+          </div>
+        }
+      </div>
+    </section>
+
+    @for (outro of depois(); track outro.chave) {
+      <ng-container *ngTemplateOutlet="faixa; context: { $implicit: outro }" />
+    }
+  </div>
+
+  <!-- Um estágio recolhido: faixa fina com o total e o nome na vertical. -->
+  <ng-template #faixa let-outro>
+    <a
+      class="faixa"
+      [routerLink]="rotaDoEstagio(outro.chave)"
+      [attr.aria-label]="outro.rotulo + ', ' + outro.total + ' licitações'"
+    >
+      <span class="faixa-total">{{ outro.total }}</span>
+      <span class="faixa-nome">{{ outro.rotulo }}</span>
+    </a>
+  </ng-template>
 } @else {
   <p class="estado">
     Estágio não encontrado. <a routerLink="/torre">Voltar para a Torre de Controle</a>

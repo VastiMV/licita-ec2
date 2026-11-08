@@ -1,5 +1,6 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { NgTemplateOutlet } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { map } from 'rxjs';
 
@@ -10,13 +11,15 @@ import { TorreCartaoComponent } from '../torre-cartao/torre-cartao.component';
 import { rotaDaEtapa, rotaDoEstagio } from '../torre.utils';
 
 /**
- * Um estágio aberto: as etapas dele viram colunas, e os outros três estágios
- * ficam recolhidos em faixas finas, com o total — vê-se o detalhe de um sem
- * perder os outros de vista. Clicar numa faixa abre aquele estágio.
+ * Um estágio aberto, como no protótipo "v2 · Estágio Disputar aberto": as
+ * etapas dele viram colunas (que quebram linha para caber sem rolar de lado),
+ * e os outros três estágios ficam recolhidos em faixas finas nas laterais, na
+ * ordem do ciclo, com o total — vê-se o detalhe de um sem perder os outros de
+ * vista. Clicar numa faixa abre aquele estágio.
  */
 @Component({
   selector: 'app-estagio-page',
-  imports: [RouterLink, TorreCartaoComponent],
+  imports: [RouterLink, NgTemplateOutlet, TorreCartaoComponent],
   templateUrl: './estagio.page.html',
   styleUrl: './estagio.page.scss',
 })

@@ -3,68 +3,101 @@
 
 @include topo-da-pagina;
 
-// Os 4 estágios numa barra: o aberto em destaque, os outros a um clique.
-// No topo, e não nas laterais, para as colunas do estágio terem a largura
-// toda da tela.
-.estagios-nav {
+// O estágio aberto no meio, os outros em faixas nas laterais (na ordem do
+// ciclo: Preparar fica à esquerda de Disputar, Contratar e Receber à direita).
+.palco {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  margin-bottom: var(--space-3);
+  gap: var(--space-3);
+  align-items: stretch;
+}
 
-  a {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-    padding: 0.4rem 0.9rem;
-    border: 1px solid var(--color-border);
-    border-radius: 999px;
-    background: var(--color-surface);
-    color: var(--color-fg);
-    font-size: var(--font-size-sm);
-    font-weight: 600;
-    text-decoration: none;
+.faixa {
+  flex: none;
+  width: 52px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 0;
+  background: var(--color-coluna);
+  border: 1px solid var(--color-coluna-borda);
+  border-radius: 14px;
+  color: var(--color-fg);
+  text-decoration: none;
 
-    b {
-      font-variant-numeric: tabular-nums;
-    }
+  &:hover {
+    border-color: var(--color-menu-destaque-hover);
+  }
 
-    &:hover {
-      background: var(--color-blue-soft);
-    }
-
-    &.atual {
-      background: var(--color-navy);
-      border-color: var(--color-navy);
-      color: #fff;
-    }
-
-    &:focus-visible {
-      @include focus-ring;
-    }
+  &:focus-visible {
+    @include focus-ring;
   }
 }
 
-.aberto {
-  padding: var(--space-3);
+.faixa-total {
+  padding: 2px 8px;
+  border: 1px solid var(--color-coluna-borda);
+  border-radius: 999px;
   background: var(--color-surface);
-  border: 2px solid var(--color-blue);
-  border-radius: var(--radius-lg);
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
 }
 
-// Colunas estreitas o bastante para as 5 de Disputar caberem lado a lado;
-// numa tela menor, quem rola é esta faixa.
+.faixa-nome {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-size: var(--font-size-sm);
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.aberto {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: 14px;
+  background: var(--color-surface);
+  border: 2px solid var(--color-menu-destaque-hover);
+  border-radius: 14px;
+}
+
+.aberto-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  b {
+    font-size: var(--font-size-sm);
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-menu-destaque-hover);
+  }
+
+  .total {
+    font-size: 1.4rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+// As colunas quebram linha em vez de rolar de lado: em Disputar (5 etapas)
+// ficam duas ou três por linha, todas à vista.
 .colunas {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--space-3);
   align-items: flex-start;
-  overflow-x: auto;
 }
 
 .coluna {
   box-sizing: border-box;
-  flex: 1 0 185px;
-  min-width: 185px;
+  flex: 1 1 220px;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: var(--space-2);

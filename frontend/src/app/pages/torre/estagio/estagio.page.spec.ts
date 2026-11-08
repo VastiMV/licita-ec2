@@ -42,19 +42,17 @@ describe('EstagioPage', () => {
     expect(coluna.querySelectorAll('app-torre-cartao').length).toBe(1);
   });
 
-  it('a barra do topo mostra os 4 estágios, com o aberto em destaque', () => {
+  it('os outros estágios ficam em faixas nas laterais, na ordem do ciclo', () => {
     const el = montar('disputar');
+    const palco = Array.from(el.querySelector('.palco')!.children).map((filho) =>
+      filho.classList.contains('aberto')
+        ? 'ABERTO'
+        : `${filho.querySelector('.faixa-nome')?.textContent?.trim()} ${filho.querySelector('.faixa-total')?.textContent?.trim()}`,
+    );
 
-    const links = Array.from(el.querySelectorAll('.estagios-nav a')) as HTMLAnchorElement[];
-    expect(links.map((a) => a.textContent?.replace(/\s+/g, ' ').trim())).toEqual([
-      'Preparar 1',
-      'Disputar 2',
-      'Contratar 0',
-      'Receber 0',
-    ]);
-    expect(links[1].getAttribute('aria-current')).toBe('page');
-    expect(links[2].getAttribute('href')).toBe('/torre/estagio/contratar');
-    expect(el.querySelector('.caminho')?.textContent).toContain('Torre de Controle');
+    expect(palco).toEqual(['Preparar 1', 'ABERTO', 'Contratar 0', 'Receber 0']);
+    const contratar = el.querySelectorAll('a.faixa')[1] as HTMLAnchorElement;
+    expect(contratar.getAttribute('href')).toBe('/torre/estagio/contratar');
   });
 
   it('estágio desconhecido avisa e oferece voltar', () => {
