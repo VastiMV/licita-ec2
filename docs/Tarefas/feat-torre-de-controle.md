@@ -107,7 +107,9 @@ garantida.
 - [x] Quadro com os 4 estágios lado a lado, etapa em cada cartão, mais urgente no topo (`/torre`)
 - [x] Estágio aberto: etapas como colunas, barra com os 4 estágios no topo (`/torre/estagio/<estagio>`)
 - [x] Menu novo: Buscar no topo, 13 etapas, Encerradas > Descartadas, Propostas (PDF), Cadastros
-- [ ] No topo: Radar, status da Sentinela e sino de avisos (junto com a Sentinela beta)
+- [x] Identidade do protótipo "Licita v1.0": menu azul escuro com o número de cada etapa, cartão com compra, posição, conta e trilha das próximas etapas, letra Plus Jakarta Sans
+- [x] No topo: empresa, Radar ("em breve"), Sentinela ("não instalada") e sino — com o estado verdadeiro até a Sentinela beta
+- [x] Publicado em produção em 08/11/2026 (sábado à noite, fora de sessão)
 - [x] Lista por etapa (`/torre/etapa/<etapa>`); Oportunidade e Cotação abrem as listas de hoje
 - [x] Clique no cartão: Preparar abre o modal da oportunidade ou o Cotador; o resto abre a compra na plataforma
 
