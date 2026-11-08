@@ -2,7 +2,8 @@
 
 Lê o Compras.gov.br **na sessão do próprio Carlinhos** e manda para o Licita.
 Plano, limites e o que cada endereço do Compras.gov traz:
-[`docs/SENTINELA.md`](../docs/SENTINELA.md).
+[`docs/SENTINELA.md`](../docs/SENTINELA.md). Mapa de todos os endereços
+(login, captcha, abre direto): [`docs/COMPRAS_GOV.md`](../docs/COMPRAS_GOV.md).
 
 ## O que esta versão faz
 

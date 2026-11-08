@@ -113,7 +113,8 @@ Carlinhos ([`sentinela/`](sentinela/), guia em
 [`sentinela/README.md`](sentinela/README.md)). Traz para a Torre as compras e
 os itens em que ele participa no Compras.gov, e mostra a **camada de
 disputa** (teto, ideal, piso, custo, lucro) ao lado da tela. Plano e limites:
-[`docs/SENTINELA.md`](docs/SENTINELA.md).
+[`docs/SENTINELA.md`](docs/SENTINELA.md). Todos os endereços do Compras.gov (login,
+captcha, o que abre direto): [`docs/COMPRAS_GOV.md`](docs/COMPRAS_GOV.md).
 
 **Sozinho, de segunda a sexta** (Celery Beat): às 8h o **PNCP** traz o que a empresa
 ganhou e as atas; às 8h10 o **Portal da Transparência** traz empenho,
@@ -136,7 +137,7 @@ frontend/        Angular — ver frontend/README.md
 sentinela/       a extensão do Chrome (Sentinela) — ver sentinela/README.md
 deploy/ec2/      produção no EC2: docker compose, Caddy, scripts e o guia
 k8s/             manifests Kubernetes (alternativa; usados no repositório original)
-docs/            TORRE.md, SENTINELA.md, DOMINIO.md, ARQUITETURA.md, Tarefas/, mockups e atas
+docs/            TORRE.md, SENTINELA.md, COMPRAS_GOV.md, DOMINIO.md, ARQUITETURA.md, Tarefas/, mockups e atas
 .github/workflows/
   build-image.yml      gera as imagens (chamado pelos outros dois)
   deploy-ec2.yml       botão "Deploy EC2" — produção
