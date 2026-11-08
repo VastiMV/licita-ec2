@@ -126,6 +126,22 @@ class TorreTests(APITestCase):
         self.assertEqual(cartao_cotada["salva"]["id"], cotada.pk)
         self.assertIsNone(cartao_ganha["salva"])
 
+    def test_abrir_leva_para_a_pagina_do_fornecedor(self):
+        salva = self.salva()
+        salva.link_plataforma = (
+            "https://cnetmobile.estaleiro.serpro.gov.br/comprasnet-web/public/compras/"
+            "acompanhamento-compra?compra=92667005000562026"
+        )
+        salva.save()
+
+        cartao = self.cartao(self.torre(), salva)
+
+        self.assertEqual(
+            cartao["link_plataforma"],
+            "https://cnetmobile.estaleiro.serpro.gov.br/comprasnet-web/seguro/fornecedor/"
+            "acompanhamento-compra?compra=92667005000562026",
+        )
+
     def test_cartao_diz_a_compra_como_o_carlinhos_fala(self):
         """O número do pregão vem do código da compra no link do Compras.gov
         (UASG + modalidade + número + ano) — o sequencial do PNCP é outro."""
