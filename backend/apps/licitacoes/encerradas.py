@@ -99,7 +99,7 @@ PARTICIPOU = (
 
 
 def _sem_proposta(hoje: dt.date) -> Q:
-    """Participou sem proposta cadastrada (caso Cubatão): a Sentinela leu
+    """Participou sem proposta cadastrada: a Sentinela leu
     "Minhas participações" e não havia proposta quando a sessão abriu."""
 
     return (

@@ -104,7 +104,7 @@ class IngestaoTests(TestCase):
         self.assertEqual((tocantins.situacao_compra, tocantins.fase_compra), ("SU", "99"))
 
     def test_estar_nas_participacoes_nao_prova_proposta(self):
-        """Caso Cubatão: estava na lista sem proposta."""
+        """A lista de participações sozinha não diz se há proposta."""
 
         self.receber("participacoes")
 
@@ -168,7 +168,9 @@ class IngestaoTests(TestCase):
         self.assertIn("pedido de desconto · item 22", textos)
 
     def test_primeira_pagina_vazia_de_meus_itens_e_participacao_sem_proposta(self):
-        """Cubatão: participou sem cadastrar proposta → Descartadas."""
+        """Participou sem lançar preço em nenhum item → Descartadas. (O Cubatão
+        foi usado aqui por engano: em 08/11/2026 o HAR mostrou que ele tem
+        proposta no item 2. O teste vale para qualquer compra sem item.)"""
 
         self.receber("participacoes")
         cubatao = OportunidadeSalva.objects.get(uasg="986371")

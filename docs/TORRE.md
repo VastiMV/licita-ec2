@@ -102,7 +102,7 @@ Regra da operação (07/11/2026): **cotar não é participar.**
 | **Descartadas** (não participou) | tirada da lista antes do prazo | Tirada da lista |
 | Descartadas | prazo venceu sem cotação | Prazo venceu sem cotação |
 | Descartadas | prazo venceu com cotação, fora do Compras.gov.br | Prazo venceu com cotação |
-| Descartadas | apareceu nas participações do Compras.gov **sem proposta cadastrada** (caso do Pregão 55/2026, Cubatão) | Sem proposta cadastrada |
+| Descartadas | apareceu nas participações do Compras.gov **sem proposta cadastrada** (a lista "meus itens" vem vazia) | Sem proposta cadastrada |
 
 - **Uma licitação está em um lugar só:** no quadro, em Encerradas ou em
   Descartadas. `test_saidas.py` garante isso.

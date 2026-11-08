@@ -16,8 +16,8 @@ Toda a leitura mora aqui, em Python, testável com as respostas reais
 captcha. A Sentinela **nunca** gera nem resolve captcha: ela só repassa o que
 a página já recebeu quando o Carlinhos abriu a tela (ver docs/SENTINELA.md).
 
-**Estar em "participações" não prova proposta** (o Pregão 55/2026, Cubatão,
-estava lá sem proposta). Quem diz se há proposta é a lista de itens da
+**Estar em "participações" não prova proposta** (a lista pode trazer compra
+em que a empresa não lançou preço). Quem diz se há proposta é a lista de itens da
 empresa: com item, há proposta; vazia na primeira página, não há.
 """
 

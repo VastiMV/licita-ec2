@@ -16,13 +16,23 @@
 passou da sessão (56, 55, 59, 61). Até lá elas ficam em Aguardando
 julgamento com o aviso "abrir “meus itens” no Compras.gov".
 
+**08/11 (manhã):** HAR do Cubatão (55/2026): **tem proposta** no item 2
+(cadeira de rodas Dellamed D600, 29 un., R$ 1.200,00, 23º lugar, fase
+"Julgamento/Habilitação reabertos"). Compra favoritada; itens 2, 3 e 4
+favoritados (só o 2 com preço). `isFornecedorParticipante` veio `true` —
+não serve para checar proposta sem captcha. `itens/favoritos` e
+`favoritas/dentre-opcoes` não pedem captcha.
+
 **Decisões em aberto (perguntar à operação antes de fazer):**
 1. **Origem no card** — etiqueta "Licita", "Compras.gov" ou "PNCP". O
    Carlinhos não sabe de onde veio cada card. (Proposto; não confirmado.)
-2. **Lixeirinha** nos cards de Preparar e Disputar, com confirmação. Proposto:
-   Preparar → Descartadas ("Descartada por …"); Disputar → Encerradas
-   ("Desistiu"), exceto sem proposta (→ Descartadas). **Falta confirmar** o
-   destino em Disputar.
+2. **Lixeirinha** em **Cadastro de proposta e Disputar** (pedido da
+   operação, 08/11). Proposto: em Disputar, a lixeira só funciona quando o
+   Licita já sabe dos itens ("meus itens" lido); antes disso fica travada,
+   com um botão "Conferir no Compras.gov" que abre a tela de itens para ele.
+   Com proposta → **"Parar de acompanhar"** → Encerradas ("Desistiu · 23º
+   lugar"), avisando que a proposta continua no Compras.gov. Sem proposta →
+   Descartadas. **Falta confirmar.**
    - Junto: **a Sentinela não pode recriar o que foi descartado.** Hoje
      `ingestao._salva_da_compra` só procura entre as ativas: uma compra tirada
      da lista volta na próxima leitura de participações. Corrigir antes da
@@ -72,8 +82,9 @@ Saídas do quadro:
   inabilitados, ou homologados para outro fornecedor; compra deserta,
   fracassada, revogada ou anulada.
 - **Descartadas** (não participou): as regras de hoje, mais **`sem_proposta`**
-  — aparece em "Minhas participações" sem proposta cadastrada (caso do
-  Pregão 55/2026, Cubatão).
+  — aparece em "Minhas participações" sem nenhum item com preço ("meus
+  itens" vazio). (O Cubatão, 55/2026, citado aqui antes, tem proposta no
+  item 2 — HAR de 08/11/2026.)
 - **Prazo vencido com cotação e sem dado do Compras.gov** não é descartada:
   fica em Cadastro de proposta com a etiqueta "confirmar com a Sentinela",
   até a Sentinela dizer se a proposta foi cadastrada. Só vale para compras
@@ -149,7 +160,7 @@ Beta 0.1 (08/11/2026):
 - [x] Extensão (`sentinela/`): copia o que a página já recebeu (participações, uma compra, meus itens, proposta do item) — nunca consulta tela com captcha
 - [x] API com chave própria (`SENTINELA_CHAVE`): `captura/`, `pulso/`, `camada/<código>/`, `estado/`
 - [x] Participações criam a compra que não estava no Licita; "meus itens" grava os itens da empresa com a proposta (posição, situação, lances, marca)
-- [x] Pedido de desconto e convocação de anexo viram alerta no cartão; Cubatão (sem proposta) vai para Descartadas sozinho
+- [x] Pedido de desconto e convocação de anexo viram alerta no cartão; compra sem nenhum item com preço vai para Descartadas sozinha
 - [x] Camada de disputa: teto, ideal, piso, custo e lucro de cada item, da cotação
 - [x] Vigia: sinal de vida a cada 3 min; o botão do topo mostra o estado real (verde / âmbar / vermelho)
 

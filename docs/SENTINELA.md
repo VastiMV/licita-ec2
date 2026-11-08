@@ -27,8 +27,10 @@ Construída em 08/11/2026. Código da extensão em [`sentinela/`](../sentinela/)
   Carlinhos abriu. Ler sozinha, de tempos em tempos, só o que não pede
   captcha (caixa de mensagens, a proposta de um item, a participação numa
   compra) — isso é a próxima etapa.
-- **Estar em "participações" não prova proposta** (Cubatão estava lá sem
-  proposta). Quem prova é a lista "meus itens" (`filtro=2`): com item, há
+- **Estar em "participações" não prova proposta.** Quem prova é a lista
+  "meus itens". (O Cubatão, 55/2026, que achávamos estar sem proposta, tem
+  proposta no item 2, em 23º lugar — HAR de 08/11/2026. Ninguém lembrava: é
+  para isso que a Sentinela serve.) Quem prova é a lista "meus itens" (`filtro=2`): com item, há
   proposta; vazia, não há (→ Descartadas, "sem proposta cadastrada").
 - **O pedido de desconto vem na proposta do item**
   (`situacaoUltimaNegociacao` + `justificativaUltimaNegociacao`, ex.:

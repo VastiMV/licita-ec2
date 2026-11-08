@@ -701,7 +701,7 @@ acima parecer estranha, a razão costuma estar aqui.
 | 07/11/2026 | **Sem Integra Compras (Serpro):** cobra por requisição, fora do orçamento. A leitura do Compras.gov será pela Sentinela, na sessão do próprio Carlinhos. **Nunca burlar captcha, nunca guardar senha gov.br** |
 | 07/11/2026 | **Torre de Controle** substitui "Ciclo de Licitação": 4 estágios, 13 etapas definidas com o Carlinhos; a etapa é do item; o PDF da proposta não é etapa (é a proposta ajustada, depois de ganhar); Recurso e Suspensa são etiquetas |
 | 07/11/2026 | Vitória homologada no PNCP que não estava salva no Licita é **criada** sozinha (nenhuma vitória fica de fora) |
-| 07/11/2026 | Participou sem cadastrar proposta (Cubatão, 55/2026) → Descartadas (`sem_proposta`) |
+| 07/11/2026 | Participou sem cadastrar proposta → Descartadas (`sem_proposta`). *Correção de 08/11/2026: o exemplo usado na época, o Cubatão (55/2026), tinha sim proposta — item 2, 23º lugar (HAR de 08/11)* |
 | 07/11/2026 | Prazo vencido com cotação no Compras.gov.br não é descartado: espera a Sentinela confirmar ("confirmar com a Sentinela") |
 | 08/11/2026 | Torre publicada direto em produção (sem ambiente de teste), à noite, fora de sessão. **A Torre é a tela inicial** |
 | 08/11/2026 | Visual do protótipo "Licita v1.0": menu azul escuro com o número de cada etapa, Radar/Sentinela/sino no topo **mostrando o estado verdadeiro** (em breve / não instalada), letra Plus Jakarta Sans |
