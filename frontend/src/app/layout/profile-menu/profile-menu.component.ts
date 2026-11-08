@@ -1,4 +1,4 @@
-import { Component, ElementRef, HostListener, inject, signal } from '@angular/core';
+import { Component, ElementRef, HostListener, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 
 import { UsuarioResponse } from '../../contracts/usuarios/usuario.contracts';
@@ -39,6 +39,11 @@ export class ProfileMenuComponent {
 
   protected readonly aberto = signal(false);
   protected readonly usuario = this.auth.usuario;
+
+  /** A inicial do nome no círculo escuro, como no protótipo v2. */
+  protected readonly inicial = computed(() =>
+    (this.usuario()?.nome || this.usuario()?.email || '?').trim().charAt(0).toUpperCase(),
+  );
 
   @HostListener('document:click', ['$event'])
   protected fecharAoClicarFora(evento: MouseEvent): void {

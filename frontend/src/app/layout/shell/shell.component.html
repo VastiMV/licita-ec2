@@ -1,12 +1,17 @@
-<app-sidebar />
 <app-toast-container />
 
-<div class="content">
-  <app-navbar />
+<!-- Como no protótipo v2: o cabeçalho atravessa a tela inteira, e embaixo
+     ficam o menu e o conteúdo. -->
+<app-navbar />
 
-  <main class="container">
-    <router-outlet />
-  </main>
+<div class="corpo">
+  <app-sidebar />
 
-  <app-footer />
+  <div class="content">
+    <main class="container">
+      <router-outlet />
+    </main>
+
+    <app-footer />
+  </div>
 </div>

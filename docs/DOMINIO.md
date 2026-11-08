@@ -705,3 +705,4 @@ acima parecer estranha, a razão costuma estar aqui.
 | 07/11/2026 | Prazo vencido com cotação no Compras.gov.br não é descartado: espera a Sentinela confirmar ("confirmar com a Sentinela") |
 | 08/11/2026 | Torre publicada direto em produção (sem ambiente de teste), à noite, fora de sessão. **A Torre é a tela inicial** |
 | 08/11/2026 | Visual do protótipo "Licita v1.0": menu azul escuro com o número de cada etapa, Radar/Sentinela/sino no topo **mostrando o estado verdadeiro** (em breve / não instalada), letra Plus Jakarta Sans |
+| 08/11/2026 | Ajustes da dona sobre o protótipo v2: cabeçalho atravessando a tela em cima, logo maior, **fundo branco** (sem o azulado), **cantos retos** (só pílulas e números redondos), Radar e Sentinela com cor viva (Sentinela âmbar enquanto não instalada), estágio aberto com as faixas encostadas no menu e no fim da janela, sem borda, e as 5 colunas de Disputar lado a lado |

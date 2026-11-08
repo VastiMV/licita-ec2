@@ -1,7 +1,19 @@
 :host {
   display: flex;
-  align-items: stretch;
+  flex-direction: column;
   min-height: 100vh;
+}
+
+app-navbar {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sidebar);
+}
+
+.corpo {
+  flex: 1;
+  display: flex;
+  align-items: stretch;
 }
 
 .content {
@@ -17,6 +29,17 @@
   max-width: 1060px;
   margin: 0 auto;
   padding: var(--space-8) var(--space-6) 3rem;
+}
+
+// A Torre usa a largura toda da janela (4 estágios, ou 5 colunas lado a
+// lado). O estágio aberto encosta as faixas no menu e no fim da janela.
+.container:has(app-torre-page, app-etapa-page) {
+  max-width: none;
+}
+
+.container:has(app-estagio-page) {
+  max-width: none;
+  padding-inline: 0;
 }
 
 @media (max-width: 640px) {

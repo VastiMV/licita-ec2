@@ -16,19 +16,18 @@
   align-items: flex-start;
 }
 
-// 4 × 230px cabem lado a lado num monitor comum ao lado do menu; mais
-// estreito que isso, a faixa rola de lado.
+// Os 4 dividem a largura toda; mais estreito que 4 × 230px, a faixa rola de
+// lado.
 .estagio {
   box-sizing: border-box;
   flex: 1 0 230px;
-  max-width: 340px;
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
   padding: var(--space-3);
   background: var(--color-coluna);
   border: 1px solid var(--color-coluna-borda);
-  border-radius: 14px;
+  border-radius: 0;
 }
 
 .estagio-topo {
@@ -61,7 +60,6 @@
   height: 32px;
   padding: 0 12px;
   border: 1px solid var(--color-coluna-borda);
-  border-radius: 999px;
   background: var(--color-surface);
   font-size: var(--font-size-sm);
   font-weight: 700;

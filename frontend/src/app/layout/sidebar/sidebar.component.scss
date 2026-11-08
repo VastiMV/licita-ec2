@@ -2,15 +2,15 @@
 
 .sidebar {
   position: sticky;
-  top: 0;
+  top: var(--altura-topo);
   align-self: flex-start;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
   // Largo o bastante para "Ciclo de Licitação" e os subitens do grupo
   // caberem sem reticências; em tela estreita o rótulo ainda corta com "…".
-  width: 264px;
-  height: 100vh;
+  width: 280px;
+  height: calc(100vh - var(--altura-topo));
   // Azul escuro como o logo (protótipo "Licita v1.0").
   background: var(--color-menu);
   transition: width var(--transition-fast);
@@ -124,7 +124,8 @@ hr {
     position: fixed;
     top: 0;
     left: 0;
-    width: 260px;
+    width: 280px;
+    height: 100vh;
     box-shadow: var(--shadow-md);
     transform: translateX(-100%);
     transition: transform var(--transition-fast);

@@ -6,8 +6,7 @@
   aria-haspopup="menu"
   aria-label="Menu de conta"
 >
-  <app-icon name="user" />
-  <app-icon class="chevron" name="chevron-down" />
+  <span class="inicial" aria-hidden="true">{{ inicial() }}</span>
 </button>
 
 @if (aberto()) {

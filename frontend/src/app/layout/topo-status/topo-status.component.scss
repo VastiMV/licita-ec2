@@ -26,7 +26,9 @@
   position: relative;
 }
 
-// Botões de 44px de altura: alvo fácil de acertar.
+// Botões de 44px de altura: alvo fácil de acertar. Cores vivas do protótipo
+// v2; a Sentinela fica âmbar enquanto não está instalada (pede ação), e verde
+// só quando estiver lendo de verdade.
 .pilula {
   appearance: none;
   display: flex;
@@ -58,21 +60,24 @@
   .selo {
     padding: 1px 8px;
     border-radius: 999px;
-    background: #fff;
-    color: #25469a;
+    background: #3c74d6;
+    color: #fff;
     font-size: var(--font-size-xs);
     font-weight: 600;
   }
 }
 
 .sentinela {
-  border: 1px solid var(--color-border);
-  background: #f1f4f9;
-  color: var(--color-fg);
+  border: 1px solid #f0c36b;
+  background: #fff4dc;
+  color: #7a4a00;
 
   .estado {
     font-weight: 500;
-    color: var(--color-muted);
+  }
+
+  .ponto {
+    background: #e0a12a;
   }
 }
 
@@ -102,7 +107,7 @@
   align-items: center;
   justify-content: center;
   border: 1px solid var(--color-border);
-  border-radius: 12px;
+  border-radius: 0;
   background: var(--color-surface);
   color: var(--color-navy);
   cursor: pointer;

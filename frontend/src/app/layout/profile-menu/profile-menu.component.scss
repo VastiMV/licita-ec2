@@ -10,7 +10,7 @@
   display: flex;
   align-items: center;
   gap: 0.3rem;
-  padding: 0.4rem 0.6rem;
+  padding: 0;
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
   background: transparent;
@@ -29,10 +29,17 @@
   }
 }
 
-.chevron {
-  width: 14px;
-  height: 14px;
-  color: var(--color-muted);
+// A conta: círculo escuro com a inicial (protótipo v2).
+.inicial {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--color-menu);
+  color: #fff;
+  font-weight: 700;
 }
 
 .dropdown {
