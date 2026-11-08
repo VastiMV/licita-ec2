@@ -145,6 +145,7 @@ garantida.
 - [ ] Radar: sugestões parecidas com o que a empresa ganhou
 - [ ] "Hoje" e "Mensagens" no menu (dependem da Sentinela)
 - [ ] Remover o quadro antigo: ver `feat-remover-legado.md`, tarefa 6
+- [ ] Quando houver mais de uma empresa: `sincronizar_pncp` mostrar os CNPJs consultados e avisar quando a API falhar. Hoje um 404 da API vira "0 itens" sem aviso (`_paginar` em `integracoes/clients/compras_gov.py`), e um CNPJ digitado errado em Empresas também dá 0 sem explicar — foi o que aconteceu em 08/11/2026
 
 ## Referências
 
