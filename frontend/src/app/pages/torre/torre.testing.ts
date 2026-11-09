@@ -45,7 +45,7 @@ export const PMDF: CartaoTorre = {
   ...FARROUPILHA,
   id: 56,
   etapa: 'aguardando_adjudicacao',
-  etapa_rotulo: 'Aguardando adjudicação',
+  etapa_rotulo: 'Habilitada (aguardando adjudicação)',
   uasg: '926670',
   compra: 'Pregão 56/2026',
   orgao_nome: 'DEPTO. SAÚDE E ASSIST AO PESSOAL POL MIL - DF',
@@ -122,8 +122,12 @@ export function torre(): TorreResponse {
         etapas: [
           { chave: 'disputa', rotulo: 'Disputa', total: 0 },
           { chave: 'aguardando_julgamento', rotulo: 'Aguardando julgamento', total: 1 },
-          { chave: 'julgado_habilitado', rotulo: 'Julgado e habilitado', total: 0 },
-          { chave: 'aguardando_adjudicacao', rotulo: 'Aguardando adjudicação', total: 1 },
+          { chave: 'julgado_habilitado', rotulo: 'Aceita e habilitada', total: 0 },
+          {
+            chave: 'aguardando_adjudicacao',
+            rotulo: 'Habilitada (aguardando adjudicação)',
+            total: 1,
+          },
         ],
         cartoes: [FARROUPILHA, PMDF],
       },

@@ -47,8 +47,8 @@ ESTAGIOS: list[tuple[str, str, list[tuple[str, str]]]] = [
         [
             ("disputa", "Disputa"),
             ("aguardando_julgamento", "Aguardando julgamento"),
-            ("julgado_habilitado", "Julgado e habilitado"),
-            ("aguardando_adjudicacao", "Aguardando adjudicação"),
+            ("julgado_habilitado", "Aceita e habilitada"),
+            ("aguardando_adjudicacao", "Habilitada (aguardando adjudicação)"),
         ],
     ),
     # Homologado abre Contratar (pedido do Carlinhos, 08/11/2026): ganhou,

@@ -34,8 +34,8 @@ describe('TorreCartaoComponent', () => {
 
     expect(passos).toEqual([
       '● Aguardando julgamento',
-      'Julgado e habilitado',
-      'Aguardando adjudicação',
+      'Aceita e habilitada',
+      'Habilitada (aguardando adjudicação)',
     ]);
   });
 
