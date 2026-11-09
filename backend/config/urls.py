@@ -30,4 +30,5 @@ urlpatterns = [
     path('api/cotador/', include('apps.cotador.urls')),
     path('api/propostas/', include('apps.propostas.urls')),
     path('api/sentinela/', include('apps.sentinela.urls')),
+    path('api/notificacoes/', include('apps.notificacoes.urls')),
 ]

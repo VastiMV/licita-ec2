@@ -18,6 +18,7 @@ const ITEM: ItemDoRelatorio = {
   lido_em: '2026-11-08T23:50:58Z',
   homologado: false,
   empresa_venceu: null,
+  acompanhado: false,
   vencedor: {
     classificacao: 1,
     fornecedor: 'VL-LOJA DE VARIEDADES LTDA',
@@ -75,7 +76,7 @@ const RELATORIO: RelatorioResponse = {
     },
     { ...ITEM, numero: '5', participantes: 0, vencedor: null, propostas: [] },
   ],
-  resumo: { itens: 2, com_propostas: 1, ganhos: 0, perdidos: 0 },
+  resumo: { itens: 2, com_propostas: 1, ganhos: 0, perdidos: 0, acompanhados: 0 },
 };
 
 describe('RelatorioModalComponent', () => {

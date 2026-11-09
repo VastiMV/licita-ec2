@@ -144,16 +144,45 @@ class SinalTests(_ComCubatao):
         c = cartao(self.salva)
         return c["itens"][0]["sinal"], c["itens_ganhando"], c["itens_com_posicao"]
 
-    def test_23o_lugar_e_perdendo(self):
+    def test_23o_lugar_com_o_1o_ja_habilitado_sai_para_encerradas(self):
+        """Cubatão: o 1º (VL-Loja) já está habilitado. Na prática perdeu: a
+        compra sai da Torre para Encerradas (e segue vigiada 1x por dia)."""
+
         self.receber()
 
+        from apps.licitacoes.encerradas import classificar
+
+        self.assertIsNone(cartao(self.salva))
+        self.assertEqual(classificar(HOJE)[self.salva.pk][:2], ("encerradas", "perdida"))
+
+    def test_23o_lugar_sem_ninguem_habilitado_e_perdendo(self):
+        def ninguem_julgado(item):
+            for p in item["propostasItem"]:
+                p.pop("situacao", None)
+
+        self.receber(mudar=ninguem_julgado)
+
         self.assertEqual(self.sinal(), ("perdendo", 0, 1))
+
+    def test_o_22_em_analise_e_ele_e_o_23_e_o_proximo(self):
+        def so_o_22_vivo(item):
+            for p in item["propostasItem"]:
+                if p["classificacao"] < 22:
+                    p["situacao"] = "1"
+                elif p["classificacao"] == 22:
+                    p.pop("situacao", None)
+
+        self.receber(mudar=so_o_22_vivo)
+
+        self.assertEqual(self.sinal()[0], "proximo")
 
     def test_todos_na_frente_menos_um_cairam_e_o_proximo(self):
         def cairam(item):
             for p in item["propostasItem"]:
                 if p["classificacao"] < 22:
                     p["situacao"] = "1"
+                elif p["classificacao"] == 22:
+                    p.pop("situacao", None)
 
         self.receber(mudar=cairam)
 
@@ -208,32 +237,40 @@ class RelatorioTests(_ComCubatao):
         self.assertEqual((item["participantes"], item["vencedor"]), (0, None))
 
 
+def de_todos():
+    """Só as consultas das propostas de todos (a vigia diária é outra coisa)."""
+
+    return [c for c in consultas() if "/em-selecao-fornecedores/itens/" in c]
+
+
 class RondaTests(_ComCubatao):
     def test_item_com_posicao_e_sem_leitura_entra(self):
         self.assertEqual(consultas(), [caminho_das_propostas(CUBATAO, "2")])
 
     def test_lido_ha_pouco_nao_entra_lido_ha_mais_de_2h_entra(self):
         self.receber()
-        self.assertEqual(consultas(), [])
+        self.assertEqual(de_todos(), [])
 
         ItemParticipado.objects.update(propostas_lidas_em=timezone.now() - INTERVALO - dt.timedelta(minutes=1))
-        self.assertEqual(len(consultas()), 1)
+        self.assertEqual(len(de_todos()), 1)
 
-    def test_item_decidido_sai_da_ronda(self):
+    def test_item_decidido_sai_da_ronda_das_propostas_e_fica_na_vigia_diaria(self):
         self.receber(mudar=lambda item: item.update(homologado=True))
         ItemParticipado.objects.update(propostas_lidas_em=timezone.now() - dt.timedelta(days=3))
 
-        self.assertEqual(consultas(), [])
+        self.assertEqual(de_todos(), [])
+        self.assertTrue(any("fase-recursal" in c for c in consultas()))
 
     def test_item_sem_posicao_ainda_nao_entra(self):
         ItemParticipado.objects.update(classificacao=None)
 
         self.assertEqual(consultas(), [])
 
-    def test_compra_removida_nao_entra(self):
+    def test_compra_removida_so_entra_na_vigia_diaria(self):
         OportunidadeSalva.objects.update(removida_em=timezone.now())
 
-        self.assertEqual(consultas(), [])
+        self.assertEqual(de_todos(), [])
+        self.assertTrue(all("/participacoes/" in c or "fase-recursal" in c for c in consultas()))
 
 
 class ApiTests(APITestCase):

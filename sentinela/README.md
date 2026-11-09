@@ -41,6 +41,12 @@ o Licita abre aba nova como antes (`licita.js` marca a página do Licita com
 - A cotação do painel não confere mais a cada minuto: é lida ao abrir a
   compra e no F5 (o ↻ continua).
 
+**0.2.3 (09/11/2026):** a primeira ronda acontece 1 minuto depois que o
+Chrome abre (antes esperava 10). A ronda passa a incluir a **vigia diária**
+(itens perdidos, Encerradas e Descartadas: a proposta dele e o recurso, 1x por
+dia, na primeira ronda do dia) e as compras que ele só **acompanha** (as
+propostas de cada item, para o relatório). A lista vem do Licita (`ronda/`).
+
 **0.2.2 (09/11/2026):** depois de atualizar a extensão, as abas do
 Compras.gov que já estavam abertas paravam de falar com ela e enchiam a lista
 de "Erros" ("Extension context invalidated"). Agora elas param quietas até o

@@ -23,7 +23,7 @@ from django.db.models import Count
 from django.utils import timezone
 
 from apps.licitacoes.models import ItemParticipado, OportunidadeSalva
-from apps.licitacoes.torre import avaliar, montar_torre, posicao_efetiva, rotulo_da_compra
+from apps.licitacoes.torre import avaliar, etapa_do_item, montar_torre, posicao_efetiva, rotulo_da_compra, sinal_do_item
 
 CONSULTAS = ("itens-suspeitos", "compra", "torre", "sentinela")
 
@@ -93,7 +93,11 @@ class Command(BaseCommand):
             )
         except OportunidadeSalva.participacao.RelatedObjectDoesNotExist:
             self.linha("Participação: nenhuma (a Sentinela não leu)")
-        sinais = {c["numero"]: c for c in (cartao or {}).get("itens", [])}
+        hoje = timezone.localdate()
+        sinais = {}
+        for item in salva.itens_participados.prefetch_related("propostas"):
+            r = etapa_do_item(item, [], [], hoje)
+            sinais[item.numero_item] = {"etapa": r.etapa or f"perdido ({r.perdido})", "sinal": sinal_do_item(item, r)}
         for item in salva.itens_participados.annotate(n=Count("propostas")).order_by("id"):
             c = sinais.get(item.numero_item, {})
             self.linha(

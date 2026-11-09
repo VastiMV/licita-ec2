@@ -60,18 +60,50 @@
       type="button"
       class="sino"
       [attr.aria-expanded]="aberto() === 'avisos'"
-      aria-label="Avisos: nenhum"
+      [attr.aria-label]="naoLidas() ? 'Avisos: ' + naoLidas() + ' novos' : 'Avisos: nenhum novo'"
       (click)="alternar('avisos')"
     >
       <app-icon name="sino" />
+      @if (naoLidas()) {
+        <span class="contador" aria-hidden="true">{{ naoLidas() > 9 ? '9+' : naoLidas() }}</span>
+      }
     </button>
     @if (aberto() === 'avisos') {
-      <div class="painel" role="dialog" aria-label="Avisos">
-        <b>Nenhum aviso ainda</b>
-        <p>
-          Convocação, diligência, pedido de desconto, recurso, empenho e pagamento aparecem aqui (e
-          no Telegram) quando a Sentinela estiver ligada.
-        </p>
+      <div class="painel avisos" role="dialog" aria-label="Avisos">
+        <div class="avisos-topo">
+          <b>Avisos</b>
+          @if (naoLidas()) {
+            <button type="button" class="link" (click)="marcarTodas()">
+              Marcar todos como lidos
+            </button>
+          }
+        </div>
+        @if (avisos()?.itens?.length) {
+          <ul class="lista-avisos">
+            @for (aviso of avisos()!.itens; track aviso.id) {
+              <li>
+                <button
+                  type="button"
+                  class="aviso"
+                  [class.nao-lido]="!aviso.lida"
+                  [attr.data-nivel]="aviso.nivel"
+                  (click)="abrirAviso(aviso)"
+                >
+                  <span class="aviso-titulo">{{ aviso.titulo }}</span>
+                  @if (aviso.texto) {
+                    <span class="aviso-texto">{{ aviso.texto }}</span>
+                  }
+                  <span class="aviso-quando">{{ quando(aviso.criada_em) }}</span>
+                </button>
+              </li>
+            }
+          </ul>
+        } @else {
+          <p>
+            Nenhum aviso ainda. Convocação, pedido de desconto, recurso, data alterada, compra fora
+            dos favoritos e resultados aparecem aqui.
+          </p>
+        }
       </div>
     }
   </div>

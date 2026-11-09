@@ -325,6 +325,11 @@ def _normalizar_detalhe_compra(d: dict[str, Any]) -> dict[str, Any]:
         # vivo em 28/08/2026, ver docs/DOMINIO.md).
         "plataforma_nome": d.get("usuarioNome"),
         "link_plataforma": d.get("linkSistemaOrigem"),
+        # Para a conferência diária (09/11/2026): prazo e situação da compra
+        # (situacaoCompraId: 1 divulgada, 2 revogada, 3 anulada, 4 suspensa).
+        "data_encerramento_proposta": _so_data(d.get("dataEncerramentoProposta")),
+        "situacao_id": d.get("situacaoCompraId"),
+        "situacao_nome": d.get("situacaoCompraNome"),
     }
 
 

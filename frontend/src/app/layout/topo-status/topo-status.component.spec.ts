@@ -3,19 +3,54 @@ import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 
 import { EstadoSentinelaResponse } from '../../contracts/sentinela/sentinela.contracts';
+import { NotificacoesResponse } from '../../contracts/notificacoes/notificacoes.contracts';
+import { ModalService } from '../../shared/overlay/modal.service';
 import { EmpresasService } from '../../services/empresas/empresas.service';
+import { NotificacoesService } from '../../services/notificacoes/notificacoes.service';
 import { SentinelaService } from '../../services/sentinela/sentinela.service';
 import { TopoStatusComponent, vigiaDe } from './topo-status.component';
+
+const AVISOS: NotificacoesResponse = {
+  nao_lidas: 2,
+  itens: [
+    {
+      id: 7,
+      tipo: 'resultado',
+      nivel: 'info',
+      titulo: 'Resultado · Pregão 9/2026 · item 3',
+      texto: 'Ganhou: EMPRESA X · Marca Y · R$ 1.250,00',
+      oportunidade_id: 17,
+      criada_em: '2026-11-09T10:00:00Z',
+      lida: false,
+    },
+    {
+      id: 8,
+      tipo: 'convocacao',
+      nivel: 'alerta',
+      titulo: 'Convocação · Pregão 59/2026 · item 30',
+      texto: '',
+      oportunidade_id: 20,
+      criada_em: '2026-11-09T11:00:00Z',
+      lida: false,
+    },
+  ],
+};
 
 describe('TopoStatusComponent', () => {
   let fixture: ComponentFixture<TopoStatusComponent>;
   let el: HTMLElement;
+  let avisos: { listar: ReturnType<typeof vi.fn>; marcarLidas: ReturnType<typeof vi.fn> };
+  let modal: { abrir: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
+    avisos = { listar: vi.fn(() => of(AVISOS)), marcarLidas: vi.fn(() => of({ ok: true })) };
+    modal = { abrir: vi.fn(() => of(undefined)) };
     TestBed.configureTestingModule({
       imports: [TopoStatusComponent],
       providers: [
         provideRouter([]),
+        { provide: NotificacoesService, useValue: avisos },
+        { provide: ModalService, useValue: modal },
         {
           provide: SentinelaService,
           useValue: {
@@ -76,6 +111,44 @@ describe('TopoStatusComponent', () => {
     const paineis = el.querySelectorAll('.painel');
     expect(paineis.length).toBe(1);
     expect(paineis[0].textContent).toContain('Nenhum aviso ainda');
+  });
+
+  const avisosChegarem = async () => {
+    await new Promise((r) => setTimeout(r, 0));
+    fixture.detectChanges();
+  };
+
+  it('o sino mostra quantos avisos novos e a lista', async () => {
+    await avisosChegarem();
+    expect(el.querySelector('.sino .contador')?.textContent?.trim()).toBe('2');
+
+    clicar('.sino');
+
+    const itens = [...el.querySelectorAll('.aviso')];
+    expect(itens.length).toBe(2);
+    expect(itens[1].getAttribute('data-nivel')).toBe('alerta');
+    expect(itens[0].textContent).toContain('EMPRESA X');
+  });
+
+  it('clicar num resultado abre o relatório e marca como lido', async () => {
+    await avisosChegarem();
+    clicar('.sino');
+    clicar('.aviso');
+    await new Promise((r) => setTimeout(r, 50));
+
+    expect(avisos.marcarLidas).toHaveBeenCalledWith([7]);
+    expect(modal.abrir).toHaveBeenCalledWith(expect.anything(), {
+      id: 17,
+      titulo: AVISOS.itens[0].titulo,
+    });
+  });
+
+  it('marcar todos como lidos', async () => {
+    await avisosChegarem();
+    clicar('.sino');
+    clicar('.avisos-topo .link');
+
+    expect(avisos.marcarLidas).toHaveBeenCalledWith();
   });
 });
 

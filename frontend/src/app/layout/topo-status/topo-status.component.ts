@@ -1,7 +1,15 @@
-import { Component, ElementRef, computed, inject, signal } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { RouterLink } from '@angular/router';
+import { Component, DestroyRef, ElementRef, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { Router, RouterLink } from '@angular/router';
 import { catchError, map, of, switchMap, timer } from 'rxjs';
+
+import {
+  Notificacao,
+  NotificacoesResponse,
+} from '../../contracts/notificacoes/notificacoes.contracts';
+import { RelatorioCabecalho } from '../../contracts/licitacoes/relatorio.contracts';
+import { ModalService } from '../../shared/overlay/modal.service';
+import { NotificacoesService } from '../../services/notificacoes/notificacoes.service';
 
 import { EstadoSentinelaResponse } from '../../contracts/sentinela/sentinela.contracts';
 import { SentinelaService } from '../../services/sentinela/sentinela.service';
@@ -34,6 +42,68 @@ type Painel = 'radar' | 'sentinela' | 'avisos';
 export class TopoStatusComponent {
   private readonly elemento = inject(ElementRef<HTMLElement>);
   private readonly servicoSentinela = inject(SentinelaService);
+  private readonly servicoAvisos = inject(NotificacoesService);
+  private readonly modal = inject(ModalService);
+  private readonly router = inject(Router);
+
+  /** O sino (09/11/2026): relido a cada minuto. */
+  protected readonly avisos = signal<NotificacoesResponse | null>(null);
+  protected readonly naoLidas = computed(() => this.avisos()?.nao_lidas ?? 0);
+
+  constructor() {
+    timer(0, 60_000)
+      .pipe(
+        switchMap(() => this.servicoAvisos.listar().pipe(catchError(() => of(null)))),
+        takeUntilDestroyed(inject(DestroyRef)),
+      )
+      .subscribe((resposta) => {
+        if (resposta) this.avisos.set(resposta);
+      });
+  }
+
+  private recarregarAvisos(): void {
+    this.servicoAvisos
+      .listar()
+      .subscribe({ next: (r) => this.avisos.set(r), error: () => undefined });
+  }
+
+  protected marcarTodas(): void {
+    this.servicoAvisos
+      .marcarLidas()
+      .subscribe({ next: () => this.recarregarAvisos(), error: () => undefined });
+  }
+
+  /** Abre o que o aviso diz: resultado e relatório abrem o relatório da
+   * licitação; o resto, a Torre. E marca como lido. */
+  protected abrirAviso(aviso: Notificacao): void {
+    this.aberto.set(null);
+    if (!aviso.lida) {
+      this.servicoAvisos
+        .marcarLidas([aviso.id])
+        .subscribe({ next: () => this.recarregarAvisos(), error: () => undefined });
+    }
+    if (aviso.oportunidade_id && (aviso.tipo === 'resultado' || aviso.tipo === 'relatorio')) {
+      const cabecalho: RelatorioCabecalho = { id: aviso.oportunidade_id, titulo: aviso.titulo };
+      // Carregado só quando abre: o topo está em todas as telas.
+      void import('../../pages/torre/relatorio-modal/relatorio-modal.component').then((m) =>
+        this.modal
+          .abrir<void, RelatorioCabecalho>(m.RelatorioModalComponent, cabecalho)
+          .subscribe(),
+      );
+      return;
+    }
+    void this.router.navigate(['/torre']);
+  }
+
+  protected quando(iso: string): string {
+    const data = new Date(iso);
+    return data.toLocaleString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
 
   /** A primeira empresa ativa (a Inside é uma só). Sem empresa, nada. */
   protected readonly empresa = toSignal(

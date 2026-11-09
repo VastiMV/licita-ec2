@@ -59,22 +59,20 @@ from django.utils import timezone
 from apps.cotador.models import Cotacao
 
 from .models import EventoOportunidadeSalva, ItemParticipado, OportunidadeSalva, OportunidadeSalvaQuerySet
-from .torre import (
-    FASES_COMPRA_ANTES_DA_SESSAO,
-    FORNECEDOR_INABILITADO,
-    PLATAFORMA_COM_SENTINELA,
-    PROPOSTA_DESCLASSIFICADA,
-)
+from .torre import avaliar
 
-# Quem participou e saiu: a regra é a mesma da Torre (`torre.avaliar`), aqui
-# em forma de consulta para a lista filtrar e ordenar no banco.
+# A regra mora na Torre (`torre.avaliar`), num lugar só (09/11/2026): antes
+# ela estava escrita duas vezes (lá e aqui, como consulta), e as duas
+# divergiam — o menu dizia 3 descartadas e a lista mostrava 4.
 MOTIVOS: dict[str, str] = {
     "perdida": "Perdida",
+    "acompanhando": "Acompanhando o resultado",
     "revogada": "Revogada",
     "anulada": "Anulada",
     "fracassada": "Fracassada",
     "deserta": "Deserta",
 }
+
 MOTIVO_DA_SITUACAO = {"RE": "revogada", "AN": "anulada", "FR": "fracassada", "DE": "deserta"}
 
 MOTIVOS_DESCARTE = {
@@ -86,134 +84,103 @@ MOTIVOS_DESCARTE = {
     "sem_proposta": "Sem proposta cadastrada",
 }
 
-ITEM_PERDIDO = Q(vencedor_e_a_empresa=False) | Q(
-    situacao_proposta__in=[*PROPOSTA_DESCLASSIFICADA, FORNECEDOR_INABILITADO]
-)
-COMPRA_ENCERRADA = Q(participacao__situacao_compra__in=list(MOTIVO_DA_SITUACAO))
-# A Sentinela viu a compra nas participações depois da sessão, sem ainda ter
-# lido os itens: fica no quadro esperando (mesma regra de `torre.avaliar`).
-ESPERA_OS_ITENS = Q(participacao__isnull=False, participacao__proposta_cadastrada__isnull=True) & ~Q(
-    participacao__fase_compra__in=FASES_COMPRA_ANTES_DA_SESSAO
-)
-PARTICIPOU = (
-    Q(tem_itens=True) | Q(participacao__proposta_cadastrada=True) | COMPRA_ENCERRADA | ESPERA_OS_ITENS
-)
+
+def _com_prefetch(lista):
+    return lista.select_related("cotacao", "participacao", "proposta").prefetch_related(
+        "itens_participados__propostas", "documentos_financeiros", "entregas"
+    )
 
 
-def _sem_proposta(hoje: dt.date) -> Q:
-    """Participou sem proposta cadastrada: a Sentinela leu
-    "Minhas participações" e não havia proposta quando a sessão abriu."""
+def classificar(hoje: dt.date | None = None) -> dict[int, tuple[str, str, dt.date | None]]:
+    """Para onde saiu cada licitação que não está na Torre:
+    `{id: ("encerradas" | "descartadas", chave do motivo, data)}`.
 
-    return (
-        Q(tem_itens=False, participacao__proposta_cadastrada=False)
-        & (
-            ~Q(participacao__fase_compra__in=FASES_COMPRA_ANTES_DA_SESSAO)
-            | Q(data_encerramento_proposta__lt=hoje)
+    - **Ativas**: a regra da Torre (`torre.avaliar`).
+    - **Removidas**: pela lixeira (`descartada_manual`), ou tiradas da lista
+      (`descartada`) — exceto se o prazo venceu antes da remoção: aí vale o
+      prazo, que veio primeiro (a remoção foi só limpeza).
+    """
+
+    hoje = hoje or timezone.localdate()
+    saidas: dict[int, tuple[str, str, dt.date | None]] = {}
+    for salva in _com_prefetch(OportunidadeSalva.objects.ativas()):
+        _, saida = avaliar(salva, hoje)
+        if saida:
+            saidas[salva.pk] = (saida.para, saida.chave, saida.data)
+
+    manuais = set(
+        EventoOportunidadeSalva.objects.filter(tipo=EventoOportunidadeSalva.Tipo.DESCARTADA).values_list(
+            "oportunidade_id", flat=True
         )
-        & ~COMPRA_ENCERRADA
     )
-
-
-def _venceu_antes(hoje: dt.date) -> Q:
-    """O prazo venceu antes de (ou sem) a remoção: saiu do ciclo pelo prazo.
-
-    Não sai pelo prazo quem tem sinal de participação: fatos da Torre (itens,
-    proposta cadastrada), proposta gerada no fluxo antigo, ou cotação feita
-    numa compra do Compras.gov.br — essa espera a Sentinela confirmar."""
-
-    prazo = "data_encerramento_proposta"
-    espera_a_sentinela = Q(tem_cotacao=True, plataforma_id=PLATAFORMA_COM_SENTINELA)
-    return (
-        Q(**{f"{prazo}__lt": hoje}, proposta__isnull=True)
-        & ~PARTICIPOU
-        & ~espera_a_sentinela
-        & ~_sem_proposta(hoje)
-        & (Q(removida_em__isnull=True) | Q(**{f"{prazo}__lt": TruncDate("removida_em")}))
-    )
-
-
-def _com_fatos(lista: OportunidadeSalvaQuerySet) -> OportunidadeSalvaQuerySet:
-    itens = ItemParticipado.objects.filter(oportunidade=OuterRef("pk"))
-    return lista.annotate(
+    removidas = OportunidadeSalva.objects.filter(removida_em__isnull=False).annotate(
         tem_cotacao=Exists(Cotacao.objects.filter(oportunidade=OuterRef("pk"))),
-        tem_itens=Exists(itens),
-        tem_item_vivo=Exists(itens.exclude(ITEM_PERDIDO)),
+        tem_itens=Exists(ItemParticipado.objects.filter(oportunidade=OuterRef("pk"))),
+    )
+    for salva in removidas:
+        removida = timezone.localdate(salva.removida_em)
+        prazo = salva.data_encerramento_proposta
+        if salva.pk in manuais:
+            saidas[salva.pk] = ("descartadas", "descartada_manual", removida)
+        elif prazo and prazo < removida and not salva.tem_itens:
+            chave = "prazo_cotacao" if salva.tem_cotacao else "prazo_oportunidade"
+            saidas[salva.pk] = ("descartadas", chave, prazo)
+        else:
+            saidas[salva.pk] = ("descartadas", "descartada", removida)
+    return saidas
+
+
+def contar(hoje: dt.date | None = None) -> dict[str, int]:
+    """Os números do menu — os mesmos das listas."""
+
+    total = {"encerradas": 0, "descartadas": 0}
+    for para, _, _ in classificar(hoje).values():
+        total[para] += 1
+    return total
+
+
+def _lista(para: str, campo_data: str, hoje: dt.date | None) -> OportunidadeSalvaQuerySet:
+    saidas = {pk: v for pk, v in classificar(hoje).items() if v[0] == para}
+    if not saidas:
+        return OportunidadeSalva.objects.none().annotate(
+            motivo=Value("", output_field=CharField()),
+            **{campo_data: Value(None, output_field=DateField())},
+            tem_cotacao=Value(False),
+        )
+    return (
+        OportunidadeSalva.objects.filter(pk__in=saidas)
+        .annotate(
+            motivo=Case(
+                *(When(pk=pk, then=Value(chave)) for pk, (_, chave, _) in saidas.items()),
+                output_field=CharField(),
+            ),
+            **{
+                campo_data: Case(
+                    *(When(pk=pk, then=Value(data)) for pk, (_, _, data) in saidas.items()),
+                    output_field=DateField(),
+                )
+            },
+            tem_cotacao=Exists(Cotacao.objects.filter(oportunidade=OuterRef("pk"))),
+        )
     )
 
 
 def encerradas(hoje: dt.date | None = None) -> OportunidadeSalvaQuerySet:
-    """As encerradas — quem participou do certame e saiu —, anotadas com
-    ``encerrada_em``, ``motivo`` e ``tem_cotacao``: compra revogada,
-    anulada, fracassada ou deserta, ou todos os itens da empresa perdidos."""
+    """As encerradas — quem participou do certame e saiu, e as que ele só
+    acompanha —, anotadas com ``encerrada_em``, ``motivo`` e ``tem_cotacao``."""
 
-    perdida = Q(tem_itens=True, tem_item_vivo=False)
-    ultima_leitura_de_item = Subquery(
-        ItemParticipado.objects.filter(oportunidade=OuterRef("pk"))
-        .order_by("-atualizado_em")
-        .values("atualizado_em")[:1],
-        output_field=DateTimeField(),
-    )
-    return (
-        _com_fatos(OportunidadeSalva.objects.ativas())
-        .filter(COMPRA_ENCERRADA | perdida)
-        .annotate(
-            motivo=Case(
-                *(
-                    When(participacao__situacao_compra=situacao, then=Value(motivo))
-                    for situacao, motivo in MOTIVO_DA_SITUACAO.items()
-                ),
-                default=Value("perdida"),
-                output_field=CharField(),
-            ),
-            encerrada_em=Case(
-                When(COMPRA_ENCERRADA, then=TruncDate("participacao__atualizada_em")),
-                default=Coalesce(TruncDate(ultima_leitura_de_item), F("data_encerramento_proposta")),
-                output_field=DateField(),
-            ),
-        )
-    )
+    return _lista("encerradas", "encerrada_em", hoje)
 
 
 def descartadas(hoje: dt.date | None = None) -> OportunidadeSalvaQuerySet:
-    """As descartadas — tiradas da lista antes do prazo, com o prazo vencido
-    sem sinal de participação, ou que participaram sem proposta cadastrada —,
-    anotadas com ``motivo``, ``descartada_em`` (o que veio primeiro: o dia da
-    remoção ou o prazo) e ``tem_cotacao`` (onde estava: Oportunidade ou
-    Cotação)."""
+    """As descartadas, anotadas com ``motivo``, ``descartada_em``,
+    ``tem_cotacao`` e ``motivo_detalhe`` (o texto completo da lixeira)."""
 
-    hoje = hoje or timezone.localdate()
-    venceu = _venceu_antes(hoje)
-    sem_proposta = _sem_proposta(hoje) & Q(removida_em__isnull=True)
-    tirada_antes = Q(removida_em__isnull=False) & ~venceu
-    # Lixeira: descartada (removida) depois do último "voltou para a Torre".
     descartes = EventoOportunidadeSalva.objects.filter(
         oportunidade=OuterRef("pk"), tipo=EventoOportunidadeSalva.Tipo.DESCARTADA
     ).order_by("-ocorrido_em")
-    manual = Q(removida_em__isnull=False, tem_descarte_manual=True)
-    return (
-        _com_fatos(OportunidadeSalva.objects.all())
-        .annotate(
-            tem_descarte_manual=Exists(descartes),
-            motivo_detalhe=Subquery(descartes.values("descricao")[:1]),
-        )
-        .filter(tirada_antes | venceu | sem_proposta | manual)
-        .annotate(
-            motivo=Case(
-                When(manual, then=Value("descartada_manual")),
-                When(sem_proposta, then=Value("sem_proposta")),
-                When(venceu & Q(tem_cotacao=True), then=Value("prazo_cotacao")),
-                When(venceu, then=Value("prazo_oportunidade")),
-                default=Value("descartada"),
-                output_field=CharField(),
-            ),
-            descartada_em=Case(
-                When(manual, then=TruncDate("removida_em")),
-                When(sem_proposta, then=TruncDate("participacao__atualizada_em")),
-                When(venceu, then=F("data_encerramento_proposta")),
-                default=TruncDate("removida_em"),
-                output_field=DateField(),
-            ),
-        )
+    return _lista("descartadas", "descartada_em", hoje).annotate(
+        motivo_detalhe=Subquery(descartes.values("descricao")[:1])
     )
 
 
@@ -330,6 +297,13 @@ def _desfecho(salva, eventos: list[dict]) -> dict:
             "inabilitada ou homologada para outro fornecedor."
         )
         return {"tipo": "perdida", "data": salva.encerrada_em, "por": None, "porque": porque}
+    if salva.motivo == "acompanhando":
+        porque = (
+            "Está em \"Minhas participações\" no Compras.gov.br, o prazo passou e não há cotação no Licita: "
+            "acompanhando o resultado (quem ganhou, marca e preço). Se a vigia achar proposta da empresa, "
+            "a licitação volta para a Torre."
+        )
+        return {"tipo": "acompanhando", "data": salva.encerrada_em, "por": None, "porque": porque}
     if salva.motivo in MOTIVO_DA_SITUACAO.values():
         porque = f"O órgão marcou a compra como {MOTIVOS[salva.motivo].lower()} no Compras.gov.br."
         return {"tipo": salva.motivo, "data": salva.encerrada_em, "por": None, "porque": porque}

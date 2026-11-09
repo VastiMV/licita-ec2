@@ -198,7 +198,9 @@ async function fazerRonda(forcar = false) {
 function agendar() {
   chrome.alarms.create("vigia", { periodInMinutes: 3 });
   chrome.alarms.create("tarefas", { periodInMinutes: 1 });
-  chrome.alarms.create("ronda", { periodInMinutes: 10 });
+  // A primeira ronda 1 minuto depois que o Chrome abre (09/11/2026): se o
+  // computador ligou às 10h, a vigia do dia acontece às 10h, sem esperar.
+  chrome.alarms.create("ronda", { delayInMinutes: 1, periodInMinutes: 10 });
 }
 
 chrome.runtime.onInstalled.addListener(agendar);

@@ -79,6 +79,7 @@ def relatorio_do_item(item) -> dict:
         "lido_em": item.propostas_lidas_em,
         "homologado": homologado,
         "empresa_venceu": item.vencedor_e_a_empresa,
+        "acompanhado": False,
         "vencedor": _proposta(vencedora, vencedora.pk in atipicas) if vencedora else None,
         "empresa": {
             "classificacao": empresa.classificacao if empresa else item.classificacao,
@@ -95,8 +96,37 @@ def relatorio_do_item(item) -> dict:
     }
 
 
+def relatorio_do_acompanhado(item) -> dict:
+    """Item de uma compra que ele só acompanha ("xeretar"): sem a linha dele."""
+
+    propostas = sorted(item.propostas.all(), key=lambda p: (p.classificacao or 10**6, p.pk))
+    com_valor = [p for p in propostas if p.valor_final is not None]
+    mediana, fora = _atipicos([p.valor_final for p in com_valor])
+    atipicas = {com_valor[i].pk for i in fora}
+    vencedora = proposta_vencedora(propostas) if propostas else None
+    marcas = Counter(p.marca.strip().upper() for p in propostas if p.marca.strip())
+    return {
+        "numero": item.numero_item,
+        "descricao": item.descricao,
+        "quantidade": item.quantidade,
+        "participantes": len(propostas),
+        "lido_em": item.propostas_lidas_em,
+        "homologado": item.decidido,
+        "empresa_venceu": None,
+        "acompanhado": True,
+        "vencedor": _proposta(vencedora, vencedora.pk in atipicas) if vencedora else None,
+        "empresa": None,
+        "diferenca": None,
+        "diferenca_percentual": None,
+        "mediana": _dinheiro(mediana),
+        "marcas": [{"marca": m, "propostas": n} for m, n in marcas.most_common(5)],
+        "propostas": [_proposta(p, p.pk in atipicas) for p in propostas],
+    }
+
+
 def relatorio_da_compra(salva) -> dict:
     itens = [relatorio_do_item(i) for i in salva.itens_participados.prefetch_related("propostas")]
+    itens += [relatorio_do_acompanhado(i) for i in salva.itens_acompanhados.prefetch_related("propostas")]
     return {
         "id": salva.pk,
         "compra": rotulo_da_compra(salva),
@@ -109,5 +139,6 @@ def relatorio_da_compra(salva) -> dict:
             "com_propostas": sum(1 for i in itens if i["participantes"]),
             "ganhos": sum(1 for i in itens if i["empresa_venceu"]),
             "perdidos": sum(1 for i in itens if i["empresa_venceu"] is False),
+            "acompanhados": sum(1 for i in itens if i.get("acompanhado")),
         },
     }

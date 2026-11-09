@@ -62,6 +62,29 @@ export const DESFECHOS: Record<
     icone: 'x',
   },
   concluido: { familia: 'sucesso', nome: 'Concluído', curto: 'Concluído', icone: 'check' },
+  descartada_manual: {
+    familia: 'neutro',
+    nome: 'Descartada manualmente',
+    curto: 'Descartada',
+    icone: 'lixeira',
+  },
+  sem_proposta: {
+    familia: 'alerta',
+    nome: 'Sem proposta cadastrada',
+    curto: 'Sem proposta',
+    icone: 'x',
+  },
+  perdida: { familia: 'perigo', nome: 'Perdida', curto: 'Perdida', icone: 'x' },
+  acompanhando: {
+    familia: 'neutro',
+    nome: 'Acompanhando o resultado',
+    curto: 'Acompanhando',
+    icone: 'relogio',
+  },
+  revogada: { familia: 'alerta', nome: 'Revogada pelo órgão', curto: 'Revogada', icone: 'x' },
+  anulada: { familia: 'alerta', nome: 'Anulada pelo órgão', curto: 'Anulada', icone: 'x' },
+  fracassada: { familia: 'alerta', nome: 'Fracassada', curto: 'Fracassada', icone: 'x' },
+  deserta: { familia: 'alerta', nome: 'Deserta', curto: 'Deserta', icone: 'x' },
 };
 
 // ---------- formatação ----------

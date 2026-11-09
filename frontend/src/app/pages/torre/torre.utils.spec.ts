@@ -4,6 +4,7 @@ import {
   localDoCartao,
   moeda,
   nivelDoCartao,
+  perdendoDoCartao,
   prazoDoCartao,
   resumoDoItem,
   rotaDaEtapa,
@@ -84,5 +85,15 @@ describe('torre.utils', () => {
   it('relatório só do Disputar em diante, com itens', () => {
     expect(temRelatorio(PMDF)).toBe(true);
     expect(temRelatorio(COTADA)).toBe(false);
+  });
+
+  it('embaixo da linha: 🟠 próximos e 👎 perdendo, sem "podem ser chamados"', () => {
+    const cartao = {
+      ...PMDF,
+      itens: [{ ...PMDF.itens[0], sinal: 'proximo' as const }, PMDF.itens[1], PMDF.itens[2]],
+    };
+
+    expect(perdendoDoCartao(cartao)).toBe('🟠 1 próximo a ser chamado · 👎 1 perdendo');
+    expect(perdendoDoCartao(FARROUPILHA)).toBeNull();
   });
 });

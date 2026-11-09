@@ -152,5 +152,5 @@ class SaidasComFatosDaTorreTests(Base):
             lugares = [salva.pk in na_torre, salva.pk in em_encerradas, salva.pk in em_descartadas]
             self.assertEqual(sum(lugares), 1, f"{salva.sequencial_compra} está em {lugares}")
         self.assertEqual(torre["saidas"]["encerradas"], len(em_encerradas))
-        # A Torre só conta as ativas; a tirada da lista está em Descartadas.
-        self.assertEqual(torre["saidas"]["descartadas"], len(em_descartadas) - 1)
+        # Os números do menu são os das listas (inclusive a tirada da lista).
+        self.assertEqual(torre["saidas"]["descartadas"], len(em_descartadas))

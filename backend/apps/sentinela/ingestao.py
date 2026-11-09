@@ -47,6 +47,7 @@ from apps.integracoes.plataformas import plataforma_padrao
 from apps.licitacoes.models import (
     EventoOportunidadeSalva,
     Fonte,
+    ItemAcompanhado,
     ItemParticipado,
     OportunidadeSalva,
     ParticipacaoCompra,
@@ -190,6 +191,8 @@ def _ler_proposta_do_item(dados, params, codigo, cnpj, item, **_) -> dict:
     gravados = sum(_gravar_item(salva, registro, {cnpj}) for registro in registros if isinstance(registro, dict))
     if gravados:
         _marcar_proposta(salva, True)
+    numero = str(item)
+    ItemParticipado.objects.filter(oportunidade=salva, numero_item=numero).update(vigiado_em=timezone.now())
     _talvez_voltar(salva)
     return {"itens": gravados}
 
@@ -235,11 +238,25 @@ def _ler_fase_recursal(dados, params, codigo, item, sessao, **_) -> dict:
     prazos = dados.get("prazos") or {}
     revisao = (dados.get("revisaoDecisao") or {}).get("situacao") or ""
     decisao = (dados.get("decisao") or {}).get("situacao") or ""
+    if len(recursos) > len(registro.recursos or []):
+        from apps.licitacoes.torre import rotulo_da_compra
+        from apps.notificacoes.servico import avisar
+
+        quem = recursos[-1].get("nome") or "outra empresa"
+        avisar(
+            "recurso",
+            f"Recurso · {rotulo_da_compra(salva)} · item {registro.numero_item}",
+            texto=f"{quem} entrou com recurso.",
+            oportunidade=salva,
+            nivel="alerta",
+            chave=f"recurso:{registro.pk}:{len(recursos)}",
+        )
     registro.recursos = recursos
     registro.prazo_contrarrazao = _data_hora(prazos.get("dataHoraLimiteContrarrazao"))
     registro.decisao_recurso = (revisao or decisao)[:1]
     registro.sessao_julgamento = int(sessao)
     registro.save(update_fields=["recursos", "prazo_contrarrazao", "decisao_recurso", "sessao_julgamento", "atualizado_em"])
+    _talvez_voltar(salva)
     return {"itens": 1, "recursos": len(recursos)}
 
 
@@ -277,12 +294,27 @@ def _ler_propostas_do_item(dados, params, codigo, item, **_) -> dict:
     if not salva:
         return {"propostas": 0, "motivo": "compra desconhecida: abra antes as participações"}
     numero = str(registro.get("identificador") or registro.get("numero") or item).strip()
-    participado = ItemParticipado.objects.filter(oportunidade=salva, numero_item=numero).first()
-    if not participado:
-        return {"propostas": 0, "motivo": "item em que a empresa não participa"}
-
     cnpjs = _cnpjs_da_empresa()
     propostas = [p for p in registro.get("propostasItem") or [] if isinstance(p, dict)]
+    da_empresa = next((p for p in propostas if ((p.get("participante") or {}).get("identificacao")) in cnpjs), None)
+
+    participado = ItemParticipado.objects.filter(oportunidade=salva, numero_item=numero).first()
+    acompanhado = None
+    if not participado:
+        acompanhado = ItemAcompanhado.objects.filter(oportunidade=salva, numero_item=numero).first()
+        if acompanhado and da_empresa:
+            # Rede de segurança (09/11/2026): ele tinha proposta e o Licita
+            # não sabia — o item vira dele e a compra volta para a Torre.
+            _gravar_item(salva, {**registro, "propostaItem": da_empresa}, cnpjs)
+            _marcar_proposta(salva, True)
+            participado = ItemParticipado.objects.get(oportunidade=salva, numero_item=numero)
+            acompanhado.propostas.all().delete()
+            acompanhado.delete()
+            acompanhado = None
+    if not participado and not acompanhado:
+        return {"propostas": 0, "motivo": "item que a empresa não disputa nem acompanha"}
+
+    dono = {"item": participado} if participado else {"acompanhado": acompanhado}
     novas = []
     for proposta in propostas:
         participante = proposta.get("participante") or {}
@@ -290,7 +322,7 @@ def _ler_propostas_do_item(dados, params, codigo, item, **_) -> dict:
         cnpj = str(participante.get("identificacao") or "")[:14]
         novas.append(
             PropostaDoItem(
-                item=participado,
+                **dono,
                 classificacao=proposta.get("classificacao") or None,
                 cnpj=cnpj,
                 nome=(participante.get("nome") or "")[:255],
@@ -303,20 +335,70 @@ def _ler_propostas_do_item(dados, params, codigo, item, **_) -> dict:
                 da_empresa=cnpj in cnpjs,
             )
         )
-    participado.propostas.all().delete()
+    PropostaDoItem.objects.filter(**dono).delete()
     PropostaDoItem.objects.bulk_create(novas)
+    homologado = registro.get("homologado") is True
+    vencedora = proposta_vencedora(novas) if homologado else None
 
-    da_empresa = next((p for p in propostas if ((p.get("participante") or {}).get("identificacao")) in cnpjs), None)
+    if acompanhado:
+        decidiu = homologado and vencedora is not None and not acompanhado.decidido
+        acompanhado.propostas_lidas_em = timezone.now()
+        acompanhado.decidido = acompanhado.decidido or (homologado and vencedora is not None)
+        acompanhado.save(update_fields=["propostas_lidas_em", "decidido"])
+        if decidiu:
+            _avisar_resultado(salva, numero, vencedora)
+            _talvez_relatorio_completo(salva)
+        return {"propostas": len(novas)}
+
     if da_empresa:
         _gravar_item(salva, {**registro, "propostaItem": da_empresa}, cnpjs)
         participado.refresh_from_db()
-    if registro.get("homologado") is True:
-        vencedora = proposta_vencedora(novas)
-        if vencedora is not None:
-            participado.vencedor_e_a_empresa = vencedora.da_empresa
+    campos = ["vencedor_e_a_empresa", "propostas_lidas_em"]
+    if vencedora is not None:
+        if participado.vencedor_e_a_empresa is None and not vencedora.da_empresa:
+            _avisar_resultado(salva, numero, vencedora)
+        participado.vencedor_e_a_empresa = vencedora.da_empresa
+        if participado.homologado_em is None:
+            # Começo da contagem dos 180 dias da vigia de quem perdeu.
+            participado.homologado_em = timezone.localdate()
+            campos.append("homologado_em")
     participado.propostas_lidas_em = timezone.now()
-    participado.save(update_fields=["vencedor_e_a_empresa", "propostas_lidas_em"])
+    participado.save(update_fields=campos)
     return {"propostas": len(novas)}
+
+
+def _avisar_resultado(salva: OportunidadeSalva, numero: str, vencedora: PropostaDoItem) -> None:
+    """O resultado saiu num item que ele perdeu ou só acompanha → sino."""
+
+    from apps.licitacoes.torre import rotulo_da_compra
+    from apps.notificacoes.servico import avisar
+
+    valor = f"R$ {vencedora.valor_final:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".") if vencedora.valor_final is not None else ""
+    partes = [p for p in (vencedora.nome, vencedora.marca, valor) if p]
+    avisar(
+        "resultado",
+        f"Resultado · {rotulo_da_compra(salva)} · item {numero}",
+        texto="Ganhou: " + " · ".join(partes),
+        oportunidade=salva,
+        nivel="info",
+        chave=f"resultado:{salva.pk}:{numero}",
+    )
+
+
+def _talvez_relatorio_completo(salva: OportunidadeSalva) -> None:
+    from apps.licitacoes.torre import rotulo_da_compra
+    from apps.notificacoes.servico import avisar
+
+    itens = salva.itens_acompanhados.all()
+    if itens.exists() and not itens.filter(decidido=False).exists():
+        avisar(
+            "relatorio",
+            f"Relatório completo · {rotulo_da_compra(salva)}",
+            texto=f"{salva.orgao_nome}: saiu o resultado de todos os {itens.count()} itens.",
+            oportunidade=salva,
+            nivel="info",
+            chave=f"relatorio:{salva.pk}",
+        )
 
 
 def _ler_favoritas(dados, params, **_) -> dict:
@@ -336,6 +418,18 @@ def _ler_favoritas(dados, params, **_) -> dict:
             continue
         favorita = codigo in favoritas
         mudou += int(salva.favorita_no_compras is not favorita)
+        if salva.favorita_no_compras is not False and not favorita:
+            from apps.licitacoes.torre import rotulo_da_compra
+            from apps.notificacoes.servico import avisar
+
+            avisar(
+                "favorito",
+                f"Fora dos favoritos no Compras.gov · {rotulo_da_compra(salva)}",
+                texto=f"{salva.orgao_nome}: está no Licita, mas não nos favoritos. Vai participar?",
+                oportunidade=salva,
+                nivel="aviso",
+                chave=f"favorito:{salva.pk}:{agora:%Y%m%d}",
+            )
         salva.favorita_no_compras = favorita
         salva.favorita_conferida_em = agora
         salva.save(update_fields=["favorita_no_compras", "favorita_conferida_em"])
@@ -409,6 +503,14 @@ def _talvez_voltar(salva: OportunidadeSalva) -> None:
         return
     if item := salva.itens_participados.filter(anexo_solicitado="S").first():
         voltar_por_convocacao(salva, f"convocação para enviar anexo no item {item.numero_item}")
+        return
+    from apps.licitacoes.torre import chamado_de_volta
+
+    # Recurso ou pedido de desconto também trazem de volta (09/11/2026).
+    for item in salva.itens_participados.all():
+        if chamado_de_volta(item):
+            voltar_por_convocacao(salva, f"recurso ou pedido de desconto no item {item.numero_item}")
+            return
 
 
 def _salva_da_compra(compra: dict, codigo: str | None = None) -> tuple[OportunidadeSalva | None, bool]:
@@ -475,13 +577,68 @@ def _gravar_participacao(salva: OportunidadeSalva, compra: dict, registro: dict)
         valores["diligencia_em_andamento"] = bool(registro["possuiDiligenciaEmAndamento"])
     if "possuiConvRemanescentesEmAndamento" in registro:
         valores["convocacao_em_andamento"] = bool(registro["possuiConvRemanescentesEmAndamento"])
-    if abre := _data_hora(compra.get("dataHoraPrevisaoAbertura")):
-        valores["sessao_abre_em"] = abre
+    antes = ParticipacaoCompra.objects.filter(oportunidade=salva).first()
+    if "dataHoraPrevisaoAbertura" in compra:
+        # Vazia = "sem prazo definido" (Butantan, 9/2026): também é notícia.
+        valores["sessao_abre_em"] = _data_hora(compra.get("dataHoraPrevisaoAbertura"))
     ParticipacaoCompra.objects.update_or_create(oportunidade=salva, defaults=valores)
 
-    if not salva.data_encerramento_proposta and (fim := _data(compra.get("dataHoraFimPropostas"))):
-        salva.data_encerramento_proposta = fim
-        salva.save(update_fields=["data_encerramento_proposta"])
+    if antes and "sessao_abre_em" in valores and antes.sessao_abre_em and valores["sessao_abre_em"]:
+        if antes.sessao_abre_em != valores["sessao_abre_em"]:
+            registrar_data_alterada(salva, "abertura da sessão", antes.sessao_abre_em, valores["sessao_abre_em"])
+    if antes and (situacao := valores.get("situacao_compra")) and situacao != antes.situacao_compra:
+        if situacao == "SU":
+            avisar_situacao(salva, "Compra suspensa", "aviso")
+        elif situacao in {"RE", "AN"}:
+            avisar_situacao(salva, "Compra revogada" if situacao == "RE" else "Compra anulada", "alerta")
+
+    if fim := _data(compra.get("dataHoraFimPropostas")):
+        if not salva.data_encerramento_proposta:
+            salva.data_encerramento_proposta = fim
+            salva.save(update_fields=["data_encerramento_proposta"])
+        elif salva.data_encerramento_proposta != fim:
+            anterior = salva.data_encerramento_proposta
+            salva.data_encerramento_proposta = fim
+            salva.save(update_fields=["data_encerramento_proposta"])
+            registrar_data_alterada(salva, "prazo da proposta", anterior, fim)
+
+
+def _quando(valor) -> str:
+    if isinstance(valor, dt.datetime):
+        return f"{timezone.localtime(valor):%d/%m %H:%M}"
+    return f"{valor:%d/%m}"
+
+
+def registrar_data_alterada(salva: OportunidadeSalva, qual: str, antes, depois) -> None:
+    """O órgão mudou a data (09/11/2026): histórico + sino."""
+
+    from apps.licitacoes.torre import rotulo_da_compra
+    from apps.notificacoes.servico import avisar
+
+    texto = f"Data alterada pelo órgão ({qual}): {_quando(antes)} → {_quando(depois)}."
+    salva.registrar(EventoOportunidadeSalva.Tipo.DATA_ALTERADA, autor=None, descricao=texto)
+    avisar(
+        "data",
+        f"Data alterada · {rotulo_da_compra(salva)}",
+        texto=f"{salva.orgao_nome}. {texto}",
+        oportunidade=salva,
+        nivel="aviso",
+        chave=f"data:{salva.pk}:{qual}:{depois}",
+    )
+
+
+def avisar_situacao(salva: OportunidadeSalva, titulo: str, nivel: str) -> None:
+    from apps.licitacoes.torre import rotulo_da_compra
+    from apps.notificacoes.servico import avisar
+
+    avisar(
+        "situacao",
+        f"{titulo} · {rotulo_da_compra(salva)}",
+        texto=salva.orgao_nome,
+        oportunidade=salva,
+        nivel=nivel,
+        chave=f"situacao:{salva.pk}:{titulo}",
+    )
 
 
 def _marcar_proposta(salva: OportunidadeSalva, tem: bool) -> None:
@@ -518,27 +675,58 @@ def _gravar_item(salva: OportunidadeSalva, item: dict, cnpjs: set[str]) -> int:
     valores = proposta.get("valores") or {}
     situacao = str(proposta.get("situacao") or "")
     anexo = str(proposta.get("situacaoUltimaSolicitacaoAnexos") or "")
-    ItemParticipado.objects.update_or_create(
-        oportunidade=salva,
-        numero_item=numero,
-        defaults={
-            "descricao": item.get("descricao") or "",
-            "quantidade": _decimal(proposta.get("quantidadeOfertada") or item.get("quantidadeSolicitada")),
-            "marca": (proposta.get("marcaFabricante") or "")[:120],
-            "modelo": (proposta.get("modeloVersao") or "")[:120],
-            "classificacao": proposta.get("classificacao") or None,
-            "situacao_proposta": situacao if situacao in SITUACOES_DA_PROPOSTA else "",
-            "fase_item": str(item.get("fase") or "")[:4],
-            "anexo_solicitado": anexo if anexo in {"S", "P", "E"} else "",
-            "negociacao": str(proposta.get("situacaoUltimaNegociacao") or "")[:1],
-            "negociacao_texto": proposta.get("justificativaUltimaNegociacao") or "",
-            "valor_proposta_inicial": _valor(valores.get("valorPropostaInicial")),
-            "valor_lance_final": _valor(valores.get("valorPropostaInicialOuLances")),
-            "sessao_julgamento": int(item.get("numeroSessaoJulgHab") or 1),
-            "fonte": Fonte.SENTINELA,
-        },
-    )
+    antes = ItemParticipado.objects.filter(oportunidade=salva, numero_item=numero).first()
+    campos = {
+        "descricao": item.get("descricao") or "",
+        "quantidade": _decimal(proposta.get("quantidadeOfertada") or item.get("quantidadeSolicitada")),
+        "marca": (proposta.get("marcaFabricante") or "")[:120],
+        "modelo": (proposta.get("modeloVersao") or "")[:120],
+        "classificacao": proposta.get("classificacao") or None,
+        "situacao_proposta": situacao if situacao in SITUACOES_DA_PROPOSTA else "",
+        "fase_item": str(item.get("fase") or "")[:4],
+        "valor_proposta_inicial": _valor(valores.get("valorPropostaInicial")),
+        "valor_lance_final": _valor(valores.get("valorPropostaInicialOuLances")),
+        "sessao_julgamento": int(item.get("numeroSessaoJulgHab") or 1),
+        "fonte": Fonte.SENTINELA,
+    }
+    # Convocação e negociação só quando a resposta traz (a lista de propostas
+    # de todos não traz a negociação: não pode apagar a que já se sabe).
+    if "situacaoUltimaSolicitacaoAnexos" in proposta or antes is None:
+        campos["anexo_solicitado"] = anexo if anexo in {"S", "P", "E"} else ""
+    if "situacaoUltimaNegociacao" in proposta or antes is None:
+        campos["negociacao"] = str(proposta.get("situacaoUltimaNegociacao") or "")[:1]
+        campos["negociacao_texto"] = proposta.get("justificativaUltimaNegociacao") or ""
+    registro, _ = ItemParticipado.objects.update_or_create(oportunidade=salva, numero_item=numero, defaults=campos)
+    _avisar_chamado(salva, registro, antes)
     return 1
+
+
+def _avisar_chamado(salva: OportunidadeSalva, item: ItemParticipado, antes: ItemParticipado | None) -> None:
+    """Convocação ou pedido de desconto que acabou de aparecer → sino (vermelho)."""
+
+    from apps.licitacoes.torre import rotulo_da_compra
+    from apps.notificacoes.servico import avisar
+
+    compra = rotulo_da_compra(salva)
+    if item.anexo_solicitado == "S" and (antes is None or antes.anexo_solicitado != "S"):
+        avisar(
+            "convocacao",
+            f"Convocação · {compra} · item {item.numero_item}",
+            texto=f"{salva.orgao_nome}: o pregoeiro pediu o envio de anexo.",
+            oportunidade=salva,
+            nivel="alerta",
+            chave=f"convocacao:{item.pk}:{timezone.localdate()}",
+        )
+    aberta = bool(item.negociacao) and item.negociacao != "E"
+    if aberta and (antes is None or not (antes.negociacao and antes.negociacao != "E")):
+        avisar(
+            "desconto",
+            f"Pedido de desconto · {compra} · item {item.numero_item}",
+            texto=item.negociacao_texto or salva.orgao_nome,
+            oportunidade=salva,
+            nivel="alerta",
+            chave=f"desconto:{item.pk}:{timezone.localdate()}",
+        )
 
 
 # -- conversões ------------------------------------------------------------------

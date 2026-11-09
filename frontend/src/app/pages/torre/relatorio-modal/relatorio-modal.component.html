@@ -54,24 +54,24 @@
                   <p class="muted">—</p>
                 }
               </div>
-              <div class="bloco" data-tom="empresa">
-                <p class="rotulo">Inside</p>
-                <p class="nome">
-                  {{
-                    item.empresa.classificacao
-                      ? item.empresa.classificacao + 'º lugar'
-                      : 'sem posição'
-                  }}
-                </p>
-                <p>
-                  {{ item.empresa.marca || '—'
-                  }}{{ item.empresa.modelo ? ' · ' + item.empresa.modelo : '' }}
-                </p>
-                <p class="valor num">{{ moeda(item.empresa.valor) ?? '—' }}</p>
-              </div>
+              @if (item.empresa; as e) {
+                <div class="bloco" data-tom="empresa">
+                  <p class="rotulo">Inside</p>
+                  <p class="nome">
+                    {{ e.classificacao ? e.classificacao + 'º lugar' : 'sem posição' }}
+                  </p>
+                  <p>{{ e.marca || '—' }}{{ e.modelo ? ' · ' + e.modelo : '' }}</p>
+                  <p class="valor num">{{ moeda(e.valor) ?? '—' }}</p>
+                </div>
+              }
               <div class="bloco" data-tom="diferenca">
-                <p class="rotulo">Diferença</p>
-                <p class="valor num">{{ diferenca(item) ?? '—' }}</p>
+                @if (item.empresa) {
+                  <p class="rotulo">Diferença</p>
+                  <p class="valor num">{{ diferenca(item) ?? '—' }}</p>
+                } @else {
+                  <p class="rotulo">Mediana das propostas</p>
+                  <p class="valor num">{{ moeda(item.mediana) ?? '—' }}</p>
+                }
                 @if (item.marcas.length) {
                   <p class="muted">
                     Marcas mais ofertadas:
