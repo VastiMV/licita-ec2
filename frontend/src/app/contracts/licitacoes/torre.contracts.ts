@@ -45,10 +45,15 @@ export interface ItemTorre {
   readonly perdendo: boolean;
   /** Por que se perdeu ("proposta desclassificada"); vazio se não. */
   readonly perdido: string;
+  /** 👍 1º de verdade (ou ganhou) · 🟠 o próximo a ser chamado · 👎 atrás
+   * disso (ou perdeu) · vazio sem posição. Desconta quem caiu na frente. */
+  readonly sinal: SinalDoItem;
   readonly quantidade: string | null;
   readonly valor_unitario: string | null;
   readonly valor_total: string | null;
 }
+
+export type SinalDoItem = 'ganhando' | 'proximo' | 'perdendo' | '';
 
 export interface CartaoTorre {
   /** Id da oportunidade salva. */
@@ -72,6 +77,9 @@ export interface CartaoTorre {
   readonly itens: readonly ItemTorre[];
   /** Soma dos itens ganhos ou à frente (sem os perdendo). */
   readonly valor_ganho: string | null;
+  /** "ganhando 1 de 8": itens com 👍 e itens com posição conhecida. */
+  readonly itens_ganhando: number;
+  readonly itens_com_posicao: number;
   /** Já ordenadas: alerta, aviso, informação. */
   readonly etiquetas: readonly EtiquetaTorre[];
 }

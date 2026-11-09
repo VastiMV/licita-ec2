@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { EMPTY, Observable, concatMap, of } from 'rxjs';
 
+import { RelatorioCabecalho } from '../../contracts/licitacoes/relatorio.contracts';
 import { CartaoTorre } from '../../contracts/licitacoes/torre.contracts';
 import { OportunidadeSalvaResponse } from '../../contracts/licitacoes/oportunidade-salva.contracts';
 import { ModalService } from '../../shared/overlay/modal.service';
@@ -13,6 +14,7 @@ import {
   OportunidadeModalComponent,
   OportunidadeModalResultado,
 } from '../oportunidades/salvas/oportunidade-modal/oportunidade-modal.component';
+import { RelatorioModalComponent } from './relatorio-modal/relatorio-modal.component';
 
 /**
  * O que acontece ao clicar num cartão da Torre — num lugar só, para o
@@ -46,6 +48,11 @@ export class TorreAcoesService {
       return of(false);
     }
     return EMPTY;
+  }
+
+  /** O relatório da licitação: vencedor, marca e diferença, item a item. */
+  relatorio(cabecalho: RelatorioCabecalho): Observable<void | undefined> {
+    return this.modal.abrir<void, RelatorioCabecalho>(RelatorioModalComponent, cabecalho);
   }
 
   private cotar(cartao: CartaoTorre): Observable<boolean> {

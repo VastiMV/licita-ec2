@@ -9,10 +9,10 @@ import { EtapaPage } from './etapa.page';
 
 describe('EtapaPage', () => {
   let fixture: ComponentFixture<EtapaPage>;
-  let acoes: { abrir: ReturnType<typeof vi.fn> };
+  let acoes: { abrir: ReturnType<typeof vi.fn>; relatorio: ReturnType<typeof vi.fn> };
 
   function montar(etapa: string): HTMLElement {
-    acoes = { abrir: vi.fn(() => of(false)) };
+    acoes = { abrir: vi.fn(() => of(false)), relatorio: vi.fn(() => of(undefined)) };
     TestBed.configureTestingModule({
       imports: [EtapaPage],
       providers: [
@@ -59,5 +59,23 @@ describe('EtapaPage', () => {
     const el = montar('homologado');
 
     expect(el.querySelector('.vazio')?.textContent).toContain('Nenhuma licitação em Homologado');
+  });
+
+  it('cada item mostra 👍 / 👎 com o texto para leitor de tela', () => {
+    const el = montar('aguardando_adjudicacao');
+
+    const sinais = [...el.querySelectorAll('.sinal')].map((s) => s.getAttribute('data-sinal'));
+    expect(sinais).toEqual(['perdendo', 'perdendo', 'ganhando']);
+    expect(el.querySelector('.sinal')?.textContent).toContain('👎');
+    expect(el.querySelector('.sinal .sr-only')?.textContent).toContain('Perdendo');
+  });
+
+  it('"Relatório" abre o relatório da licitação', () => {
+    const el = montar('aguardando_adjudicacao');
+
+    (el.querySelector('.relatorio') as HTMLButtonElement).click();
+
+    expect(acoes.relatorio).toHaveBeenCalledWith({ id: 56, titulo: 'Pregão 56/2026' });
+    expect(acoes.abrir).not.toHaveBeenCalled();
   });
 });

@@ -54,6 +54,29 @@ Compras.gov — só com o clique dele, uma compra por vez, e só depois de um HA
 mostrando o endereço que o próprio Compras.gov usa. Ver "Onde paramos" em
 `Tarefas/feat-torre-de-controle.md`.
 
+**0.1.4 (08/11/2026) — posição e relatório:** a Sentinela lê sozinha a lista
+de propostas de todos os participantes de cada item da empresa (sem captcha;
+`ronda.py`). O Licita guarda em `PropostaDoItem` e mostra:
+
+- **👍 / 🟠 / 👎** ao lado de cada item (lista da etapa) e "👍 ganhando 1 de 8"
+  no cartão. 👍 = 1º **de verdade** (descontando quem caiu na frente:
+  desclassificado ou inabilitado); 🟠 = o próximo a ser chamado (2º de
+  verdade); 👎 = atrás disso, ou perdeu (`torre.sinal_do_item`).
+- **Relatório da licitação** (botão "Relatório" na lista da etapa e "Ver
+  relatório" em Encerradas): item a item, vencedor (ou 1º), marca, modelo,
+  valor, a posição e o valor da Inside, a diferença em R$ e %, as marcas mais
+  ofertadas e a lista inteira. Valor absurdo (mais de 5× ou menos de 1/5 da
+  mediana) fica marcado e fora das contas (`relatorio.py`).
+- Item **homologado** (o campo `homologado` da lista): se a vencedora não é a
+  Inside, `vencedor_e_a_empresa = False` → item perdido; todos perdidos → a
+  licitação vai para Encerradas. Compra com itens ganhos e perdidos fica na
+  Torre (na etapa do item ganho), com os perdidos em 👎; o relatório mostra
+  todos.
+
+Ainda falta: confirmar o 🟠 com um caso real de "desclassificada" (os códigos
+vêm do manual); o painel da camada mostrar só o item aberto (precisa do HAR
+da tela de lances); relatórios gerais (seção Relatórios, com ECharts).
+
 **Ainda não feito:** ler a caixa de mensagens sozinha a cada 3 min; avisar
 quando o lance digitado ficar abaixo do piso (precisa ver a tela real de
 disputa); Telegram; o sino com as mensagens.

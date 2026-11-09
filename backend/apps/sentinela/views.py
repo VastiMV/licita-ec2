@@ -1,7 +1,7 @@
 """API da Sentinela.
 
-A extensão usa a chave (`ChaveDaSentinela`): `pulso/`, `captura/` e
-`camada/<código>/`. O Licita (usuário logado) usa `estado/`.
+A extensão usa a chave (`ChaveDaSentinela`): `pulso/`, `captura/`,
+`camada/<código>/` e `ronda/`. O Licita (usuário logado) usa `estado/`.
 """
 
 from __future__ import annotations
@@ -17,6 +17,7 @@ from .camada import numeros_da_compra
 from .estado import estado_atual
 from .ingestao import CapturaInvalida, receber
 from .models import Pulso
+from .ronda import consultas
 
 logger = logging.getLogger(__name__)
 
@@ -70,6 +71,13 @@ class CamadaView(_DaExtensao):
         if numeros is None:
             return Response({"compra": codigo, "conhecida": False, "itens": []})
         return Response({"conhecida": True, **numeros})
+
+
+class RondaView(_DaExtensao):
+    """O que a Sentinela deve consultar sozinha agora (só endereços sem captcha)."""
+
+    def get(self, request):
+        return Response({"consultas": consultas()})
 
 
 class EstadoView(APIView):

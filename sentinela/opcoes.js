@@ -10,11 +10,13 @@ async function mostrarEstado() {
   const s = await chrome.storage.local.get([
     "ultimoPulso",
     "ultimaCaptura",
+    "ultimaRonda",
     "ultimoErro",
   ]);
   estado.textContent = [
     `Último sinal de vida: ${quando(s.ultimoPulso)}${s.ultimoPulso ? ` (${s.ultimoPulso.valor})` : ""}`,
     `Última leitura enviada: ${quando(s.ultimaCaptura)}${s.ultimaCaptura ? ` (${JSON.stringify(s.ultimaCaptura.valor)})` : ""}`,
+    `Última ronda: ${quando(s.ultimaRonda)}${s.ultimaRonda ? ` (${s.ultimaRonda.valor})` : ""}`,
     `Último erro: ${s.ultimoErro ? `${quando(s.ultimoErro)} — ${s.ultimoErro.valor}` : "nenhum"}`,
   ].join("\n");
 }
@@ -40,6 +42,13 @@ document.getElementById("testar").addEventListener("click", async () => {
   estado.textContent = "Testando…";
   await chrome.storage.local.remove("ultimoErro");
   await chrome.runtime.sendMessage({ tipo: "testar" });
+  mostrarEstado();
+});
+
+document.getElementById("ronda").addEventListener("click", async () => {
+  estado.textContent = "Conferindo as propostas na aba do Compras.gov…";
+  await chrome.storage.local.remove("ultimoErro");
+  await chrome.runtime.sendMessage({ tipo: "ronda_agora" });
   mostrarEstado();
 });
 

@@ -88,6 +88,18 @@ tbody tr:last-child td {
 
 .acoes {
   text-align: right;
+  white-space: nowrap;
+
+  .abrir + .abrir {
+    margin-left: 6px;
+  }
+}
+
+// 👍 / 🟠 / 👎: o emoji fica com a cor dele, mesmo com o item em cinza.
+.sinal {
+  display: inline-block;
+  min-width: 1.4em;
+  font-size: 1.05em;
 }
 
 .abrir {

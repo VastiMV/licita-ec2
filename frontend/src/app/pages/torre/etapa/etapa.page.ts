@@ -7,7 +7,15 @@ import { CartaoTorre, TorreResponse } from '../../../contracts/licitacoes/torre.
 import { TorreService } from '../../../services/licitacoes/torre.service';
 import { formatarData, normalizarTitulo } from '../../oportunidades/edital-card/edital-card.utils';
 import { TorreAcoesService } from '../torre-acoes.service';
-import { localDoCartao, moeda, orgaoDoCartao, resumoDoItem, rotaDoEstagio } from '../torre.utils';
+import {
+  localDoCartao,
+  moeda,
+  orgaoDoCartao,
+  resumoDoItem,
+  rotaDoEstagio,
+  sinalDoItem,
+  temRelatorio,
+} from '../torre.utils';
 
 /**
  * A lista de uma etapa, como as listas de hoje do Licita: uma linha por
@@ -51,6 +59,8 @@ export class EtapaPage implements OnInit {
   protected readonly moeda = moeda;
   protected readonly data = formatarData;
   protected readonly rotaDoEstagio = rotaDoEstagio;
+  protected readonly sinal = sinalDoItem;
+  protected readonly temRelatorio = temRelatorio;
 
   ngOnInit(): void {
     this.carregar();
@@ -74,6 +84,10 @@ export class EtapaPage implements OnInit {
   protected abrirLinha(cartao: CartaoTorre, evento: Event): void {
     if ((evento.target as HTMLElement | null)?.closest('button, a')) return;
     this.abrir(cartao);
+  }
+
+  protected relatorio(cartao: CartaoTorre): void {
+    this.acoes.relatorio({ id: cartao.id, titulo: cartao.compra }).subscribe();
   }
 
   protected abrir(cartao: CartaoTorre): void {

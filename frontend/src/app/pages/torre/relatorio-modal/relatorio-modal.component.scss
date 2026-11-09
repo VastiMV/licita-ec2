@@ -1,0 +1,179 @@
+:host {
+  display: block;
+  width: min(1040px, calc(100vw - 32px));
+}
+
+.relatorio {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 48px);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-modal);
+  color: var(--color-fg);
+  outline: none;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--color-border);
+
+  h2 {
+    margin: 0;
+    font-size: 20px;
+  }
+  p {
+    margin: 0;
+  }
+}
+
+.sobre {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-muted);
+}
+
+.fechar {
+  align-self: flex-start;
+  min-width: 44px;
+  min-height: 44px;
+  border: 0;
+  background: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: var(--color-fg);
+}
+
+.corpo {
+  padding: 16px 20px 24px;
+  overflow: auto;
+}
+
+.resumo {
+  margin: 0 0 16px;
+}
+.ganho {
+  color: var(--color-success);
+}
+.perda {
+  color: var(--color-danger);
+}
+
+.item {
+  padding: 16px 0;
+  border-top: 1px solid var(--color-border);
+
+  h3 {
+    margin: 0 0 12px;
+    font-size: 16px;
+  }
+  .desc {
+    font-weight: 400;
+  }
+}
+
+.quadro {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.bloco {
+  padding: 12px;
+  border-left: 4px solid var(--tom, var(--color-border));
+  background: var(--tom-fundo, var(--color-coluna));
+
+  p {
+    margin: 0 0 2px;
+  }
+  &[data-tom='vencedor'] {
+    --tom: var(--color-success);
+    --tom-fundo: var(--color-success-bg);
+  }
+  &[data-tom='empresa'] {
+    --tom: var(--color-etapa-disputar);
+    --tom-fundo: var(--color-etapa-disputar-bg);
+  }
+  &[data-tom='diferenca'] {
+    --tom: var(--color-warn);
+    --tom-fundo: var(--color-warn-bg);
+  }
+}
+
+.rotulo {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+.nome {
+  font-weight: 700;
+}
+.valor {
+  font-size: 18px;
+  font-weight: 700;
+}
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+details {
+  margin-top: 12px;
+}
+summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--color-blue);
+}
+
+.rolagem {
+  overflow-x: auto;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+
+  th,
+  td {
+    padding: 6px 8px;
+    text-align: left;
+    border-bottom: 1px solid var(--color-border);
+    vertical-align: top;
+  }
+  th.num,
+  td.num {
+    text-align: right;
+    white-space: nowrap;
+  }
+  tr.empresa td {
+    background: var(--color-etapa-disputar-bg);
+    font-weight: 700;
+  }
+  tr.caiu td {
+    color: var(--color-muted);
+    text-decoration: line-through;
+  }
+}
+
+.atipica {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-danger);
+  text-decoration: none;
+}
+
+.falha {
+  color: var(--color-danger);
+}
+.muted {
+  color: var(--color-muted);
+}

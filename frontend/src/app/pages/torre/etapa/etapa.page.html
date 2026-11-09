@@ -45,6 +45,12 @@
               <td>
                 @for (item of cartao.itens; track item.numero) {
                   <div [class.cinza]="item.perdendo || !!item.perdido">
+                    @if (sinal(item); as s) {
+                      <span class="sinal" [attr.data-sinal]="item.sinal" [attr.title]="s.texto"
+                        ><span aria-hidden="true">{{ s.icone }}</span
+                        ><span class="sr-only">{{ s.texto }}:</span></span
+                      >
+                    }
                     {{ resumoDoItem(item) }}
                   </div>
                 } @empty {
@@ -67,6 +73,11 @@
               <td class="valor">{{ moeda(cartao.valor_ganho) ?? '—' }}</td>
               <td class="acoes">
                 <button type="button" class="abrir" (click)="abrir(cartao)">Abrir</button>
+                @if (temRelatorio(cartao)) {
+                  <button type="button" class="abrir relatorio" (click)="relatorio(cartao)">
+                    Relatório
+                  </button>
+                }
               </td>
             </tr>
           }
