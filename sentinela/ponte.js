@@ -1,6 +1,17 @@
 // A ponte entre a página (pagina.js) e o fundo da extensão (fundo.js).
 // Só aceita mensagens da própria aba, marcadas pela Sentinela.
 
+// Depois de atualizar a extensão, a ponte das abas já abertas perde a ligação
+// com ela: não manda nada (sem erro) até o F5.
+function mandar(mensagem) {
+  if (typeof chrome === "undefined" || !chrome.runtime || !chrome.runtime.id) return;
+  try {
+    chrome.runtime.sendMessage(mensagem);
+  } catch {
+    // extensão atualizada: esta aba precisa de F5
+  }
+}
+
 const esperando = new Map();
 let proximo = 1;
 
@@ -9,13 +20,13 @@ window.addEventListener("message", (evento) => {
   const mensagem = evento.data;
   if (!mensagem || mensagem.sentinela !== true) return;
   if (mensagem.tipo === "captura") {
-    chrome.runtime.sendMessage({
+    mandar({
       tipo: "captura",
       url: mensagem.url,
       dados: mensagem.dados,
     });
   } else if (mensagem.tipo === "estado") {
-    chrome.runtime.sendMessage({
+    mandar({
       tipo: "estado",
       estado: mensagem.estado,
       detalhe: mensagem.detalhe,

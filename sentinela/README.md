@@ -41,6 +41,11 @@ o Licita abre aba nova como antes (`licita.js` marca a página do Licita com
 - A cotação do painel não confere mais a cada minuto: é lida ao abrir a
   compra e no F5 (o ↻ continua).
 
+**0.2.2 (09/11/2026):** depois de atualizar a extensão, as abas do
+Compras.gov que já estavam abertas paravam de falar com ela e enchiam a lista
+de "Erros" ("Extension context invalidated"). Agora elas param quietas até o
+F5.
+
 **0.2.1 (09/11/2026) — lixeira, recurso e favoritos:**
 - **Ronda** a cada 10 minutos (seg–sex, 8h–19h), só telas sem captcha, no
   máximo 60 consultas por vez: (1) quais compras de Preparar ainda estão nos
