@@ -327,6 +327,8 @@ class EventoOportunidadeSalva(models.Model):
         PROPOSTA_GERADA = "proposta_gerada", "Cotação salva"
         # Gerar proposta no Cotador (`apps.propostas`).
         PROPOSTA = "proposta", "Proposta gerada"
+        # Correção de dado errado, com o porquê na descrição (09/11/2026).
+        CORRECAO = "correcao", "Correção de dados"
 
     oportunidade = models.ForeignKey(
         OportunidadeSalva,
