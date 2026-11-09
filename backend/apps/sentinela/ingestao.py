@@ -298,10 +298,16 @@ def _ler_propostas_do_item(dados, params, codigo, item, **_) -> dict:
     propostas = [p for p in registro.get("propostasItem") or [] if isinstance(p, dict)]
     da_empresa = next((p for p in propostas if ((p.get("participante") or {}).get("identificacao")) in cnpjs), None)
 
-    participado = ItemParticipado.objects.filter(oportunidade=salva, numero_item=numero).first()
+    # Trava o item até o fim da gravação: com duas Sentinelas ligadas, a
+    # segunda espera a primeira terminar e não duplica a lista (09/11/2026).
+    participado = (
+        ItemParticipado.objects.select_for_update().filter(oportunidade=salva, numero_item=numero).first()
+    )
     acompanhado = None
     if not participado:
-        acompanhado = ItemAcompanhado.objects.filter(oportunidade=salva, numero_item=numero).first()
+        acompanhado = (
+            ItemAcompanhado.objects.select_for_update().filter(oportunidade=salva, numero_item=numero).first()
+        )
         if acompanhado and da_empresa:
             # Rede de segurança (09/11/2026): ele tinha proposta e o Licita
             # não sabia — o item vira dele e a compra volta para a Torre.

@@ -529,6 +529,18 @@ class LixeiraERecursoTests(APITestCase):
         self.assertTrue(do_pmdf)
         self.assertTrue(all(c.endswith("/propostas?filtro=2") or "fase-recursal" in c for c in do_pmdf))
 
+    def test_duas_sentinelas_a_segunda_nao_desfaz_a_tarefa_feita(self):
+        self.descartar(self.pmdf)
+        tarefa = self.client.get("/api/sentinela/tarefas/", HTTP_X_SENTINELA_CHAVE=CHAVE).data[0]
+        url = f"/api/sentinela/tarefas/{tarefa['id']}/"
+
+        self.client.post(url, {"ok": True, "detalhe": "200"}, format="json", HTTP_X_SENTINELA_CHAVE=CHAVE)
+        self.client.post(url, {"ok": False, "detalhe": "404"}, format="json", HTTP_X_SENTINELA_CHAVE=CHAVE)
+
+        from .models import Tarefa
+
+        self.assertEqual(Tarefa.objects.get(pk=tarefa["id"]).estado, Tarefa.Estado.FEITA)
+
     def test_tarefa_de_desfavoritar_vai_e_volta(self):
         self.descartar(self.pmdf)
 

@@ -89,7 +89,12 @@ class TarefaView(_DaExtensao):
         from django.utils import timezone
 
         tarefa = get_object_or_404(Tarefa, pk=pk)
-        tarefa.estado = Tarefa.Estado.FEITA if request.data.get("ok") else Tarefa.Estado.ERRO
+        ok = bool(request.data.get("ok"))
+        if tarefa.estado == Tarefa.Estado.FEITA and not ok:
+            # Duas Sentinelas ligadas (09/11/2026): a outra já tirou o
+            # favorito; o "não encontrado" desta não desfaz o que foi feito.
+            return Response({"ok": True, "ja_feita": True})
+        tarefa.estado = Tarefa.Estado.FEITA if ok else Tarefa.Estado.ERRO
         tarefa.resultado = str(request.data.get("detalhe") or "")[:255]
         tarefa.feita_em = timezone.now()
         tarefa.save(update_fields=["estado", "resultado", "feita_em"])
