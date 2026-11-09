@@ -1,10 +1,12 @@
 import { Injectable, inject } from '@angular/core';
-import { EMPTY, Observable, concatMap, of } from 'rxjs';
+import { EMPTY, Observable, catchError, concatMap, map, of } from 'rxjs';
 
 import { RelatorioCabecalho } from '../../contracts/licitacoes/relatorio.contracts';
 import { CartaoTorre } from '../../contracts/licitacoes/torre.contracts';
 import { OportunidadeSalvaResponse } from '../../contracts/licitacoes/oportunidade-salva.contracts';
+import { TorreService } from '../../services/licitacoes/torre.service';
 import { ModalService } from '../../shared/overlay/modal.service';
+import { ToastService } from '../../shared/ui/toast/toast.service';
 import {
   CotadorModalComponent,
   CotadorModalData,
@@ -30,6 +32,45 @@ import { RelatorioModalComponent } from './relatorio-modal/relatorio-modal.compo
 @Injectable({ providedIn: 'root' })
 export class TorreAcoesService {
   private readonly modal = inject(ModalService);
+  private readonly torre = inject(TorreService);
+  private readonly toast = inject(ToastService);
+
+  /**
+   * A lixeira (decisão da operação, 08/11/2026): uma pergunta só, mostrando
+   * o preço lançado quando houver, e a licitação vai para Descartadas com o
+   * motivo completo; no Compras.gov, a Sentinela tira o favorito.
+   * `true` quando a tela deve recarregar.
+   */
+  descartar(cartao: CartaoTorre): Observable<boolean> {
+    return this.torre.resumoDoDescarte(cartao.id).pipe(
+      concatMap((resumo) =>
+        this.modal.confirmar({
+          titulo: `Descartar ${cartao.compra}?`,
+          mensagem:
+            resumo.pergunta +
+            (resumo.tira_favorito
+              ? ' No Compras.gov, a Sentinela tira o favorito desta compra.'
+              : ''),
+          confirmarLabel: 'Descartar',
+          variantConfirmar: 'danger',
+        }),
+      ),
+      concatMap((confirmou) =>
+        confirmou
+          ? this.torre.descartar(cartao.id).pipe(
+              map(() => {
+                this.toast.sucesso(`${cartao.compra} foi para Descartadas.`);
+                return true;
+              }),
+            )
+          : of(false),
+      ),
+      catchError(() => {
+        this.toast.erro('Não foi possível descartar agora. Tente de novo.');
+        return of(false);
+      }),
+    );
+  }
 
   /** `true` quando a tela deve recarregar. */
   abrir(cartao: CartaoTorre): Observable<boolean> {

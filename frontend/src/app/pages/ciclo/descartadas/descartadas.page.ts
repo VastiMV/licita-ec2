@@ -130,6 +130,8 @@ const COLUNAS: readonly ColunaTabela<DescartadaResponse>[] = [
     chave: 'motivo',
     titulo: 'Motivo',
     valor: (linha) => linha.motivo_label,
+    // Quem, quando, em que etapa e com que preço — "ele vai esquecer".
+    secundario: (linha) => linha.motivo_detalhe || null,
   },
   {
     chave: 'estava_em',

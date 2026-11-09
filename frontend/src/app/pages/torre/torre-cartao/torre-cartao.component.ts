@@ -1,6 +1,7 @@
 import { Component, computed, input, output } from '@angular/core';
 
 import { CartaoTorre } from '../../../contracts/licitacoes/torre.contracts';
+import { IconComponent } from '../../../shared/ui/icon/icon.component';
 import {
   compraDoCartao,
   ganhandoDoCartao,
@@ -22,12 +23,20 @@ import {
  */
 @Component({
   selector: 'app-torre-cartao',
+  imports: [IconComponent],
   templateUrl: './torre-cartao.component.html',
   styleUrl: './torre-cartao.component.scss',
 })
 export class TorreCartaoComponent {
   readonly cartao = input.required<CartaoTorre>();
   readonly abrir = output<CartaoTorre>();
+  /** A lixeira (Preparar e Disputar). Quem decide o que fazer é
+   * `TorreAcoesService.descartar`. */
+  readonly descartar = output<CartaoTorre>();
+
+  protected readonly temLixeira = computed(() =>
+    ['preparar', 'disputar'].includes(this.cartao().estagio),
+  );
 
   /** Dentro da coluna da etapa (estágio aberto) a pílula repetiria o nome
    * da coluna: lá ela some, como no protótipo v2. */

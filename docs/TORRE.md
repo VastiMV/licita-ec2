@@ -131,6 +131,44 @@ porquê.
 Ordem dos cartões em cada estágio (`_urgencia`): alerta primeiro, depois
 aviso, depois o prazo mais curto.
 
+## 5b. Lixeira e recurso (08/11/2026)
+
+**Lixeira** (`apps/licitacoes/lixeira.py`, `POST salvas/<id>/descartar/`):
+
+- Em **todo cartão de Preparar e de Disputar**. Para o Carlinhos é uma coisa
+  só: um clique, uma pergunta, e vai para **Descartadas**.
+- A pergunta mostra o **preço lançado** quando a Sentinela já leu os itens
+  ("Você tem preço cadastrado no item 2 (Dellamed D600, R$ 1.200,00, 23º
+  lugar). Deseja prosseguir?"), ou avisa que ainda não conferiu. Nunca bloqueia.
+- O motivo grava **quem, quando, em que etapa e com que preço** ("Descartada
+  manualmente por Carlinhos em 09/11/2026, na etapa Aguardando julgamento.
+  Tinha preço no item 2 (…)") — Descartadas e "Ver processo" mostram esse
+  texto. Motivo `descartada_manual`, que vale sobre as outras regras.
+- **Descartadas passa a aceitar quem participou** quando é ele que descarta
+  (decisão de 08/11). As saídas automáticas continuam em Encerradas.
+- No Compras.gov, a Sentinela **tira o favorito** (tarefa
+  `sentinela.Tarefa`). Com preço lançado a compra continua em "Minhas
+  participações" — lá fica "poluído", o Licita fica limpo.
+- **A Sentinela nunca traz de volta** o que foi descartado: atualiza os fatos
+  em silêncio. **Exceto convocação** (anexo pedido ou chamada de
+  remanescente): a licitação volta para a Torre, em vermelho, com o evento
+  "Voltou para a Torre sozinha: …".
+
+**Vermelho = pede resposta da empresa:** convocação (anexo, remanescente),
+pedido de desconto, **recurso**, diligência.
+
+**Recurso** (`fase-recursal-fornecedor/<sessão>`, lido pela ronda da
+Sentinela, sem captcha). Caso real: Pregão 56/2026, item 22 — a Brava Sul
+recorreu em 05/10, o prazo de contrarrazões venceu em 09/10 sem resposta, o
+recurso foi indeferido em 13/10 e mantido em 26/10. O cartão mostra:
+
+| Situação | Etiqueta |
+|---|---|
+| recurso cadastrado, prazo de contrarrazões aberto | 🔴 "recurso de Brava Sul · item 22 · contrarrazões até 09/10 23:59" |
+| prazo passou, sem decisão | 🔴 "recurso de … · item 22 · aguardando decisão" |
+| procedente / revertido (P, R) | 🔴 "recurso procedente · item 22" |
+| indeferido / mantido (N, M) | "recurso indeferido · item 22" (informação) |
+
 ## 6. Os dados (models)
 
 Todos em `backend/apps/licitacoes/models.py`. Foram **acrescentados** ao lado
@@ -186,6 +224,7 @@ Todas em `/api/licitacoes/`, exigem login.
 | `GET documentos-financeiros/sem-licitacao/` | o que o Portal trouxe e não deu para ligar |
 | `POST documentos-financeiros/<id>/ligar/` | liga a uma licitação (e item, opcional) |
 | `GET encerradas/`, `GET descartadas/` | as listas de saída, com filtros |
+| `GET/POST salvas/<id>/descartar/` | a lixeira: a pergunta (preço lançado) / descartar |
 | `GET ciclo/` | **legado**: o quadro antigo. Nenhuma tela usa mais; sai em `feat-remover-legado` |
 
 O cartão (`montar_torre` → `_cartao`) já vem pronto para a tela: etapa,

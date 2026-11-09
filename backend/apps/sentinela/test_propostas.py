@@ -287,3 +287,50 @@ class DiagnosticoTests(_ComCubatao):
     def test_torre_e_sentinela_rodam(self):
         self.assertIn("Disputar (1)", self.rodar("torre"))
         self.assertIn("Notícias nas últimas 24h", self.rodar("sentinela"))
+
+
+class FavoritosTests(TestCase):
+    """Lavras (60/2027, 09/11/2026): salva no Licita, tirada dos favoritos no
+    Compras.gov. A ronda pergunta; a que não volta ganha o aviso."""
+
+    LAVRAS = "15303205000602027"
+    URL = "https://cnetmobile.estaleiro.serpro.gov.br/comprasnet-oportunidade/v1/compras/favoritas/dentre-opcoes"
+
+    def setUp(self):
+        Empresa.objects.create(tenant=tenant_atual(), nome="Inside Solutions Ltda", cnpj=CNPJ)
+        self.lavras = OportunidadeSalva.objects.create(
+            cnpj_orgao="22078679000174", ano_compra="2027", sequencial_compra="8",
+            data_encerramento_proposta=HOJE + dt.timedelta(days=4),
+            link_plataforma=f"https://x/acompanhamento-compra?compra={self.LAVRAS}",
+        )  # fmt: skip
+        self.cubatao = OportunidadeSalva.objects.create(
+            cnpj_orgao="1", ano_compra="2026", sequencial_compra="55",
+            data_encerramento_proposta=HOJE + dt.timedelta(days=4),
+            link_plataforma=f"https://x/acompanhamento-compra?compra={CUBATAO}",
+        )  # fmt: skip
+
+    def test_a_ronda_pergunta_pelas_compras_de_preparar(self):
+        with mock.patch("apps.sentinela.ronda.timezone.localdate", return_value=HOJE):
+            caminhos = consultas()
+
+        favoritas = [c for c in caminhos if "favoritas" in c]
+        self.assertEqual(len(favoritas), 1)
+        self.assertIn(self.LAVRAS, favoritas[0])
+        self.assertIn(CUBATAO, favoritas[0])
+
+    def test_fora_dos_favoritos_ganha_aviso_e_a_outra_nao(self):
+        resumo = receber(f"{self.URL}?compras={self.LAVRAS},{CUBATAO}", [CUBATAO])
+
+        self.assertEqual((resumo["conferidas"], resumo["fora"]), (2, 1))
+        self.lavras.refresh_from_db()
+        self.assertIs(self.lavras.favorita_no_compras, False)
+        textos = lambda s: [e["texto"] for e in cartao(s)["etiquetas"]]  # noqa: E731
+        self.assertIn("fora dos favoritos no Compras.gov", textos(self.lavras))
+        self.assertNotIn("fora dos favoritos no Compras.gov", textos(self.cubatao))
+
+    def test_voltou_aos_favoritos_o_aviso_some(self):
+        receber(f"{self.URL}?compras={self.LAVRAS}", [])
+        receber(f"{self.URL}?compras={self.LAVRAS}", [self.LAVRAS])
+
+        self.lavras.refresh_from_db()
+        self.assertIs(self.lavras.favorita_no_compras, True)

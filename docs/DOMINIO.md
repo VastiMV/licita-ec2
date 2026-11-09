@@ -709,6 +709,9 @@ acima parecer estranha, a razão costuma estar aqui.
 | 08/11/2026 | Ajustes da dona sobre o protótipo v2: cabeçalho atravessando a tela em cima, logo maior, **fundo branco** (sem o azulado), **cantos retos** (só pílulas e números redondos), Radar e Sentinela com cor viva (Sentinela âmbar enquanto não instalada), estágio aberto com as faixas encostadas no menu e no fim da janela, sem borda, e as 5 colunas de Disputar lado a lado |
 | 08/11/2026 | Sincronias do PNCP e do Portal da Transparência só de **segunda a sexta** (fim de semana não tem movimentação) |
 | 08/11/2026 | **Homologado passa para Contratar** (era a última etapa de Disputar) — pedido do Carlinhos: ganhou, agora é esperar contrato ou empenho. A ordem das 13 etapas não mudou |
+| 08/11/2026 | **Lixeira** em todo cartão de Preparar e Disputar: uma pergunta (mostra o preço lançado), vai para **Descartadas** — que passa a aceitar quem participou quando é ele que descarta — com o motivo completo (quem, quando, etapa, preço). No Compras.gov só sai o favorito |
+| 08/11/2026 | Descartada fica em silêncio; **convocação traz de volta, em vermelho**. Tudo que pede resposta (convocação, pedido de desconto, **recurso**, diligência) é vermelho |
+| 08/11/2026 | **Recurso que ninguém viu** (56/2026, item 22, Brava Sul): a Sentinela passa a vigiar a fase recursal de cada item a cada 10 min |
 | 08/11/2026 | Slogan no login: **"Do edital ao empenho, do empenho ao Pix."** / "Você disputa. O Licita vigia." |
 | 08/11/2026 | **Login vale 12 horas** desde a entrada, mesmo com uso (`SESSAO_MAXIMA_HORAS`, claim `login_em` conferida em `RefreshView`); depois do login, abre a Torre |
 | 08/11/2026 | Cada usuário sobe a **própria foto** (menu da conta → Trocar foto); reduzida a 256×256 no navegador e guardada no cadastro (`User.foto`) |

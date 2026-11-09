@@ -103,15 +103,53 @@ function avisarSeASessaoCaiu(resultados) {
   return true;
 }
 
+// O que o Licita pediu (hoje: tirar o favorito de uma compra descartada).
+async function fazerTarefas() {
+  let tarefas;
+  try {
+    tarefas = await licita("tarefas/");
+  } catch (erro) {
+    await guardarUltimo("ultimoErro", String(erro.message || erro));
+    return;
+  }
+  if (!tarefas.length) return;
+  const pedidos = tarefas
+    .filter((t) => t.tipo === "desfavoritar" && /^\d{17}$/.test(t.compra))
+    .map((t) => ({
+      id: t.id,
+      metodo: "DELETE",
+      caminho: `/comprasnet-oportunidade/v1/compras/${t.compra}/favorita`,
+    }));
+  const resposta = await executarNaAba(pedidos);
+  if (!resposta) return; // sem aba: a tarefa espera
+  if (avisarSeASessaoCaiu(resposta.resultados)) return;
+  for (const r of resposta.resultados) {
+    const ok = r.status >= 200 && r.status < 300;
+    await licita(`tarefas/${r.id}/`, {
+      method: "POST",
+      body: JSON.stringify({
+        ok,
+        detalhe: ok
+          ? "favorito tirado"
+          : `Compras.gov respondeu ${r.status} ${r.erro || ""}`.trim(),
+      }),
+    }).catch(() => {});
+  }
+  await guardarUltimo(
+    "ultimaTarefa",
+    `${resposta.resultados.length} favorito(s)`,
+  );
+}
+
 function emHorarioDeTrabalho(agora = new Date()) {
   const dia = agora.getDay();
   const hora = agora.getHours();
   return dia >= 1 && dia <= 5 && hora >= 8 && hora < 19;
 }
 
-// A ronda: a lista de propostas de cada item da empresa (sem captcha). A
-// resposta vai para o Licita como captura — a mesma leitura de quando o
-// Carlinhos abre a tela.
+// A ronda: favoritos, proposta, recurso, diligências e as propostas de todos
+// (só endereços sem captcha; a lista vem do Licita, `ronda/`). A resposta vai
+// para o Licita como captura — a mesma leitura de quando o Carlinhos abre a tela.
 async function fazerRonda(forcar = false) {
   if (!forcar && !emHorarioDeTrabalho()) return;
   let lista;
@@ -153,12 +191,13 @@ async function fazerRonda(forcar = false) {
   }
   await guardarUltimo(
     "ultimaRonda",
-    `${enviadas} de ${pedidos.length} itens conferidos`,
+    `${enviadas} de ${pedidos.length} consultas`,
   );
 }
 
 function agendar() {
   chrome.alarms.create("vigia", { periodInMinutes: 3 });
+  chrome.alarms.create("tarefas", { periodInMinutes: 1 });
   chrome.alarms.create("ronda", { periodInMinutes: 10 });
 }
 
@@ -166,6 +205,7 @@ chrome.runtime.onInstalled.addListener(agendar);
 chrome.runtime.onStartup.addListener(agendar);
 chrome.alarms.onAlarm.addListener((alarme) => {
   if (alarme.name === "vigia") vigiar();
+  if (alarme.name === "tarefas") fazerTarefas();
   if (alarme.name === "ronda") fazerRonda();
 });
 
@@ -227,8 +267,10 @@ chrome.runtime.onMessage.addListener((mensagem, _remetente, responder) => {
     return true; // resposta assíncrona
   }
   if (mensagem.tipo === "ronda_agora") {
-    fazerRonda(true)
-      .then(() => chrome.storage.local.get(["ultimaRonda", "ultimoErro"]))
+    Promise.all([fazerTarefas(), fazerRonda(true)])
+      .then(() =>
+        chrome.storage.local.get(["ultimaRonda", "ultimaTarefa", "ultimoErro"]),
+      )
       .then((estado) => responder(estado));
     return true;
   }

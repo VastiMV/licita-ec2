@@ -10,12 +10,15 @@ import { OportunidadeSalvaResponse } from './oportunidade-salva.contracts';
 
 /** Por que foi descartada: tirada da lista antes do prazo, ou o prazo
  * venceu (com ou sem cotação). */
-export type MotivoDescarte = 'descartada' | 'prazo_oportunidade' | 'prazo_cotacao';
+export type MotivoDescarte =
+  'descartada_manual' | 'descartada' | 'prazo_oportunidade' | 'prazo_cotacao' | 'sem_proposta';
 
 export const MOTIVOS_DESCARTE: readonly { value: MotivoDescarte; label: string }[] = [
+  { value: 'descartada_manual', label: 'Descartada manualmente' },
   { value: 'descartada', label: 'Tirada da lista' },
   { value: 'prazo_oportunidade', label: 'Prazo venceu sem cotação' },
   { value: 'prazo_cotacao', label: 'Prazo venceu com cotação' },
+  { value: 'sem_proposta', label: 'Sem proposta cadastrada' },
 ];
 
 /** Onde a licitação estava quando foi descartada. */
@@ -26,6 +29,9 @@ export interface DescartadaResponse extends OportunidadeSalvaResponse {
   readonly descartada_em: string;
   readonly motivo: MotivoDescarte;
   readonly motivo_label: string;
+  /** Lixeira: "Descartada manualmente por Carlinhos em 09/11/2026, na etapa
+   * Aguardando julgamento. Tinha preço no item 2 (…)". Vazio nos outros. */
+  readonly motivo_detalhe?: string;
   readonly estava_em: EtapaDescarte;
   readonly cotacao_id: number | null;
   readonly valor_cotado: number | null;

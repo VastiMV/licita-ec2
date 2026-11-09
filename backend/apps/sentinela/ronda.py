@@ -1,18 +1,23 @@
-"""A ronda da Sentinela: o que ela consulta **sozinha** no Compras.gov.br.
+"""A ronda da Sentinela: o que ela consulta **sozinha** no Compras.gov.br, a
+cada 10 minutos em horário de trabalho — **só endereços que não pedem
+captcha**, na aba do Compras.gov, com a sessão da própria página. Cada
+resposta volta para `captura/` (a mesma leitura de quando o Carlinhos abre a
+tela).
 
-Hoje é uma consulta só, que **não pede captcha**: a lista de propostas de
-todos os participantes de um item (`em-selecao-fornecedores/itens/{n}/propostas`).
-Só para os itens em que a empresa participa e que já passaram da disputa
-(têm posição). É dela que saem o 👍/🟠/👎 da Torre e o relatório da licitação.
+Em ordem de prioridade, até `MAXIMO` consultas por ronda (ritmo de gente):
 
-Ritmo de gente (docs/SENTINELA.md): no máximo `POR_RONDA` itens por vez,
-os mais atrasados primeiro, e cada item no máximo a cada `INTERVALO`.
-Item já decidido (homologado para alguém) é lido **uma vez** depois da
-decisão e sai da ronda.
-
-A extensão faz a consulta na aba do Compras.gov, com a sessão da própria
-página, e manda a resposta para `captura/` — a leitura é a mesma de quando
-o Carlinhos abre a tela (`ingestao._ler_propostas_do_item`).
+1. **Favoritos** (09/11/2026): numa consulta só, quais compras de Preparar
+   ainda estão nos favoritos do Compras.gov. A que saiu de lá ganha o aviso
+   "fora dos favoritos no Compras.gov" (Lavras, 60/2027).
+2. Para cada item vivo da empresa numa compra depois da sessão (fase 3 ou 4):
+   a **proposta** (situação, posição, pedido de desconto, convocação). Nos
+   itens em que ela está na frente (até 2º) ou já aceita/habilitada, também
+   a **fase recursal** (o recurso do 56/2026 item 22 que ninguém viu) e as
+   **diligências**. Descartadas entram só com a proposta: é dela que vem a
+   convocação que as traz de volta.
+3. As **propostas de todos os participantes** (👍/🟠/👎 e o relatório): no
+   máximo `POR_RONDA` itens, os mais atrasados primeiro, cada um no máximo a
+   cada `INTERVALO`; item decidido é lido uma vez depois da decisão e sai.
 """
 
 from __future__ import annotations
@@ -23,20 +28,84 @@ import re
 from django.db.models import F, Q
 from django.utils import timezone
 
-from apps.licitacoes.models import ItemParticipado
+from apps.empresas.models import Empresa
+from apps.licitacoes.models import ItemParticipado, OportunidadeSalva
 
 BASE = "/comprasnet-fase-externa/v1/compras"
+FAVORITAS = "/comprasnet-oportunidade/v1/compras/favoritas/dentre-opcoes"
 CODIGO = re.compile(r"compra=(\d{17})")
+NUMERO_SEGURO = re.compile(r"[A-Za-z0-9-]+")
+FASES_DEPOIS_DA_SESSAO = {"3", "4"}
+PERDIDO = ["1", "2", "9", "5"]
+JA_JULGADO = {"3", "4", "6"}
 INTERVALO = dt.timedelta(hours=2)
 POR_RONDA = 15
+MAXIMO = 60
+FAVORITAS_POR_CONSULTA = 30
 
 
 def caminho_das_propostas(codigo: str, numero_item: str) -> str:
     return f"{BASE}/{codigo}/em-selecao-fornecedores/itens/{numero_item}/propostas?ordenacao-propostas=V"
 
 
-def consultas(agora: dt.datetime | None = None) -> list[str]:
-    agora = agora or timezone.now()
+def _codigo(salva) -> str | None:
+    achado = CODIGO.search(salva.link_plataforma or "")
+    return achado.group(1) if achado else None
+
+
+def _favoritas() -> list[str]:
+    """As compras do Compras.gov.br que ainda estão em Preparar."""
+
+    from apps.licitacoes.torre import ESTAGIO_DA_ETAPA, avaliar
+
+    hoje = timezone.localdate()
+    codigos = []
+    salvas = (
+        OportunidadeSalva.objects.ativas()
+        .filter(link_plataforma__contains="compra=")
+        .select_related("cotacao", "participacao", "proposta")
+        .prefetch_related("itens_participados__propostas", "documentos_financeiros", "entregas")
+    )
+    for salva in salvas:
+        cartao, saida = avaliar(salva, hoje)
+        if saida or ESTAGIO_DA_ETAPA[cartao["etapa"]] != "preparar":
+            continue
+        if codigo := _codigo(salva):
+            codigos.append(codigo)
+    return [
+        f"{FAVORITAS}?compras={','.join(codigos[i : i + FAVORITAS_POR_CONSULTA])}"
+        for i in range(0, len(codigos), FAVORITAS_POR_CONSULTA)
+    ]
+
+
+def _da_empresa() -> list[str]:
+    cnpjs = list(Empresa.objects.filter(ativa=True).values_list("cnpj", flat=True))
+    if not cnpjs:
+        return []
+    cnpj = cnpjs[0]
+    caminhos: list[str] = []
+    itens = (
+        ItemParticipado.objects.filter(oportunidade__participacao__fase_compra__in=FASES_DEPOIS_DA_SESSAO)
+        .exclude(vencedor_e_a_empresa=False)
+        .exclude(situacao_proposta__in=PERDIDO)
+        .select_related("oportunidade")
+        .order_by("oportunidade_id", "numero_item")
+    )
+    for item in itens:
+        codigo, n = _codigo(item.oportunidade), item.numero_item
+        if not codigo or not NUMERO_SEGURO.fullmatch(n):
+            continue
+        caminhos.append(f"{BASE}/{codigo}/em-selecao-fornecedores/participacoes/{cnpj}/itens/{n}/propostas?filtro=2")
+        if item.oportunidade.removida_em is not None:
+            continue  # descartada: só o que pode ser convocação
+        na_frente = item.classificacao is not None and item.classificacao <= 2
+        if na_frente or item.situacao_proposta in JA_JULGADO:
+            caminhos.append(f"{BASE}/{codigo}/itens/{n}/fase-recursal-fornecedor/{item.sessao_julgamento or 1}")
+            caminhos.append(f"{BASE}/{codigo}/itens/{n}/participacoes/{cnpj}/diligencias")
+    return caminhos
+
+
+def _propostas_de_todos(agora: dt.datetime) -> list[str]:
     itens = (
         ItemParticipado.objects.filter(
             oportunidade__removida_em__isnull=True,
@@ -52,10 +121,15 @@ def consultas(agora: dt.datetime | None = None) -> list[str]:
     )
     caminhos: list[str] = []
     for item in itens:
-        achado = CODIGO.search(item.oportunidade.link_plataforma or "")
-        if not achado or not re.fullmatch(r"[A-Za-z0-9-]+", item.numero_item):
+        codigo = _codigo(item.oportunidade)
+        if not codigo or not NUMERO_SEGURO.fullmatch(item.numero_item):
             continue
-        caminhos.append(caminho_das_propostas(achado.group(1), item.numero_item))
+        caminhos.append(caminho_das_propostas(codigo, item.numero_item))
         if len(caminhos) >= POR_RONDA:
             break
     return caminhos
+
+
+def consultas(agora: dt.datetime | None = None) -> list[str]:
+    agora = agora or timezone.now()
+    return (_favoritas() + _da_empresa() + _propostas_de_todos(agora))[:MAXIMO]

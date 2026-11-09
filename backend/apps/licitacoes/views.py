@@ -578,3 +578,26 @@ class LigarDocumentoView(APIView):
         documento.save(update_fields=["oportunidade", "item", "dados"])
         return Response(DocumentoFinanceiroSerializer(documento).data)
 
+
+
+class DescartarView(APIView):
+    """A lixeira da Torre (`lixeira.py`).
+
+    `GET  /api/licitacoes/salvas/<id>/descartar/` — a pergunta: etapa, itens
+    com preço lançado (se a Sentinela já leu) e o texto pronto.
+    `POST /api/licitacoes/salvas/<id>/descartar/` — descarta: vai para
+    Descartadas com o motivo completo e a Sentinela tira o favorito.
+    """
+
+    def get(self, request: Request, pk: int) -> Response:
+        from .lixeira import resumo
+
+        salva = get_object_or_404(OportunidadeSalva.objects.ativas(), pk=pk)
+        return Response(resumo(salva))
+
+    def post(self, request: Request, pk: int) -> Response:
+        from .lixeira import descartar
+
+        salva = get_object_or_404(OportunidadeSalva.objects.ativas(), pk=pk)
+        evento = descartar(salva, por=request.user)
+        return Response({"descricao": evento.descricao})

@@ -1,0 +1,89 @@
+{
+ "url": "https://cnetmobile.estaleiro.serpro.gov.br/comprasnet-fase-externa/v1/compras/20010905001422026/itens/aguardando-abertura-sessao-publica?tamanhoPagina=10&pagina=0",
+ "dados": [
+  {
+   "numero": 1,
+   "tipo": "I",
+   "criterioValor": "E",
+   "possuiOrcamentoSigiloso": false,
+   "exigenciaConteudoNacional": false,
+   "identificador": "1",
+   "tipoItemCatalogo": "M",
+   "descricao": "Animal Vivo",
+   "criterioJulgamento": "1",
+   "homologado": false,
+   "numeroSessaoJulgHab": 1,
+   "tipoTratamentoDiferenciadoMeEpp": "0",
+   "participacaoExclusivaMeEppOuEquiparadas": false,
+   "utilizaMargemPreferencia": false,
+   "situacao": "1",
+   "fase": "AS",
+   "quantidadeSolicitada": 5,
+   "unidadeFornecimento": "Unidade",
+   "valorEstimado": 56428.58,
+   "valorEstimadoUnitario": 56428.58,
+   "valorEstimadoTotal": 282142.9,
+   "priorizarAbertura": false,
+   "julgHabEncerrada": false,
+   "propostaItem": {
+    "quantidadeOfertada": 5,
+    "marcaFabricante": "Malinois ",
+    "modeloVersao": "Malinois",
+    "declaracaoConteudoNacional": false,
+    "valores": {
+     "valorPropostaInicial": {
+      "valorInformado": 56000.0,
+      "valorCalculado": {
+       "valorUnitario": 56000.0,
+       "valorTotal": 280000.0
+      }
+     }
+    },
+    "id": 71099263
+   },
+   "disputaPorValorUnitario": true
+  },
+  {
+   "numero": 2,
+   "tipo": "I",
+   "criterioValor": "E",
+   "possuiOrcamentoSigiloso": false,
+   "exigenciaConteudoNacional": false,
+   "identificador": "2",
+   "tipoItemCatalogo": "M",
+   "descricao": "Animal Vivo",
+   "criterioJulgamento": "1",
+   "homologado": false,
+   "numeroSessaoJulgHab": 1,
+   "tipoTratamentoDiferenciadoMeEpp": "0",
+   "participacaoExclusivaMeEppOuEquiparadas": false,
+   "utilizaMargemPreferencia": false,
+   "situacao": "1",
+   "fase": "AS",
+   "quantidadeSolicitada": 3,
+   "unidadeFornecimento": "Unidade",
+   "valorEstimado": 56428.58,
+   "valorEstimadoUnitario": 56428.58,
+   "valorEstimadoTotal": 169285.74,
+   "priorizarAbertura": false,
+   "julgHabEncerrada": false,
+   "propostaItem": {
+    "quantidadeOfertada": 3,
+    "marcaFabricante": "Malinois",
+    "modeloVersao": "Malinois",
+    "declaracaoConteudoNacional": false,
+    "valores": {
+     "valorPropostaInicial": {
+      "valorInformado": 56000.0,
+      "valorCalculado": {
+       "valorUnitario": 56000.0,
+       "valorTotal": 168000.0
+      }
+     }
+    },
+    "id": 71099299
+   },
+   "disputaPorValorUnitario": true
+  }
+ ]
+}

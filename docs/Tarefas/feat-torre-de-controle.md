@@ -164,8 +164,20 @@ Beta 0.1 (08/11/2026):
 - [x] Camada de disputa: teto, ideal, piso, custo e lucro de cada item, da cotação
 - [x] Vigia: sinal de vida a cada 3 min; o botão do topo mostra o estado real (verde / âmbar / vermelho)
 
+Beta 0.2 (08/11/2026) — lixeira e recurso. **⏸️ EM ESPERA: construído e
+testado, só na branch; NÃO publicado.** A operação quer pensar mais o
+sincronismo da lixeira (Licita × Compras.gov) antes do PR e do deploy. Não
+instalar a extensão 0.2 antes do deploy do backend (ela chama `tarefas/` e
+`ronda/`, que ainda não existem em produção).
+- [x] Lixeira em todo cartão de Preparar e Disputar: pergunta com o preço lançado, Descartadas com motivo completo (quem, quando, etapa, preço), tira o favorito no Compras.gov
+- [x] A Sentinela não traz de volta o descartado; convocação traz de volta em vermelho
+- [x] Sessão da aba (só na memória) + consultas sozinhas, lista fechada sem captcha
+- [x] Ronda a cada 10 min: proposta, fase recursal e diligências de cada item com proposta
+- [x] Recurso, contrarrazões, diligência, convocação e pedido de desconto em vermelho
+- [x] Itens antes da sessão (142 com preço, 387 sem) lidos quando ele abre a compra
+
 Próximo:
-- [ ] Ler sozinha, a cada 3 min (8h–18h), o que **não** pede captcha: caixa de mensagens, proposta de cada item conhecido, participação de cada compra
+- [ ] Ler sozinha a caixa de mensagens (sem captcha)
 - [ ] Aviso de lance abaixo do piso na tela de disputa (precisa de um HAR/tela real de disputa — a próxima é a do Pregão 387, Guarulhos)
 - [ ] Sino do Licita com as mensagens; Telegram (Passo 3)
 - [ ] Captcha apareceu → avisar o Carlinhos (hoje só a sessão caída é detectada, pela renovação que falha)
@@ -193,4 +205,13 @@ cd /opt/licita && sudo docker compose exec backend python manage.py sincronizar_
 
 A API de Dados Abertos aceita no máximo 365 dias por consulta; o cliente
 divide o período sozinho.
+
+## Publicado em 09/11/2026
+
+A lixeira e o vigia de recurso (Sentinela 0.2) saíram da espera e foram
+juntados com tudo o que entrou em 08–09/11 (propostas de todos, relatório,
+conferência só de leitura) e com o aviso "fora dos favoritos no Compras.gov".
+Extensão 0.2.1. Ainda em aberto: o relatório das descartadas ("xeretar"),
+o 2º lugar com o 1º já habilitado (🟠 ou 👎), compras de "Minhas
+participações" indo para Descartadas, e a contagem de Descartadas.
 

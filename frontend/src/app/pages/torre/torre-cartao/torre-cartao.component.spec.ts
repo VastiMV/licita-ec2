@@ -81,4 +81,22 @@ describe('TorreCartaoComponent', () => {
 
     expect(emitidos).toEqual([PMDF]);
   });
+
+  it('lixeira em Preparar e Disputar, emitindo descartar', () => {
+    const el = montar(FARROUPILHA);
+    const emitidos: CartaoTorre[] = [];
+    fixture.componentInstance.descartar.subscribe((c) => emitidos.push(c));
+
+    const lixeira = el.querySelector('.lixeira') as HTMLButtonElement;
+    expect(lixeira.getAttribute('aria-label')).toBe('Descartar Pregão 61/2026');
+    lixeira.click();
+
+    expect(emitidos).toEqual([FARROUPILHA]);
+  });
+
+  it('sem lixeira em Contratar (ali ele já ganhou)', () => {
+    const el = montar({ ...FARROUPILHA, estagio: 'contratar', etapa: 'homologado' });
+
+    expect(el.querySelector('.lixeira')).toBeNull();
+  });
 });

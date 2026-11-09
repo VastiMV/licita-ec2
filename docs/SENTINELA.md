@@ -77,9 +77,42 @@ Ainda falta: confirmar o 🟠 com um caso real de "desclassificada" (os códigos
 vêm do manual); o painel da camada mostrar só o item aberto (precisa do HAR
 da tela de lances); relatórios gerais (seção Relatórios, com ECharts).
 
+**0.2.1 (09/11/2026) — no ar:** lixeira (descartar no Licita tira o
+favorito no Compras.gov), vigia de recurso e diligências, e o aviso **"fora
+dos favoritos no Compras.gov"** nas compras de Preparar (a ronda pergunta ao
+Compras.gov quais ainda estão nos favoritos; Lavras, 60/2027, é o caso que
+motivou). Nada sai sozinho: ele decide pela lixeira.
+
 **Ainda não feito:** ler a caixa de mensagens sozinha a cada 3 min; avisar
 quando o lance digitado ficar abaixo do piso (precisa ver a tela real de
 disputa); Telegram; o sino com as mensagens.
+
+## Versão 0.2 (08/11/2026): ronda, tarefas e a sessão da aba
+
+Descoberto nos HARs de 08/11: a página manda a sessão no cabeçalho
+`authorization: Bearer …` (não é cookie), mais `x-device-platform: web` e
+`x-version-number`. **Tudo o que importa dentro de um item não pede
+captcha:** proposta, fase recursal, diligências, anexos. Só três telas pedem:
+as listas (participações e itens) e o chat.
+
+| O que | Como |
+|---|---|
+| **Sessão** | `pagina.js` guarda o `authorization` que a própria página usa, **só na memória da aba**. Nunca é gravado, nunca sai do computador |
+| **Consultas próprias** | só uma lista fechada (`PERMITIDO` em `pagina.js`): proposta do item (`?filtro=2`), fase recursal, diligências e `DELETE …/favorita`. Nada com captcha |
+| **Tarefas** | a cada 1 min pergunta `GET tarefas/` (hoje: tirar favorito pedido pela lixeira) e responde `POST tarefas/<id>/` |
+| **Ronda** | a cada 10 min (dias úteis, 8h–18h) pega `GET ronda/` e consulta, uma por vez com pausa, proposta/recurso/diligências de cada item com proposta; manda as respostas para `captura/`. Botão "Fazer a ronda agora" nas opções |
+| **Sessão caiu** | 401 ou sessão ainda não vista → estado "precisa de você" no topo do Licita ("abra ou atualize a aba do Compras.gov") |
+
+Testes de ponta a ponta: `sentinela/testes/teste-extensao.js` e
+`sentinela/testes/teste-ronda.js` (Chromium real, Compras.gov simulado com as
+respostas reais de `backend/apps/sentinela/exemplos/`).
+
+**Antes da sessão** a lista de itens (`aguardando-abertura-sessao-publica`,
+com captcha) traz a proposta dentro do item em que ele lançou preço (142/2026
+com "Malinois" R$ 56.000,00; 387/2026 sem nada). Lida quando ele abre a compra.
+
+Campos que **não** servem para saber se há proposta: `isFornecedorParticipante`
+(veio `true` na 387, sem preço), favoritos, estar em "Minhas participações".
 
 ## Por que extensão (e não outra coisa)
 

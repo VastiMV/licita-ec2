@@ -39,7 +39,11 @@
 
           <div class="cartoes">
             @for (cartao of estagio.cartoes; track cartao.id) {
-              <app-torre-cartao [cartao]="cartao" (abrir)="abrir($event)" />
+              <app-torre-cartao
+                [cartao]="cartao"
+                (abrir)="abrir($event)"
+                (descartar)="descartar($event)"
+              />
             } @empty {
               <p class="vazio">Nenhuma licitação em {{ estagio.rotulo }}.</p>
             }

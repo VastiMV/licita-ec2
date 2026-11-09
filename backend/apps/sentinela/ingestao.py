@@ -11,6 +11,14 @@ Toda a leitura mora aqui, em Python, testável com as respostas reais
 | `compras/{código}/participacao` | idem, de uma compra só |
 | `compras/{código}/itens/em-selecao-fornecedores?filtro=2` | os itens **da empresa**, com a proposta dela (`ItemParticipado`) |
 | `.../participacoes/{CNPJ}/itens/{n}/propostas` | a proposta da empresa num item |
+| `compras/{código}/itens/aguardando-abertura-sessao-publica` (e `/{grupo}/itens-grupo`) | antes da sessão: os itens em que a empresa lançou preço |
+| `compras/{código}/itens/{n}/fase-recursal-fornecedor/{sessão}` | recurso no item: quem, prazo de contrarrazões, decisão |
+| `compras/{código}/itens/{n}/participacoes/{CNPJ}/diligencias` | diligências da empresa no item |
+
+**Descartada não volta** (lixeira, 08/11/2026): a Sentinela continua
+atualizando os fatos dela em silêncio, mas ela fica em Descartadas — **exceto
+convocação** (anexo pedido ou chamada de remanescente): aí volta para a Torre
+(`lixeira.voltar_por_convocacao`).
 | `compras/{código}/em-selecao-fornecedores/itens/{n}/propostas` | as propostas de **todos** os participantes de um item da empresa (`PropostaDoItem`): quem está na frente, quem ganhou, marca, valor |
 
 **Captcha:** a lista de participações e a de itens são telas que pedem
@@ -62,9 +70,24 @@ ROTAS = [
         "proposta_do_item",
     ),
     (
+        re.compile(_BASE + r"/(?P<codigo>\d{17})/itens/aguardando-abertura-sessao-publica(?:/[^/]+/itens-grupo)?/?$"),
+        "itens_antes_da_sessao",
+    ),
+    (
+        re.compile(_BASE + r"/(?P<codigo>\d{17})/itens/(?P<item>[^/]+)/fase-recursal-fornecedor/(?P<sessao>\d+)/?$"),
+        "fase_recursal",
+    ),
+    (
+        re.compile(
+            _BASE + r"/(?P<codigo>\d{17})/itens/(?P<item>[^/]+)/participacoes/(?P<cnpj>\d{14})/diligencias/?$"
+        ),
+        "diligencias",
+    ),
+    (
         re.compile(_BASE + r"/(?P<codigo>\d{17})/em-selecao-fornecedores/itens/(?P<item>[^/]+)/propostas/?$"),
         "propostas_do_item",
     ),
+    (re.compile(r"/comprasnet-oportunidade/v1/compras/favoritas/dentre-opcoes/?$"), "favoritas"),
 ]
 
 SITUACOES_DA_COMPRA = {c.value for c in ParticipacaoCompra.Situacao}
@@ -101,6 +124,7 @@ def _ler_participacoes(dados, params, **_) -> dict:
         if not salva:
             continue
         _gravar_participacao(salva, compra, registro)
+        _talvez_voltar(salva)
         resumo["compras"] += 1
         resumo["criadas"] += int(criada)
     return resumo
@@ -152,6 +176,7 @@ def _ler_itens(dados, params, codigo, **_) -> dict:
     if gravados or (so_da_empresa and primeira_pagina):
         # Com item, há proposta. "Meus itens" vazio na primeira página: sem proposta.
         _marcar_proposta(salva, bool(gravados))
+    _talvez_voltar(salva)
     return {"itens": gravados}
 
 
@@ -165,7 +190,74 @@ def _ler_proposta_do_item(dados, params, codigo, cnpj, item, **_) -> dict:
     gravados = sum(_gravar_item(salva, registro, {cnpj}) for registro in registros if isinstance(registro, dict))
     if gravados:
         _marcar_proposta(salva, True)
+    _talvez_voltar(salva)
     return {"itens": gravados}
+
+
+def _ler_itens_antes_da_sessao(dados, params, codigo, **_) -> dict:
+    """Antes da sessão, a lista de itens traz a proposta dentro do item em
+    que a empresa lançou preço (142/2026: "Malinois", R$ 56.000,00) e nada nos
+    outros (387/2026). Itens de grupo vêm noutra lista (`itens-grupo`), por
+    isso uma página sem proposta **não** prova que não há proposta."""
+
+    if not isinstance(dados, list):
+        raise CapturaInvalida("itens antes da sessão: era esperada uma lista")
+    salva = _salva_pelo_codigo(codigo)
+    if not salva:
+        return {"itens": 0, "motivo": "compra desconhecida: abra antes as participações"}
+    cnpjs = _cnpjs_da_empresa()
+    com_proposta = [item for item in dados if isinstance(item, dict) and item.get("propostaItem")]
+    gravados = sum(_gravar_item(salva, item, cnpjs) for item in com_proposta)
+    if gravados:
+        _marcar_proposta(salva, True)
+    return {"itens": gravados}
+
+
+def _ler_fase_recursal(dados, params, codigo, item, sessao, **_) -> dict:
+    """Quem entrou com recurso no item, até quando dá para responder
+    (contrarrazões) e o que foi decidido. Caso real: 56/2026, item 22."""
+
+    if not isinstance(dados, dict):
+        raise CapturaInvalida("fase recursal: era esperado um objeto")
+    salva = _salva_pelo_codigo(codigo)
+    registro = salva and salva.itens_participados.filter(numero_item=str(item)).first()
+    if not registro:
+        return {"itens": 0, "motivo": "item desconhecido"}
+    recursos = [
+        {
+            "cnpj": p.get("identificacaoParticipante") or "",
+            "nome": p.get("nomeParticipante") or "",
+            "em": p.get("dataHoraCadastro") or "",
+        }
+        for p in (dados.get("participacoes") or [])
+        if isinstance(p, dict) and p.get("situacaoCadastroRecurso") == "C"
+    ]
+    prazos = dados.get("prazos") or {}
+    revisao = (dados.get("revisaoDecisao") or {}).get("situacao") or ""
+    decisao = (dados.get("decisao") or {}).get("situacao") or ""
+    registro.recursos = recursos
+    registro.prazo_contrarrazao = _data_hora(prazos.get("dataHoraLimiteContrarrazao"))
+    registro.decisao_recurso = (revisao or decisao)[:1]
+    registro.sessao_julgamento = int(sessao)
+    registro.save(update_fields=["recursos", "prazo_contrarrazao", "decisao_recurso", "sessao_julgamento", "atualizado_em"])
+    return {"itens": 1, "recursos": len(recursos)}
+
+
+def _ler_diligencias(dados, params, codigo, item, cnpj, **_) -> dict:
+    if cnpj not in _cnpjs_da_empresa():
+        return {"itens": 0, "motivo": "diligência de outro CNPJ"}
+    if not isinstance(dados, list):
+        raise CapturaInvalida("diligências: era esperada uma lista")
+    salva = _salva_pelo_codigo(codigo)
+    registro = salva and salva.itens_participados.filter(numero_item=str(item)).first()
+    if not registro:
+        return {"itens": 0, "motivo": "item desconhecido"}
+    # O formato de uma diligência ainda não foi visto (só listas vazias):
+    # conta as que não vierem marcadas como encerradas.
+    abertas = [d for d in dados if not (isinstance(d, dict) and str(d.get("situacao", "")).upper() in {"E", "F", "ENCERRADA", "FINALIZADA"})]
+    registro.diligencias_abertas = min(len(abertas), 32767)
+    registro.save(update_fields=["diligencias_abertas", "atualizado_em"])
+    return {"itens": 1, "diligencias": len(abertas)}
 
 
 def _ler_propostas_do_item(dados, params, codigo, item, **_) -> dict:
@@ -227,12 +319,39 @@ def _ler_propostas_do_item(dados, params, codigo, item, **_) -> dict:
     return {"propostas": len(novas)}
 
 
+def _ler_favoritas(dados, params, **_) -> dict:
+    """"Destas compras, quais estão nos favoritos?" — a resposta é a lista das
+    que estão (HAR de 08/11/2026: `["98637105000552026"]`). A que foi
+    perguntada e não voltou saiu dos favoritos no Compras.gov.br."""
+
+    if not isinstance(dados, list):
+        raise CapturaInvalida("favoritas: era esperada uma lista")
+    perguntadas = {c for c in (params.get("compras") or "").split(",") if re.fullmatch(r"\d{17}", c)}
+    favoritas = {str(c) for c in dados}
+    agora = timezone.now()
+    mudou = 0
+    for codigo in perguntadas:
+        salva = _salva_pelo_codigo(codigo)
+        if not salva:
+            continue
+        favorita = codigo in favoritas
+        mudou += int(salva.favorita_no_compras is not favorita)
+        salva.favorita_no_compras = favorita
+        salva.favorita_conferida_em = agora
+        salva.save(update_fields=["favorita_no_compras", "favorita_conferida_em"])
+    return {"conferidas": len(perguntadas), "fora": len(perguntadas - favoritas), "mudaram": mudou}
+
+
 LEITORES = {
     "participacoes": _ler_participacoes,
     "participacao": _ler_participacao,
     "itens": _ler_itens,
     "proposta_do_item": _ler_proposta_do_item,
+    "itens_antes_da_sessao": _ler_itens_antes_da_sessao,
+    "fase_recursal": _ler_fase_recursal,
+    "diligencias": _ler_diligencias,
     "propostas_do_item": _ler_propostas_do_item,
+    "favoritas": _ler_favoritas,
 }
 
 
@@ -260,7 +379,36 @@ def _chave_pncp(chave: str | None) -> tuple[str, str, str] | None:
 
 
 def _salva_pelo_codigo(codigo: str) -> OportunidadeSalva | None:
-    return OportunidadeSalva.objects.ativas().filter(link_plataforma__contains=f"compra={codigo}").first()
+    """A da Torre; se não houver, a última descartada (que não volta)."""
+
+    todas = OportunidadeSalva.objects.filter(link_plataforma__contains=f"compra={codigo}")
+    return todas.filter(removida_em__isnull=True).first() or todas.order_by("-removida_em").first()
+
+
+def _descartada_da_compra(cnpj: str, ano: str, sequencial: str) -> OportunidadeSalva | None:
+    return (
+        OportunidadeSalva.objects.filter(
+            cnpj_orgao=cnpj, ano_compra=ano, sequencial_compra__in={sequencial, sequencial.zfill(6)}
+        )
+        .exclude(removida_em__isnull=True)
+        .order_by("-removida_em")
+        .first()
+    )
+
+
+def _talvez_voltar(salva: OportunidadeSalva) -> None:
+    """Descartada só volta para a Torre com convocação."""
+
+    if salva.removida_em is None:
+        return
+    from apps.licitacoes.lixeira import voltar_por_convocacao
+
+    participacao = getattr(salva, "participacao", None)
+    if participacao and participacao.convocacao_em_andamento:
+        voltar_por_convocacao(salva, "convocação de remanescente no Compras.gov")
+        return
+    if item := salva.itens_participados.filter(anexo_solicitado="S").first():
+        voltar_por_convocacao(salva, f"convocação para enviar anexo no item {item.numero_item}")
 
 
 def _salva_da_compra(compra: dict, codigo: str | None = None) -> tuple[OportunidadeSalva | None, bool]:
@@ -278,6 +426,9 @@ def _salva_da_compra(compra: dict, codigo: str | None = None) -> tuple[Oportunid
         ).first()
     if not salva and codigo:
         salva = _salva_pelo_codigo(codigo)
+    if not salva and chave:
+        # Descartada pela lixeira: atualiza em silêncio, nunca recria.
+        salva = _descartada_da_compra(*chave)
     if salva:
         if codigo and f"compra={codigo}" not in (salva.link_plataforma or ""):
             # Salva de outra origem sem o link do Compras.gov: é o que liga as
@@ -354,7 +505,11 @@ def _gravar_item(salva: OportunidadeSalva, item: dict, cnpjs: set[str]) -> int:
     # Só com a proposta **da empresa** na resposta. Abrir no Compras.gov um
     # item em que ela não entrou devolve o item sem proposta nenhuma — e isso
     # virava item da empresa (59/2026, item 1; corrigido em 09/11/2026).
-    if participante not in cnpjs:
+    # Antes da sessão a proposta vem sem o CNPJ (só a própria empresa a vê):
+    # vale se tiver preço. Com CNPJ, tem que ser o da empresa.
+    if participante and participante not in cnpjs:
+        return 0
+    if not participante and not (proposta.get("valores") or {}).get("valorPropostaInicial"):
         return 0
     numero = str(item.get("identificador") or item.get("numero") or "").strip()
     if not numero:
@@ -379,6 +534,7 @@ def _gravar_item(salva: OportunidadeSalva, item: dict, cnpjs: set[str]) -> int:
             "negociacao_texto": proposta.get("justificativaUltimaNegociacao") or "",
             "valor_proposta_inicial": _valor(valores.get("valorPropostaInicial")),
             "valor_lance_final": _valor(valores.get("valorPropostaInicialOuLances")),
+            "sessao_julgamento": int(item.get("numeroSessaoJulgHab") or 1),
             "fonte": Fonte.SENTINELA,
         },
     )

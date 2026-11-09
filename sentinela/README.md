@@ -1,4 +1,4 @@
-# Sentinela — a extensão do Chrome (beta 0.1)
+# Sentinela — a extensão do Chrome (beta 0.2)
 
 Lê o Compras.gov.br **na sessão do próprio Carlinhos** e manda para o Licita.
 Plano, limites e o que cada endereço do Compras.gov traz:
@@ -41,16 +41,27 @@ o Licita abre aba nova como antes (`licita.js` marca a página do Licita com
 - A cotação do painel não confere mais a cada minuto: é lida ao abrir a
   compra e no F5 (o ↻ continua).
 
+**0.2.1 (09/11/2026) — lixeira, recurso e favoritos:**
+- **Ronda** a cada 10 minutos (seg–sex, 8h–19h), só telas sem captcha, no
+  máximo 60 consultas por vez: (1) quais compras de Preparar ainda estão nos
+  **favoritos** do Compras.gov — a que saiu ganha o aviso "fora dos favoritos
+  no Compras.gov"; (2) a proposta de cada item vivo da empresa e, nos itens em
+  que ela está na frente ou já foi aceita/habilitada, o **recurso** e as
+  diligências; (3) as propostas de todos (até 15 itens). Botão "Fazer a
+  ronda agora" nas opções.
+- **Tarefas.** Quando alguém descarta uma licitação pela lixeira do Licita,
+  ela tira o favorito no Compras.gov (em até 1 minuto, com a aba aberta).
+
 ## O que ela nunca faz
 
 - Resolver, gerar ou burlar captcha.
 - Guardar senha (gov.br ou Compras.gov).
-- Enviar qualquer coisa ao Compras.gov (lance, proposta, anexo): ela só lê.
-- Gravar ou mandar para fora o token de login. Para a ronda, ela usa o
-  token que a própria página já usa, **só na memória da aba**: nunca é
-  gravado, nunca sai do computador, nunca vai para o Licita. Fechou a aba,
-  acabou. A lista do que ela pode consultar está fixa em `pagina.js`
-  (`PERMITIDO`): hoje, um endereço só, de leitura.
+- Enviar lance, proposta ou anexo ao Compras.gov. A única escrita é **tirar o
+  favorito** de uma compra que alguém descartou no Licita.
+- Gravar ou mandar para fora o token de login. Ela usa o token que a própria
+  página já usa, **só na memória da aba**: nunca é gravado, nunca sai do
+  computador, nunca vai para o Licita. Fechou a aba, acabou. O que ela pode
+  consultar está fixo em `pagina.js` (`PERMITIDO`).
 
 ## Instalar (no computador do Carlinhos)
 

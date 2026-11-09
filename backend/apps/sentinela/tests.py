@@ -348,3 +348,181 @@ class ApiTests(APITestCase):
         resposta = self.client.get("/api/sentinela/estado/")
 
         self.assertEqual(resposta.data["estado"], "nao_instalada")
+
+
+class LixeiraERecursoTests(APITestCase):
+    """A lixeira (descartada não volta, exceto convocação) e o vigia de
+    recurso, com as respostas reais de 08/11/2026."""
+
+    def setUp(self):
+        Empresa.objects.create(tenant=tenant_atual(), nome="Inside Solutions Ltda", cnpj=CNPJ)
+        self.usuario = User.objects.create_user(email="carlinhos@inside.com", password="x", nome="Carlinhos")
+        self.client.force_authenticate(self.usuario)
+        patcher = mock.patch.object(autenticacao, "env", SimpleNamespace(sentinela_chave=CHAVE))
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        self.receber("participacoes")
+        self.receber("meus_itens_56")
+        self.pmdf = OportunidadeSalva.objects.get(uasg="926670")
+
+    def receber(self, nome, ajuste=None):
+        captura = exemplo(nome)
+        dados = captura["dados"]
+        if ajuste:
+            ajuste(dados)
+        return receber(captura["url"], dados)
+
+    def descartar(self, salva):
+        return self.client.post(f"/api/licitacoes/salvas/{salva.pk}/descartar/")
+
+    # -- recurso ---------------------------------------------------------------
+
+    def test_recurso_indeferido_aparece_no_cartao(self):
+        self.receber("fase_recursal_56_item_22")
+
+        item = self.pmdf.itens_participados.get(numero_item="22")
+        self.assertEqual(item.recursos[0]["cnpj"], "42418039000173")
+        self.assertEqual(item.decisao_recurso, "M")
+        textos = {e["texto"]: e["nivel"] for e in cartao_na_torre(self.pmdf)["etiquetas"]}
+        self.assertEqual(textos.get("recurso indeferido · item 22"), "info")
+
+    def test_recurso_sem_decisao_e_vermelho_com_o_prazo_das_contrarrazoes(self):
+        def sem_decisao(dados):
+            dados.pop("decisao")
+            dados.pop("revisaoDecisao")
+            dados["prazos"]["dataHoraLimiteContrarrazao"] = "2099-10-09T23:59:59"
+
+        self.receber("fase_recursal_56_item_22", sem_decisao)
+
+        alertas = [e["texto"] for e in cartao_na_torre(self.pmdf)["etiquetas"] if e["nivel"] == "alerta"]
+        self.assertIn("recurso de Brava Sul · item 22 · contrarrazões até 09/10 23:59", alertas)
+
+    def test_item_sem_recurso_fica_limpo(self):
+        self.receber("fase_recursal_56_item_6_sem_recurso")
+
+        self.assertEqual(self.pmdf.itens_participados.get(numero_item="6").recursos, [])
+
+    def test_diligencia_aberta_e_vermelha(self):
+        self.receber("diligencias_56_item_6")
+        self.assertEqual(self.pmdf.itens_participados.get(numero_item="6").diligencias_abertas, 0)
+
+        captura = exemplo("diligencias_56_item_6")
+        receber(captura["url"], [{"id": 1, "situacao": "A"}])
+
+        textos = [e["texto"] for e in cartao_na_torre(self.pmdf)["etiquetas"]]
+        self.assertIn("diligência · item 6", textos)
+
+    # -- antes da sessão -------------------------------------------------------
+
+    def test_antes_da_sessao_le_o_preco_lancado(self):
+        self.receber("antes_da_sessao_142_com_preco")
+        self.receber("antes_da_sessao_387_sem_preco")
+
+        prf = OportunidadeSalva.objects.get(uasg="200109")
+        self.assertEqual(sorted(prf.itens_participados.values_list("numero_item", flat=True)), ["1", "2"])
+        self.assertTrue(prf.participacao.proposta_cadastrada)
+        guarulhos = OportunidadeSalva.objects.get(uasg="986477")
+        self.assertFalse(guarulhos.itens_participados.exists())
+        self.assertIsNone(guarulhos.participacao.proposta_cadastrada)
+
+    # -- lixeira ---------------------------------------------------------------
+
+    def test_a_pergunta_mostra_o_preco_lancado(self):
+        resposta = self.client.get(f"/api/licitacoes/salvas/{self.pmdf.pk}/descartar/")
+
+        self.assertTrue(resposta.data["conferido"])
+        self.assertIn("item 22 (Movement", resposta.data["pergunta"])
+        self.assertIn("1º lugar", resposta.data["pergunta"])
+        self.assertTrue(resposta.data["pergunta"].endswith("Deseja prosseguir?"))
+
+    def test_sem_conferir_a_pergunta_avisa(self):
+        guarulhos = OportunidadeSalva.objects.get(uasg="986477")
+
+        resposta = self.client.get(f"/api/licitacoes/salvas/{guarulhos.pk}/descartar/")
+
+        self.assertFalse(resposta.data["conferido"])
+        self.assertIn("Ainda não conferi", resposta.data["pergunta"])
+
+    def test_descartar_vai_para_descartadas_com_o_motivo_completo_e_pede_o_desfavorito(self):
+        from .models import Tarefa
+
+        resposta = self.descartar(self.pmdf)
+
+        self.assertEqual(resposta.status_code, 200, resposta.data)
+        self.assertIsNone(cartao_na_torre(self.pmdf))
+        lista = self.client.get("/api/licitacoes/descartadas/").data["results"]
+        linha = next(l for l in lista if l["id"] == self.pmdf.pk)
+        self.assertEqual(linha["motivo"], "descartada_manual")
+        self.assertIn("Descartada manualmente por Carlinhos", linha["motivo_detalhe"])
+        self.assertIn("na etapa Aguardando adjudicação", linha["motivo_detalhe"])
+        self.assertIn("Tinha preço no item 6", linha["motivo_detalhe"])
+        tarefa = Tarefa.objects.get()
+        self.assertEqual((tarefa.tipo, tarefa.compra), ("desfavoritar", "92667005000562026"))
+
+    def test_descartada_nao_volta_com_a_proxima_leitura(self):
+        self.descartar(self.pmdf)
+
+        self.receber("participacoes")
+        self.receber("meus_itens_56")
+
+        self.assertEqual(OportunidadeSalva.objects.filter(uasg="926670").count(), 1)
+        self.pmdf.refresh_from_db()
+        self.assertIsNotNone(self.pmdf.removida_em)
+        self.assertIsNone(cartao_na_torre(self.pmdf))
+
+    def test_convocacao_traz_a_descartada_de_volta_em_vermelho(self):
+        self.descartar(self.pmdf)
+
+        def convocado(dados):
+            dados[2]["propostaItem"]["situacaoUltimaSolicitacaoAnexos"] = "S"
+
+        self.receber("meus_itens_56", convocado)
+
+        self.pmdf.refresh_from_db()
+        self.assertIsNone(self.pmdf.removida_em)
+        cartao = cartao_na_torre(self.pmdf)
+        self.assertEqual(cartao["etiquetas"][0]["nivel"], "alerta")
+        self.assertIn("convocação: enviar anexo · item 22", [e["texto"] for e in cartao["etiquetas"]])
+        self.assertTrue(self.pmdf.eventos.filter(tipo="voltou").exists())
+
+    # -- ronda e tarefas -------------------------------------------------------
+
+    def test_ronda_consulta_proposta_recurso_e_diligencia_dos_itens(self):
+        resposta = self.client.get("/api/sentinela/ronda/", HTTP_X_SENTINELA_CHAVE=CHAVE)
+
+        consultas = resposta.data["consultas"]
+        self.assertIn(
+            "/comprasnet-fase-externa/v1/compras/92667005000562026/itens/22/fase-recursal-fornecedor/1", consultas
+        )
+        self.assertIn(
+            f"/comprasnet-fase-externa/v1/compras/92667005000562026/itens/22/participacoes/{CNPJ}/diligencias",
+            consultas,
+        )
+        self.assertFalse(any("captcha" in c or "em-selecao-fornecedores?" in c for c in consultas))
+
+    def test_ronda_de_descartada_so_olha_a_proposta(self):
+        self.descartar(self.pmdf)
+
+        consultas = self.client.get("/api/sentinela/ronda/", HTTP_X_SENTINELA_CHAVE=CHAVE).data["consultas"]
+
+        do_pmdf = [c for c in consultas if "92667005000562026" in c]
+        self.assertTrue(do_pmdf)
+        self.assertTrue(all(c.endswith("/propostas?filtro=2") for c in do_pmdf))
+
+    def test_tarefa_de_desfavoritar_vai_e_volta(self):
+        self.descartar(self.pmdf)
+
+        pendentes = self.client.get("/api/sentinela/tarefas/", HTTP_X_SENTINELA_CHAVE=CHAVE).data
+        self.assertEqual(pendentes[0]["compra"], "92667005000562026")
+        self.client.post(
+            f"/api/sentinela/tarefas/{pendentes[0]['id']}/",
+            {"ok": True, "detalhe": "200"},
+            format="json",
+            HTTP_X_SENTINELA_CHAVE=CHAVE,
+        )
+
+        self.assertEqual(self.client.get("/api/sentinela/tarefas/", HTTP_X_SENTINELA_CHAVE=CHAVE).data, [])
+
+    def test_tarefas_e_ronda_exigem_a_chave(self):
+        self.assertEqual(self.client.get("/api/sentinela/tarefas/").status_code, 403)
+        self.assertEqual(self.client.get("/api/sentinela/ronda/").status_code, 403)

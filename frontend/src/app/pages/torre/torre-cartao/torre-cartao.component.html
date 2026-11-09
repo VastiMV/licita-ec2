@@ -1,4 +1,15 @@
 <article class="cartao" [attr.data-nivel]="nivel()">
+  @if (temLixeira()) {
+    <button
+      type="button"
+      class="lixeira"
+      (click)="descartar.emit(cartao())"
+      [attr.aria-label]="'Descartar ' + cartao().compra"
+      title="Descartar"
+    >
+      <app-icon name="trash" />
+    </button>
+  }
   <button
     type="button"
     class="cartao-abrir"

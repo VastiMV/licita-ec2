@@ -36,6 +36,8 @@ const TOKEN = 'Bearer token-de-mentira-so-do-teste';
     if (u.pathname.startsWith('/comprasnet-') && !u.pathname.startsWith('/comprasnet-web/')) {
       pedidos.push(`${req.method()} ${u.pathname}${u.search} auth=${req.headers()['authorization'] === TOKEN ? 'sim' : 'não'}`);
       if (req.headers()['authorization'] !== TOKEN) return route.fulfill({ status: 403, body: 'Forbidden' });
+      if (u.pathname.endsWith('/favoritas/dentre-opcoes'))
+        return route.fulfill({ status: 200, contentType: 'application/json', body: '[]' });
       if (u.pathname === new URL(cubatao.url).pathname)
         return route.fulfill({ status: 206, contentType: 'application/json', body: JSON.stringify(cubatao.dados) });
       return route.fulfill({ status: 200, contentType: 'application/json', body: '{}' });

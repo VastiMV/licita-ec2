@@ -1,30 +1,62 @@
 // Roda DENTRO da página do Compras.gov.br (mundo "MAIN").
 //
-// 1. OBSERVA: quando a própria página recebe a resposta de uma destas
-//    consultas, copia a resposta e entrega para a ponte (ponte.js).
-// 2. LEMBRA A SESSÃO: quando a página manda o cabeçalho `authorization`,
-//    guarda o valor numa variável desta função — só na memória desta aba.
-//    Nunca é gravado, nunca sai do computador, nunca vai para o Licita.
-// 3. CONSULTA SOZINHA, a pedido da ponte, só o que está em PERMITIDO: a
-//    lista de propostas de um item, que NÃO pede captcha. Só leitura (GET).
-//    Nunca toca em tela com captcha.
+// 1. OBSERVA: quando a própria página recebe a resposta de uma consulta que
+//    interessa, copia a resposta e entrega para a ponte (ponte.js).
+// 2. LEMBRA A SESSÃO: quando a página manda o cabeçalho `authorization`, guarda
+//    o valor numa variável desta função — só na memória desta aba. Nunca é
+//    gravado, nunca sai do computador, nunca vai para o Licita.
+// 3. CONSULTA SOZINHA, a pedido da ponte, só o que está em PERMITIDO: leituras
+//    que NÃO pedem captcha (favoritos, proposta do item, propostas de todos,
+//    fase recursal, diligências) e o "tirar favorito" de uma compra (lixeira,
+//    só com o clique de alguém). Nunca toca em tela com captcha.
 (() => {
   "use strict";
 
+  const BASE = "/comprasnet-fase-externa/v1/compras";
   const INTERESSA = [
     /\/comprasnet-fase-externa\/v1\/compras\/participacoes\/?$/,
     /\/comprasnet-fase-externa\/v1\/compras\/\d{17}\/participacao\/?$/,
     /\/comprasnet-fase-externa\/v1\/compras\/\d{17}\/itens\/em-selecao-fornecedores\/?$/,
     /\/comprasnet-fase-externa\/v1\/compras\/\d{17}\/em-selecao-fornecedores\/participacoes\/\d{14}\/itens\/[^/]+\/propostas\/?$/,
+    /\/comprasnet-fase-externa\/v1\/compras\/\d{17}\/itens\/aguardando-abertura-sessao-publica(\/[^/]+\/itens-grupo)?\/?$/,
+    /\/comprasnet-fase-externa\/v1\/compras\/\d{17}\/itens\/[^/]+\/fase-recursal-fornecedor\/\d+\/?$/,
+    /\/comprasnet-fase-externa\/v1\/compras\/\d{17}\/itens\/[^/]+\/participacoes\/\d{14}\/diligencias\/?$/,
     /\/comprasnet-fase-externa\/v1\/compras\/\d{17}\/em-selecao-fornecedores\/itens\/[^/]+\/propostas\/?$/,
+    /\/comprasnet-oportunidade\/v1\/compras\/favoritas\/dentre-opcoes\/?$/,
   ];
 
-  // O que a Sentinela pode consultar sozinha: só leitura, sem captcha.
+  const RETOKEN = /\/comprasnet-usuario\/v2\/sessao\/fornecedor\/retoken\/?$/;
+
+  // O que a Sentinela pode consultar sozinha (nenhum pede captcha).
   const PERMITIDO = [
     {
       metodo: "GET",
       padrao:
         /^\/comprasnet-fase-externa\/v1\/compras\/\d{17}\/em-selecao-fornecedores\/itens\/[A-Za-z0-9-]+\/propostas\?ordenacao-propostas=V$/,
+    },
+    {
+      metodo: "GET",
+      padrao:
+        /^\/comprasnet-oportunidade\/v1\/compras\/favoritas\/dentre-opcoes\?compras=\d{17}(,\d{17}){0,29}$/,
+    },
+    {
+      metodo: "GET",
+      padrao:
+        /^\/comprasnet-fase-externa\/v1\/compras\/\d{17}\/em-selecao-fornecedores\/participacoes\/\d{14}\/itens\/[A-Za-z0-9-]+\/propostas\?filtro=2$/,
+    },
+    {
+      metodo: "GET",
+      padrao:
+        /^\/comprasnet-fase-externa\/v1\/compras\/\d{17}\/itens\/[A-Za-z0-9-]+\/fase-recursal-fornecedor\/\d+$/,
+    },
+    {
+      metodo: "GET",
+      padrao:
+        /^\/comprasnet-fase-externa\/v1\/compras\/\d{17}\/itens\/[A-Za-z0-9-]+\/participacoes\/\d{14}\/diligencias$/,
+    },
+    {
+      metodo: "DELETE",
+      padrao: /^\/comprasnet-oportunidade\/v1\/compras\/\d{17}\/favorita$/,
     },
   ];
 
@@ -37,20 +69,6 @@
       sessao.authorization = String(valor);
     if (n === "x-version-number" && valor) sessao.versao = String(valor);
   }
-
-  function lembrarCabecalhos(cabecalhos) {
-    if (!cabecalhos) return;
-    if (typeof Headers !== "undefined" && cabecalhos instanceof Headers) {
-      cabecalhos.forEach((valor, nome) => lembrar(nome, valor));
-    } else if (Array.isArray(cabecalhos)) {
-      cabecalhos.forEach(([nome, valor]) => lembrar(nome, valor));
-    } else if (typeof cabecalhos === "object") {
-      Object.entries(cabecalhos).forEach(([nome, valor]) =>
-        lembrar(nome, valor),
-      );
-    }
-  }
-  const RETOKEN = /\/comprasnet-usuario\/v2\/sessao\/fornecedor\/retoken\/?$/;
 
   function endereco(url) {
     try {
@@ -94,6 +112,19 @@
         }),
       )
       .catch(() => {});
+  }
+
+  function lembrarCabecalhos(cabecalhos) {
+    if (!cabecalhos) return;
+    if (typeof Headers !== "undefined" && cabecalhos instanceof Headers) {
+      cabecalhos.forEach((valor, nome) => lembrar(nome, valor));
+    } else if (Array.isArray(cabecalhos)) {
+      cabecalhos.forEach(([nome, valor]) => lembrar(nome, valor));
+    } else if (typeof cabecalhos === "object") {
+      Object.entries(cabecalhos).forEach(([nome, valor]) =>
+        lembrar(nome, valor),
+      );
+    }
   }
 
   const fetchOriginal = window.fetch;
@@ -163,13 +194,14 @@
       window,
       location.origin + pedido.caminho,
       {
-        method: "GET",
+        method: pedido.metodo,
         credentials: "same-origin",
         headers: {
           accept: "application/json, text/plain, */*",
           authorization: sessao.authorization,
           "x-device-platform": "web",
           "x-version-number": sessao.versao || "6.4.4",
+          "bloqueio-desabilitado": "true",
         },
       },
     );

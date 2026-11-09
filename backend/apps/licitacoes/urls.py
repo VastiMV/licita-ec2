@@ -2,6 +2,7 @@ from django.urls import path
 
 from .views import (
     CicloView,
+    DescartarView,
     CompraDetalheView,
     DocumentoFinanceiroView,
     DocumentosFinanceirosView,
@@ -45,6 +46,7 @@ urlpatterns = [
         name="licitacoes-salva-eventos",
     ),
     path("salvas/<int:pk>/processo/", ProcessoView.as_view(), name="licitacoes-salva-processo"),
+    path("salvas/<int:pk>/descartar/", DescartarView.as_view(), name="licitacoes-salva-descartar"),
     path("salvas/<int:pk>/relatorio/", RelatorioView.as_view(), name="licitacoes-salva-relatorio"),
     # Torre de Controle — lançamento manual do que nenhum sistema informa.
     path(
