@@ -206,7 +206,8 @@ e sem poder mudar nada**, de dois jeitos:
    resultado fica no registro do job (visível para quem acessa o
    repositório). Usa os mesmos segredos do deploy.
 2. **Chave de leitura** (`LEITURA_CHAVE`): com ela no cabeçalho
-   `X-Licita-Leitura-Token`, o Licita responde **só a consultas (GET)** como o
+   `X-Licita-Leitura-Token` ou em `Authorization: Bearer <chave>` (o formato
+   que o cofre do ambiente do assistente aceita), o Licita responde **só a consultas (GET)** como o
    usuário "Leitura" (inativo, não faz login). Qualquer gravação com ela é
    recusada. É o que permite ao assistente abrir as telas
    (`deploy/conferencia/conferir-telas.js`). Criar (uma vez), no terminal do EC2:

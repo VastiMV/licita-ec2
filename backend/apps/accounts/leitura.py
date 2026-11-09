@@ -36,9 +36,21 @@ def leitor() -> User:
     return usuario
 
 
+def _chave_recebida(request) -> str:
+    """A chave vem em `X-Licita-Leitura-Token` ou em `Authorization: Bearer
+    <chave>` (o formato que o cofre do ambiente do assistente aceita). No
+    segundo caso, um token de login comum nunca é igual à chave: segue para
+    o JWT normalmente."""
+
+    if direta := request.META.get(CABECALHO, ""):
+        return direta
+    tipo, _, valor = request.META.get("HTTP_AUTHORIZATION", "").partition(" ")
+    return valor.strip() if tipo.lower() == "bearer" else ""
+
+
 class ChaveDeLeitura(BaseAuthentication):
     def authenticate(self, request):
-        recebida = request.META.get(CABECALHO, "")
+        recebida = _chave_recebida(request)
         esperada = env.leitura_chave
         if not recebida or not esperada or request.method not in SAFE_METHODS:
             return None
