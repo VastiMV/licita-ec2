@@ -126,7 +126,14 @@
     return bloco;
   }
 
+  // Depois de atualizar a extensão, o painel das abas já abertas perde a
+  // ligação com ela (chrome.runtime some): ele para quieto até o F5.
+  function viva() {
+    return typeof chrome !== "undefined" && !!(chrome.runtime && chrome.runtime.id);
+  }
+
   function carregar(codigo) {
+    if (!viva()) return;
     chrome.runtime.sendMessage({ tipo: "camada", codigo }, (resposta) => {
       if (codigo !== codigoAtual) return;
       const nome = nomeDaCompra(codigo);
@@ -159,6 +166,10 @@
   }
 
   function verificar() {
+    if (!viva()) {
+      clearInterval(relogio);
+      return;
+    }
     const achado = location.href.match(CODIGO);
     const codigo = achado ? achado[1] : null;
     if (codigo === codigoAtual) return;
@@ -170,10 +181,12 @@
     carregar(codigo);
   }
 
+  let relogio = null;
+
   function iniciar() {
     verificar();
     // O Compras.gov é uma página só: o endereço muda sem recarregar.
-    setInterval(verificar, 1500);
+    relogio = setInterval(verificar, 1500);
     // A cotação é lida ao abrir a compra e no F5 (pedido da operação,
     // 08/11/2026: não precisa conferir a cada minuto). O ↻ lê na hora.
   }

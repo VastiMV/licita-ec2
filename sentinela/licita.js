@@ -20,6 +20,11 @@
       !m.url.startsWith("https://cnetmobile.estaleiro.serpro.gov.br/")
     )
       return;
-    chrome.runtime.sendMessage({ tipo: "abrir_compra", url: m.url });
+    if (!chrome.runtime || !chrome.runtime.id) return; // extensão atualizada: F5
+    try {
+      chrome.runtime.sendMessage({ tipo: "abrir_compra", url: m.url });
+    } catch {
+      // extensão atualizada: esta aba precisa de F5
+    }
   });
 })();
