@@ -351,7 +351,10 @@ def _gravar_item(salva: OportunidadeSalva, item: dict, cnpjs: set[str]) -> int:
 
     proposta = item.get("propostaItem") or {}
     participante = (proposta.get("participante") or {}).get("identificacao")
-    if participante and participante not in cnpjs:
+    # Só com a proposta **da empresa** na resposta. Abrir no Compras.gov um
+    # item em que ela não entrou devolve o item sem proposta nenhuma — e isso
+    # virava item da empresa (59/2026, item 1; corrigido em 09/11/2026).
+    if participante not in cnpjs:
         return 0
     numero = str(item.get("identificador") or item.get("numero") or "").strip()
     if not numero:

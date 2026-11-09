@@ -68,6 +68,7 @@ describe('EtapaPage', () => {
     expect(sinais).toEqual(['perdendo', 'perdendo', 'ganhando']);
     expect(el.querySelector('.sinal')?.textContent).toContain('👎');
     expect(el.querySelector('.sinal .sr-only')?.textContent).toContain('Perdendo');
+    expect(el.querySelector('.ganhando')?.textContent).toContain('Item 22');
   });
 
   it('"Relatório" abre o relatório da licitação', () => {

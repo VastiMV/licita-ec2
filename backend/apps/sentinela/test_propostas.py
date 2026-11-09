@@ -102,6 +102,25 @@ class LeituraTests(_ComCubatao):
         self.assertEqual(resumo["propostas"], 0)
         self.assertFalse(PropostaDoItem.objects.exists())
 
+    def test_abrir_item_em_que_a_empresa_nao_entrou_nao_cria_item(self):
+        """HAR de 08/11/2026: ao abrir o item 1 do 59/2026, a página pergunta a
+        proposta da Inside e recebe o item **sem** proposta. Não é item dela."""
+
+        salva = OportunidadeSalva.objects.create(
+            cnpj_orgao="2", ano_compra="2026", sequencial_compra="59",
+            link_plataforma="https://x/acompanhamento-compra?compra=98998305000592026",
+        )  # fmt: skip
+        sem_proposta = {"numero": 1, "identificador": "1", "descricao": "Laringoscópio", "fase": "HE"}
+        url = (
+            "https://cnetmobile.estaleiro.serpro.gov.br/comprasnet-fase-externa/v1/compras/98998305000592026"
+            f"/em-selecao-fornecedores/participacoes/{CNPJ}/itens/1/propostas?filtro=1"
+        )
+
+        resumo = receber(url, [sem_proposta])
+
+        self.assertEqual(resumo["itens"], 0)
+        self.assertFalse(salva.itens_participados.exists())
+
     def test_homologado_para_outro_vai_para_encerradas(self):
         self.receber(mudar=lambda item: item.update(homologado=True))
 
@@ -236,3 +255,35 @@ class ApiTests(APITestCase):
         self.client.force_authenticate(User.objects.create_user(email="op@empresa.com", password="x"))
         resposta = self.client.get(url)
         self.assertEqual((resposta.status_code, resposta.json()["itens"]), (200, []))
+
+
+class DiagnosticoTests(_ComCubatao):
+    def rodar(self, *args) -> str:
+        from io import StringIO
+
+        from django.core.management import call_command
+
+        saida = StringIO()
+        call_command("diagnostico", *args, stdout=saida)
+        return saida.getvalue()
+
+    def test_itens_suspeitos_acha_o_item_sem_proposta(self):
+        ItemParticipado.objects.create(oportunidade=self.salva, numero_item="1", descricao="Laringoscópio")
+
+        texto = self.rodar("itens-suspeitos")
+
+        self.assertIn("Itens suspeitos (Sentinela, sem preço, sem marca, sem posição): 1", texto)
+        self.assertIn("item 1 · Laringoscópio", texto)
+
+    def test_compra_mostra_itens_e_sinal(self):
+        self.receber()
+
+        texto = self.rodar("compra", CUBATAO)
+
+        self.assertIn("Pregão 55/2026", texto)
+        self.assertIn("pos 23 (de verdade 23)", texto)
+        self.assertIn("sinal perdendo · propostas 31", texto)
+
+    def test_torre_e_sentinela_rodam(self):
+        self.assertIn("Disputar (1)", self.rodar("torre"))
+        self.assertIn("Notícias nas últimas 24h", self.rodar("sentinela"))

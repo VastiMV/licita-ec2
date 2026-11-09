@@ -73,6 +73,12 @@ describe('torre.utils', () => {
     expect(sinalDoItem({ ...PMDF.itens[0], sinal: '' })).toBeNull();
     expect(ganhandoDoCartao(PMDF)).toBe('👍 ganhando 1 de 3');
     expect(ganhandoDoCartao({ ...PMDF, itens_com_posicao: 0 })).toBeNull();
+    expect(ganhandoDoCartao({ ...PMDF, itens_ganhando: 0, itens_com_posicao: 6 })).toBe(
+      '👎 ganhando 0 de 6',
+    );
+    expect(resumoDoItem({ ...PMDF.itens[0], classificacao: 2, sinal: 'proximo' })).toBe(
+      'Item 6 · 2º · próximo a ser chamado · R$\u00a013.750,00',
+    );
   });
 
   it('relatório só do Disputar em diante, com itens', () => {

@@ -95,6 +95,11 @@ tbody tr:last-child td {
   }
 }
 
+// O item em que ele está ganhando salta aos olhos (08/11/2026).
+.ganhando {
+  font-weight: 700;
+}
+
 // 👍 / 🟠 / 👎: o emoji fica com a cor dele, mesmo com o item em cinza.
 .sinal {
   display: inline-block;
