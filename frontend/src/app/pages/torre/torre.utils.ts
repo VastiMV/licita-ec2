@@ -43,9 +43,11 @@ export function resumoDoItem(item: ItemTorre): string {
   const posicao = item.classificacao ? `${item.classificacao}º` : '';
   const situacao = item.perdido
     ? `perdido: ${item.perdido}`
-    : item.perdendo
-      ? 'perdendo'
-      : item.situacao || item.etapa_rotulo;
+    : item.sinal === 'proximo'
+      ? 'próximo a ser chamado'
+      : item.perdendo
+        ? 'perdendo'
+        : item.situacao || item.etapa_rotulo;
   return [`Item ${item.numero}`, posicao, situacao, moeda(item.valor_total)]
     .filter(Boolean)
     .join(' · ');
@@ -66,10 +68,12 @@ export function sinalDoItem(item: ItemTorre): { icone: string; texto: string } |
   }
 }
 
-/** "👍 ganhando 1 de 8" — no cartão, quando há itens com posição. */
+/** "👍 ganhando 1 de 8" — no cartão, quando há itens com posição. Sem
+ * nenhum item em 1º, o polegar é para baixo (08/11/2026). */
 export function ganhandoDoCartao(cartao: CartaoTorre): string | null {
   if (!cartao.itens_com_posicao) return null;
-  return `👍 ganhando ${cartao.itens_ganhando} de ${cartao.itens_com_posicao}`;
+  const icone = cartao.itens_ganhando > 0 ? '👍' : '👎';
+  return `${icone} ganhando ${cartao.itens_ganhando} de ${cartao.itens_com_posicao}`;
 }
 
 /** O relatório faz sentido do Disputar em diante (já há propostas). */

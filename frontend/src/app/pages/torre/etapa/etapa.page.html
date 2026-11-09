@@ -44,7 +44,10 @@
               </td>
               <td>
                 @for (item of cartao.itens; track item.numero) {
-                  <div [class.cinza]="item.perdendo || !!item.perdido">
+                  <div
+                    [class.cinza]="item.sinal !== 'proximo' && (item.perdendo || !!item.perdido)"
+                    [class.ganhando]="item.sinal === 'ganhando'"
+                  >
                     @if (sinal(item); as s) {
                       <span class="sinal" [attr.data-sinal]="item.sinal" [attr.title]="s.texto"
                         ><span aria-hidden="true">{{ s.icone }}</span
