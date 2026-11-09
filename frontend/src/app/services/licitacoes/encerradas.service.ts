@@ -10,6 +10,7 @@ import {
   EncerradasParams,
   ProcessoResponse,
 } from '../../contracts/licitacoes/encerrada.contracts';
+import { RelatorioResponse } from '../../contracts/licitacoes/relatorio.contracts';
 import { ApiClient } from '../../core/api/api-client';
 import { ENDPOINTS } from '../../core/api/endpoints';
 
@@ -29,5 +30,10 @@ export class EncerradasService {
   /** A história da salva no formato do modal do processo. */
   processo(id: number): Observable<ProcessoResponse> {
     return this.api.get<ProcessoResponse>(ENDPOINTS.licitacoes.processo(id));
+  }
+
+  /** O relatório da licitação, item a item (`apps/licitacoes/relatorio.py`). */
+  relatorio(id: number): Observable<RelatorioResponse> {
+    return this.api.get<RelatorioResponse>(ENDPOINTS.licitacoes.relatorio(id));
   }
 }

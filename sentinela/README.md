@@ -29,12 +29,28 @@ e uma aba nova cairia no login. A aba original não é tocada. Sem Sentinela,
 o Licita abre aba nova como antes (`licita.js` marca a página do Licita com
 `data-sentinela`; `abrirNoCompras` em `torre-acoes.service.ts`).
 
+**0.1.4 (08/11/2026):**
+- **Ronda das propostas.** A cada 10 minutos (seg–sex, 8h–19h), para cada
+  item em que a Inside participou e que já tem posição, a Sentinela lê a
+  lista de propostas de **todos** os participantes
+  (`em-selecao-fornecedores/itens/{n}/propostas`). Essa tela **não pede
+  captcha**. Ela usa a sessão da própria aba do Compras.gov: um item por vez,
+  com pausa, no máximo 15 por ronda; cada item no máximo a cada 2 horas, e
+  item já decidido sai da ronda. Daí saem o 👍/🟠/👎 da Torre e o relatório
+  da licitação. Botão "Conferir propostas agora" nas opções.
+- A cotação do painel não confere mais a cada minuto: é lida ao abrir a
+  compra e no F5 (o ↻ continua).
+
 ## O que ela nunca faz
 
 - Resolver, gerar ou burlar captcha.
 - Guardar senha (gov.br ou Compras.gov).
-- Enviar qualquer coisa ao Compras.gov (lance, proposta, anexo).
-- Ler token de login: ela só copia respostas que a página já recebeu.
+- Enviar qualquer coisa ao Compras.gov (lance, proposta, anexo): ela só lê.
+- Gravar ou mandar para fora o token de login. Para a ronda, ela usa o
+  token que a própria página já usa, **só na memória da aba**: nunca é
+  gravado, nunca sai do computador, nunca vai para o Licita. Fechou a aba,
+  acabou. A lista do que ela pode consultar está fixa em `pagina.js`
+  (`PERMITIDO`): hoje, um endereço só, de leitura.
 
 ## Instalar (no computador do Carlinhos)
 
@@ -70,9 +86,9 @@ no ícone de recarregar da Sentinela.
 
 | Arquivo | O que faz |
 |---|---|
-| `pagina.js` | roda dentro da página do Compras.gov; copia as respostas que interessam (e avisa se a renovação da sessão falhar) |
+| `pagina.js` | roda dentro da página do Compras.gov; copia as respostas que interessam (e avisa se a renovação da sessão falhar); faz as consultas da ronda (só o que está em `PERMITIDO`) |
 | `ponte.js` | leva o que a página copiou até o fundo da extensão |
-| `fundo.js` | manda ao Licita (`/api/sentinela/captura/`, `pulso/`, `camada/<código>/`) com a chave |
+| `fundo.js` | manda ao Licita (`/api/sentinela/captura/`, `pulso/`, `camada/<código>/`) com a chave; a cada 10 min pede `ronda/` e manda a aba fazer as consultas |
 | `camada.js`, `camada.css` | o painel da camada de disputa |
 | `opcoes.html`, `opcoes.js` | endereço do Licita, chave, teste de conexão |
 
@@ -83,4 +99,5 @@ mudar.
 
 Testar a extensão de verdade (Chromium + Playwright, com o Compras.gov
 simulado pelas respostas de `backend/apps/sentinela/exemplos/`):
-`sentinela/testes/teste-extensao.js` (instruções no topo do arquivo).
+`sentinela/testes/teste-extensao.js` e `sentinela/testes/teste-ronda-propostas.js`
+(instruções no topo de cada arquivo).

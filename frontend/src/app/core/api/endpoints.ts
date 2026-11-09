@@ -35,6 +35,8 @@ export const ENDPOINTS = {
     /** A história no formato do modal do processo: etapa de cada evento,
      * valores e o desfecho. */
     processo: (id: number) => `licitacoes/salvas/${id}/processo/`,
+    /** O relatório da licitação: vencedor, marca e diferença, item a item. */
+    relatorio: (id: number) => `licitacoes/salvas/${id}/relatorio/`,
   },
   /** Fabricante › Marca › Modelo e a tabela de preços (`apps/produtos`). */
   produtos: {

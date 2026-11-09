@@ -115,12 +115,12 @@ describe('EncerradasPage', () => {
       pagina()
         .acoesDe(COTADA)
         .map((a) => a.rotulo),
-    ).toEqual(['Ver processo', 'Ver cotação']);
+    ).toEqual(['Ver processo', 'Ver relatório', 'Ver cotação']);
     expect(
       pagina()
         .acoesDe(SEM_COTACAO)
         .map((a) => a.rotulo),
-    ).toEqual(['Ver processo']);
+    ).toEqual(['Ver processo', 'Ver relatório']);
   });
 
   it('ver processo abre o modal do processo; pedir a cotação de lá abre o Cotador', () => {

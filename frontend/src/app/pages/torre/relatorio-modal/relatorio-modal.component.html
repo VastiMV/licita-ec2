@@ -1,0 +1,131 @@
+<section class="relatorio" role="dialog" aria-labelledby="relatorio-titulo" tabindex="-1">
+  <header>
+    <div>
+      <p class="sobre">Relatório da licitação</p>
+      <h2 id="relatorio-titulo">{{ relatorio()?.compra || cab.titulo }}</h2>
+      @if (relatorio(); as r) {
+        <p class="muted">{{ titulo(r.orgao_nome) }}{{ r.uasg ? ' · UASG ' + r.uasg : '' }}</p>
+      }
+    </div>
+    <button type="button" class="fechar" (click)="fechar()" aria-label="Fechar">✕</button>
+  </header>
+
+  <div class="corpo">
+    @if (erro()) {
+      <p class="falha">Não foi possível carregar o relatório agora.</p>
+    } @else if (relatorio(); as r) {
+      <p class="resumo">
+        {{ r.resumo.itens }} {{ r.resumo.itens === 1 ? 'item' : 'itens' }} da empresa ·
+        <strong class="ganho"
+          >{{ r.resumo.ganhos }} ganho{{ r.resumo.ganhos === 1 ? '' : 's' }}</strong
+        >
+        ·
+        <strong class="perda"
+          >{{ r.resumo.perdidos }} perdido{{ r.resumo.perdidos === 1 ? '' : 's' }}</strong
+        >
+      </p>
+
+      @for (item of r.itens; track item.numero) {
+        <article class="item">
+          <h3>
+            Item {{ item.numero }}
+            @if (item.descricao) {
+              <span class="desc">· {{ titulo(item.descricao) }}</span>
+            }
+            @if (item.participantes) {
+              <span class="muted">· {{ item.participantes }} participantes</span>
+            }
+          </h3>
+
+          @if (!item.participantes) {
+            <p class="muted">
+              A Sentinela ainda não leu as propostas deste item. Com a aba do Compras.gov aberta e
+              logada, elas chegam sozinhas em até 10 minutos.
+            </p>
+          } @else {
+            <div class="quadro">
+              <div class="bloco" data-tom="vencedor">
+                <p class="rotulo">{{ item.homologado ? 'Vencedor' : 'Em 1º lugar' }}</p>
+                @if (item.vencedor; as v) {
+                  <p class="nome">{{ v.fornecedor }}</p>
+                  <p>{{ v.marca || '—' }}{{ v.modelo ? ' · ' + v.modelo : '' }}</p>
+                  <p class="valor num">{{ moeda(v.valor) ?? '—' }}</p>
+                } @else {
+                  <p class="muted">—</p>
+                }
+              </div>
+              <div class="bloco" data-tom="empresa">
+                <p class="rotulo">Inside</p>
+                <p class="nome">
+                  {{
+                    item.empresa.classificacao
+                      ? item.empresa.classificacao + 'º lugar'
+                      : 'sem posição'
+                  }}
+                </p>
+                <p>
+                  {{ item.empresa.marca || '—'
+                  }}{{ item.empresa.modelo ? ' · ' + item.empresa.modelo : '' }}
+                </p>
+                <p class="valor num">{{ moeda(item.empresa.valor) ?? '—' }}</p>
+              </div>
+              <div class="bloco" data-tom="diferenca">
+                <p class="rotulo">Diferença</p>
+                <p class="valor num">{{ diferenca(item) ?? '—' }}</p>
+                @if (item.marcas.length) {
+                  <p class="muted">
+                    Marcas mais ofertadas:
+                    @for (m of item.marcas.slice(0, 3); track m.marca; let ultima = $last) {
+                      {{ m.marca }} ({{ m.propostas }}){{ ultima ? '' : ', ' }}
+                    }
+                  </p>
+                }
+              </div>
+            </div>
+
+            <details>
+              <summary>Ver as {{ item.participantes }} propostas</summary>
+              <div class="rolagem">
+                <table>
+                  <thead>
+                    <tr>
+                      <th scope="col">Pos.</th>
+                      <th scope="col">Fornecedor</th>
+                      <th scope="col">Marca</th>
+                      <th scope="col">Modelo</th>
+                      <th scope="col" class="num">Valor</th>
+                      <th scope="col">Situação</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (p of item.propostas; track $index) {
+                      <tr [class.empresa]="p.da_empresa" [class.caiu]="p.caiu">
+                        <td class="num">{{ p.classificacao ? p.classificacao + 'º' : '—' }}</td>
+                        <td>{{ p.fornecedor }}{{ p.uf ? ' (' + p.uf + ')' : '' }}</td>
+                        <td>{{ p.marca || '—' }}</td>
+                        <td>{{ p.modelo || '—' }}</td>
+                        <td class="num">
+                          {{ moeda(p.valor) ?? '—' }}
+                          @if (p.atipica) {
+                            <span class="atipica" title="Fica fora das contas"
+                              >valor fora do padrão</span
+                            >
+                          }
+                        </td>
+                        <td>{{ situacao(p) }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </details>
+          }
+        </article>
+      } @empty {
+        <p class="muted">A empresa não tem itens registrados nesta licitação.</p>
+      }
+    } @else {
+      <p class="muted">Carregando…</p>
+    }
+  </div>
+</section>

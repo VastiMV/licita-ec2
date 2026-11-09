@@ -53,6 +53,7 @@ da sessão de julgamento (`numeroSessaoJulgHab`, quase sempre `1`).
 | Itens antes da sessão (traz a proposta da empresa **dentro** do item com preço) | `/comprasnet-fase-externa/v1/compras/{compra}/itens/aguardando-abertura-sessao-publica?pagina&tamanhoPagina` | 🔐 | 🧩 **sim** | 👁 copia (Sentinela 0.2) |
 | Itens de um grupo, antes da sessão | `.../itens/aguardando-abertura-sessao-publica/{item}/itens-grupo` | 🔐 | não | 👁 copia (0.2) |
 | **Itens da compra** depois da sessão — `filtro=1` "Todos os itens" (traz a proposta da empresa dentro do item) · `filtro=2` "Itens em que estou participando" · `filtro=3` "Itens com diligência" | `/comprasnet-fase-externa/v1/compras/{compra}/itens/em-selecao-fornecedores?filtro&pagina&tamanhoPagina` | 🔐 | 🧩 **sim** | 👁 copia (filtros 1 e 2) |
+| **Propostas de todos os participantes do item** (posição, fornecedor, marca, modelo, valor inicial e final, situação: aceita, habilitada, desclassificada…). Vem inteira numa resposta só (31 propostas no Cubatão 55/2026) | `/comprasnet-fase-externa/v1/compras/{compra}/em-selecao-fornecedores/itens/{item}/propostas?ordenacao-propostas=V` | 🔐 | não | 👁 copia · 🔁 **consulta sozinha (0.1.4)**, só nos itens da empresa |
 | Detalhes de um item | `/comprasnet-fase-externa/v1/compras/{compra}/itens/{item}/detalhamento` | 🔐 | não | — |
 | **Minha proposta no item** (posição, valores, situação, **pedido de desconto**, convocação de anexo) | `/comprasnet-fase-externa/v1/compras/{compra}/em-selecao-fornecedores/participacoes/{cnpj}/itens/{item}/propostas?filtro` | 🔐 | não | 👁 copia · 🔁 consulta sozinha (0.2) |
 | **Fase recursal do item** (prazos de intenção, recurso, **contrarrazões** e decisão; quem recorreu; texto das decisões) | `/comprasnet-fase-externa/v1/compras/{compra}/itens/{item}/fase-recursal-fornecedor/{sessao}` | 🔐 | não | 👁 copia · 🔁 consulta sozinha (0.2) |
@@ -110,8 +111,8 @@ Todas em `https://insidelicitacoes.com.br/api/sentinela/` (sem `www`: o
 | `POST captura/` | `{url, dados}`: a resposta que a página recebeu; o Licita interpreta (`apps/sentinela/ingestao.py`) | 0.1 |
 | `GET camada/{compra}/` | números da camada de disputa (teto, ideal, piso, custo, lucro) | 0.1 |
 | `GET estado/` | para o botão do topo do Licita (usuário logado, não a chave) | 0.1 |
+| `GET ronda/` | o que consultar sozinha agora: as propostas dos itens da empresa (`apps/sentinela/ronda.py`) | 0.1.4 |
 | `GET tarefas/`, `POST tarefas/{id}/` | tarefas pedidas pelo Licita (tirar favorito) | 0.2 (em espera) |
-| `GET ronda/` | o que consultar sozinha (proposta, recurso, diligências) | 0.2 (em espera) |
 
 ## Regras que não se negociam
 

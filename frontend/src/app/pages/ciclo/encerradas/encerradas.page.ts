@@ -33,6 +33,7 @@ import {
   formatarMoeda,
   normalizarTitulo,
 } from '../../oportunidades/edital-card/edital-card.utils';
+import { TorreAcoesService } from '../../torre/torre-acoes.service';
 import {
   ProcessoModalComponent,
   ProcessoModalResultado,
@@ -126,6 +127,7 @@ const COLUNAS: readonly ColunaTabela<EncerradaResponse>[] = [
 export class EncerradasPage implements OnInit {
   private readonly service = inject(EncerradasService);
   private readonly modal = inject(ModalService);
+  private readonly acoes = inject(TorreAcoesService);
   private readonly fb = inject(FormBuilder);
 
   protected readonly colunas = COLUNAS;
@@ -166,6 +168,7 @@ export class EncerradasPage implements OnInit {
   protected acoesDe(linha: EncerradaResponse): readonly ItemMenu[] {
     const itens: ItemMenu[] = [
       { rotulo: 'Ver processo', icone: 'eye', executar: () => this.verProcesso(linha) },
+      { rotulo: 'Ver relatório', icone: 'spreadsheet', executar: () => this.verRelatorio(linha) },
     ];
     if (linha.cotacao_id !== null) {
       itens.push({
@@ -183,6 +186,13 @@ export class EncerradasPage implements OnInit {
       .subscribe((resultado) => {
         if (resultado === 'cotacao') this.verCotacao(linha);
       });
+  }
+
+  /** Quem ganhou cada item, com que marca e por quanto (08/11/2026). */
+  protected verRelatorio(linha: EncerradaResponse): void {
+    this.acoes
+      .relatorio({ id: linha.id, titulo: normalizarTitulo(linha.orgao_nome || linha.objeto) })
+      .subscribe();
   }
 
   protected verCotacao(linha: EncerradaResponse): void {

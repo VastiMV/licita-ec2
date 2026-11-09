@@ -1,11 +1,14 @@
 import { COTADA, FARROUPILHA, PMDF } from './torre.testing';
 import {
+  ganhandoDoCartao,
   localDoCartao,
   moeda,
   nivelDoCartao,
   prazoDoCartao,
   resumoDoItem,
   rotaDaEtapa,
+  sinalDoItem,
+  temRelatorio,
   trilhaDoCartao,
 } from './torre.utils';
 
@@ -56,5 +59,24 @@ describe('torre.utils', () => {
       'Cotação',
       'Cadastro de proposta',
     ]);
+  });
+
+  it('👍 / 🟠 / 👎 de cada item e "ganhando 1 de 3" no cartão', () => {
+    expect(sinalDoItem(FARROUPILHA.itens[0])?.icone).toBe('👍');
+    expect(sinalDoItem({ ...PMDF.itens[0], sinal: 'proximo' })).toEqual({
+      icone: '🟠',
+      texto: 'Próximo a ser chamado',
+    });
+    expect(
+      sinalDoItem({ ...PMDF.itens[0], perdido: 'homologado para outro fornecedor' })?.texto,
+    ).toBe('Perdeu: homologado para outro fornecedor');
+    expect(sinalDoItem({ ...PMDF.itens[0], sinal: '' })).toBeNull();
+    expect(ganhandoDoCartao(PMDF)).toBe('👍 ganhando 1 de 3');
+    expect(ganhandoDoCartao({ ...PMDF, itens_com_posicao: 0 })).toBeNull();
+  });
+
+  it('relatório só do Disputar em diante, com itens', () => {
+    expect(temRelatorio(PMDF)).toBe(true);
+    expect(temRelatorio(COTADA)).toBe(false);
   });
 });

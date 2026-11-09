@@ -11,6 +11,7 @@ Toda a leitura mora aqui, em Python, testável com as respostas reais
 | `compras/{código}/participacao` | idem, de uma compra só |
 | `compras/{código}/itens/em-selecao-fornecedores?filtro=2` | os itens **da empresa**, com a proposta dela (`ItemParticipado`) |
 | `.../participacoes/{CNPJ}/itens/{n}/propostas` | a proposta da empresa num item |
+| `compras/{código}/em-selecao-fornecedores/itens/{n}/propostas` | as propostas de **todos** os participantes de um item da empresa (`PropostaDoItem`): quem está na frente, quem ganhou, marca, valor |
 
 **Captcha:** a lista de participações e a de itens são telas que pedem
 captcha. A Sentinela **nunca** gera nem resolve captcha: ela só repassa o que
@@ -30,6 +31,7 @@ from urllib.parse import parse_qs, urlsplit
 from zoneinfo import ZoneInfo
 
 from django.db import transaction
+from django.utils import timezone
 
 from apps.empresas.models import Empresa
 from apps.integracoes.clients.compras_gov import montar_link_compras_gov, montar_link_pncp
@@ -40,8 +42,9 @@ from apps.licitacoes.models import (
     ItemParticipado,
     OportunidadeSalva,
     ParticipacaoCompra,
+    PropostaDoItem,
 )
-from apps.licitacoes.torre import MODALIDADE_COMPRAS_GOV
+from apps.licitacoes.torre import MODALIDADE_COMPRAS_GOV, proposta_vencedora
 
 BRASILIA = ZoneInfo("America/Sao_Paulo")
 
@@ -57,6 +60,10 @@ ROTAS = [
             r"/itens/(?P<item>[^/]+)/propostas/?$"
         ),
         "proposta_do_item",
+    ),
+    (
+        re.compile(_BASE + r"/(?P<codigo>\d{17})/em-selecao-fornecedores/itens/(?P<item>[^/]+)/propostas/?$"),
+        "propostas_do_item",
     ),
 ]
 
@@ -161,11 +168,71 @@ def _ler_proposta_do_item(dados, params, codigo, cnpj, item, **_) -> dict:
     return {"itens": gravados}
 
 
+def _ler_propostas_do_item(dados, params, codigo, item, **_) -> dict:
+    """As propostas de todos os participantes de um item (HARs de 08/11/2026:
+    59/2026 item 1, 4 propostas; Cubatão 55/2026 item 2, 31 propostas — a
+    lista vem inteira numa resposta só, ordenada por valor).
+
+    Só vale para item em que a empresa participa: os outros não interessam
+    (e o Licita nem sabe deles). A linha da empresa também atualiza o
+    `ItemParticipado` (posição, situação, valores)."""
+
+    registros = dados if isinstance(dados, list) else [dados]
+    registro = next((r for r in registros if isinstance(r, dict)), None)
+    if registro is None:
+        raise CapturaInvalida("propostas do item: era esperado um item")
+    salva = _salva_pelo_codigo(codigo)
+    if not salva:
+        return {"propostas": 0, "motivo": "compra desconhecida: abra antes as participações"}
+    numero = str(registro.get("identificador") or registro.get("numero") or item).strip()
+    participado = ItemParticipado.objects.filter(oportunidade=salva, numero_item=numero).first()
+    if not participado:
+        return {"propostas": 0, "motivo": "item em que a empresa não participa"}
+
+    cnpjs = _cnpjs_da_empresa()
+    propostas = [p for p in registro.get("propostasItem") or [] if isinstance(p, dict)]
+    novas = []
+    for proposta in propostas:
+        participante = proposta.get("participante") or {}
+        valores = proposta.get("valores") or {}
+        cnpj = str(participante.get("identificacao") or "")[:14]
+        novas.append(
+            PropostaDoItem(
+                item=participado,
+                classificacao=proposta.get("classificacao") or None,
+                cnpj=cnpj,
+                nome=(participante.get("nome") or "")[:255],
+                uf=((participante.get("endereco") or {}).get("uf") or "")[:2],
+                marca=(proposta.get("marcaFabricante") or "").strip()[:255],
+                modelo=(proposta.get("modeloVersao") or "").strip()[:255],
+                valor_inicial=_valor(valores.get("valorPropostaInicial")),
+                valor_final=_valor(valores.get("valorPropostaInicialOuLances")),
+                situacao=str(proposta.get("situacao") or "")[:2],
+                da_empresa=cnpj in cnpjs,
+            )
+        )
+    participado.propostas.all().delete()
+    PropostaDoItem.objects.bulk_create(novas)
+
+    da_empresa = next((p for p in propostas if ((p.get("participante") or {}).get("identificacao")) in cnpjs), None)
+    if da_empresa:
+        _gravar_item(salva, {**registro, "propostaItem": da_empresa}, cnpjs)
+        participado.refresh_from_db()
+    if registro.get("homologado") is True:
+        vencedora = proposta_vencedora(novas)
+        if vencedora is not None:
+            participado.vencedor_e_a_empresa = vencedora.da_empresa
+    participado.propostas_lidas_em = timezone.now()
+    participado.save(update_fields=["vencedor_e_a_empresa", "propostas_lidas_em"])
+    return {"propostas": len(novas)}
+
+
 LEITORES = {
     "participacoes": _ler_participacoes,
     "participacao": _ler_participacao,
     "itens": _ler_itens,
     "proposta_do_item": _ler_proposta_do_item,
+    "propostas_do_item": _ler_propostas_do_item,
 }
 
 

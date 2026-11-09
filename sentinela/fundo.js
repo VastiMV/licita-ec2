@@ -1,5 +1,7 @@
-// O fundo da Sentinela: manda ao Licita o que a página capturou e, a cada
-// 3 minutos, o sinal de vida (o "vigia" do topo do Licita).
+// O fundo da Sentinela: manda ao Licita o que a página capturou; a cada
+// 3 minutos, o sinal de vida (o "vigia" do topo do Licita); a cada 10
+// minutos, em horário de trabalho, a ronda (propostas dos itens da empresa,
+// lidas na aba do Compras.gov — só endereços sem captcha).
 //
 // Configuração (opcoes.html): o endereço do Licita e a chave da Sentinela.
 // A chave é a SENTINELA_CHAVE do servidor — não é senha de ninguém.
@@ -73,14 +75,98 @@ async function vigiar() {
   );
 }
 
-chrome.runtime.onInstalled.addListener(() => {
+// Manda à aba uma lista de consultas; ela faz uma de cada vez, com pausa.
+async function executarNaAba(pedidos) {
+  const aba = await abaDoCompras();
+  if (!aba) return null;
+  try {
+    return await chrome.tabs.sendMessage(aba.id, { tipo: "executar", pedidos });
+  } catch (erro) {
+    await guardarUltimo(
+      "ultimoErro",
+      `Aba do Compras.gov não respondeu (aperte F5 nela): ${erro.message || erro}`,
+    );
+    return null;
+  }
+}
+
+function avisarSeASessaoCaiu(resultados) {
+  const falha = resultados.find(
+    (r) => r.erro === "sem_sessao" || r.status === 401,
+  );
+  if (!falha) return false;
+  const detalhe =
+    falha.erro === "sem_sessao"
+      ? "Aperte F5 na aba do Compras.gov (a Sentinela ainda não viu a sessão)"
+      : "O Compras.gov pediu login de novo";
+  pulso("sessao_caiu", detalhe);
+  return true;
+}
+
+function emHorarioDeTrabalho(agora = new Date()) {
+  const dia = agora.getDay();
+  const hora = agora.getHours();
+  return dia >= 1 && dia <= 5 && hora >= 8 && hora < 19;
+}
+
+// A ronda: a lista de propostas de cada item da empresa (sem captcha). A
+// resposta vai para o Licita como captura — a mesma leitura de quando o
+// Carlinhos abre a tela.
+async function fazerRonda(forcar = false) {
+  if (!forcar && !emHorarioDeTrabalho()) return;
+  let lista;
+  try {
+    lista = await licita("ronda/");
+  } catch (erro) {
+    await guardarUltimo("ultimoErro", String(erro.message || erro));
+    return;
+  }
+  const pedidos = (lista.consultas || []).map((caminho) => ({
+    metodo: "GET",
+    caminho,
+  }));
+  if (!pedidos.length) {
+    await guardarUltimo("ultimaRonda", "nada para conferir");
+    return;
+  }
+  const resposta = await executarNaAba(pedidos);
+  if (!resposta) {
+    await guardarUltimo("ultimaRonda", "sem aba do Compras.gov aberta");
+    return;
+  }
+  if (avisarSeASessaoCaiu(resposta.resultados)) return;
+  let enviadas = 0;
+  for (const r of resposta.resultados) {
+    if ((r.status !== 200 && r.status !== 206) || r.dados === null) continue;
+    await licita("captura/", {
+      method: "POST",
+      body: JSON.stringify({
+        url: resposta.origem + r.caminho,
+        dados: r.dados,
+        versao: VERSAO,
+      }),
+    })
+      .then(() => enviadas++)
+      .catch((erro) =>
+        guardarUltimo("ultimoErro", String(erro.message || erro)),
+      );
+  }
+  await guardarUltimo(
+    "ultimaRonda",
+    `${enviadas} de ${pedidos.length} itens conferidos`,
+  );
+}
+
+function agendar() {
   chrome.alarms.create("vigia", { periodInMinutes: 3 });
-});
-chrome.runtime.onStartup.addListener(() => {
-  chrome.alarms.create("vigia", { periodInMinutes: 3 });
-});
+  chrome.alarms.create("ronda", { periodInMinutes: 10 });
+}
+
+chrome.runtime.onInstalled.addListener(agendar);
+chrome.runtime.onStartup.addListener(agendar);
 chrome.alarms.onAlarm.addListener((alarme) => {
   if (alarme.name === "vigia") vigiar();
+  if (alarme.name === "ronda") fazerRonda();
 });
 
 // "Abrir" do Licita: abre a compra numa cópia da aba do Compras.gov que já
@@ -139,6 +225,12 @@ chrome.runtime.onMessage.addListener((mensagem, _remetente, responder) => {
         responder({ ok: false, erro: String(erro.message || erro) }),
       );
     return true; // resposta assíncrona
+  }
+  if (mensagem.tipo === "ronda_agora") {
+    fazerRonda(true)
+      .then(() => chrome.storage.local.get(["ultimaRonda", "ultimoErro"]))
+      .then((estado) => responder(estado));
+    return true;
   }
   if (mensagem.tipo === "testar") {
     vigiar()

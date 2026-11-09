@@ -105,6 +105,11 @@
   font-variant-numeric: tabular-nums;
 }
 
+.ganhando {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
 .perdendo {
   font-size: var(--font-size-xs);
   color: var(--color-muted);
