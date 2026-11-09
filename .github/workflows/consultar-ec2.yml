@@ -35,7 +35,7 @@ jobs:
         env:
           ARGUMENTO: ${{ inputs.argumento }}
         run: |
-          if ! printf '%s' "$ARGUMENTO" | grep -Eq '^[0-9]{0,17}$'; then
+          if ! [[ "$ARGUMENTO" =~ ^[0-9]{0,17}$ ]]; then
             echo "::error::O argumento só pode ter números (até 17)."
             exit 1
           fi
