@@ -346,7 +346,7 @@ class TorreTests(APITestCase):
         self.assertIsNone(self.cartao(torre, deserta))
         cartao = self.cartao(torre, suspensa)
         self.assertEqual(cartao["etapa"], "cadastro_proposta")
-        self.assertIn("suspensa", [e["texto"] for e in cartao["etiquetas"]])
+        self.assertIn("Compra suspensa", [e["texto"] for e in cartao["etiquetas"]])
 
     # -- contratar e receber ------------------------------------------------
 

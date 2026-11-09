@@ -43,9 +43,7 @@ import {
 const JANELA_PADRAO_DIAS = 90;
 
 const TOM_DO_MOTIVO: Partial<Record<EncerradaResponse['motivo'], TomCelula>> = {
-  desclassificada: 'perigo',
-  perdido_disputa: 'perigo',
-  falhou_empenho: 'perigo',
+  perdida: 'perigo',
 };
 
 /** As chaves das colunas são contrato com `ORDENACOES_ENCERRADAS` em

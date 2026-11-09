@@ -37,6 +37,7 @@ export const FARROUPILHA: CartaoTorre = {
   valor_ganho: '239980.00',
   itens_ganhando: 1,
   itens_com_posicao: 1,
+  itens_proximos: 0,
   etiquetas: [{ nivel: 'alerta', texto: 'convocação em andamento' }],
 };
 
@@ -79,6 +80,7 @@ export const PMDF: CartaoTorre = {
   valor_ganho: '15500.00',
   itens_ganhando: 1,
   itens_com_posicao: 3,
+  itens_proximos: 0,
   etiquetas: [],
 };
 

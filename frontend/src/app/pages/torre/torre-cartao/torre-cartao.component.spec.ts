@@ -46,14 +46,12 @@ describe('TorreCartaoComponent', () => {
     expect(el.querySelector('.etiqueta')?.textContent).toContain('convocação em andamento');
   });
 
-  it('com itens perdendo: o item à frente na compra e o aviso de que podem ser chamados', () => {
+  it('com itens perdendo: o item à frente na compra e quantos estão perdendo', () => {
     const el = montar(PMDF);
 
     expect(el.querySelector('.compra')?.textContent).toBe('Pregão 56/2026 · item 22');
     expect(el.querySelector('.linha')?.textContent).toBe('1 item · R$\u00a015.500,00');
-    expect(el.querySelector('.perdendo')?.textContent).toBe(
-      '2 itens perdendo (podem ser chamados)',
-    );
+    expect(el.querySelector('.perdendo')?.textContent).toBe('👎 2 perdendo');
   });
 
   it('dentro da coluna da etapa, sem a pílula repetida', () => {

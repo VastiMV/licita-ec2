@@ -76,7 +76,9 @@ class IngestaoTests(TestCase):
 
         farroupilha = OportunidadeSalva.objects.get(uasg="158127")
         self.assertIn("compra=15812705000612026", farroupilha.link_plataforma)
-        self.assertEqual(montar_torre(hoje=HOJE)["estagios"] and cartao_na_torre(farroupilha)["compra"], "Pregão 61/2026")
+        from apps.licitacoes.torre import rotulo_da_compra
+
+        self.assertEqual(rotulo_da_compra(farroupilha), "Pregão 61/2026")
 
     def test_compra_ja_salva_no_licita_nao_e_duplicada(self):
         salva = OportunidadeSalva.objects.create(
@@ -110,9 +112,24 @@ class IngestaoTests(TestCase):
 
         self.assertIsNone(OportunidadeSalva.objects.get(uasg="986371").participacao.proposta_cadastrada)
 
-    def test_depois_da_sessao_sem_itens_lidos_fica_no_quadro_pedindo_a_leitura(self):
+    def test_depois_da_sessao_sem_itens_lidos_e_sem_cotacao_vai_acompanhar_o_resultado(self):
+        """09/11/2026: em "Minhas participações", prazo passado e sem cotação no
+        Licita — ele só quer ver o resultado ("xeretar"): Encerradas."""
+
+        from apps.licitacoes.encerradas import classificar
+
         self.receber("participacoes")
         pmdf = OportunidadeSalva.objects.get(uasg="926670")
+
+        self.assertIsNone(cartao_na_torre(pmdf))
+        self.assertEqual(classificar(HOJE)[pmdf.pk][:2], ("encerradas", "acompanhando"))
+
+    def test_depois_da_sessao_com_cotacao_fica_no_quadro_pedindo_a_leitura(self):
+        from apps.cotador.models import Cotacao
+
+        self.receber("participacoes")
+        pmdf = OportunidadeSalva.objects.get(uasg="926670")
+        Cotacao.objects.create(oportunidade=pmdf)
 
         cartao = cartao_na_torre(pmdf)
 
@@ -500,14 +517,17 @@ class LixeiraERecursoTests(APITestCase):
         )
         self.assertFalse(any("captcha" in c or "em-selecao-fornecedores?" in c for c in consultas))
 
-    def test_ronda_de_descartada_so_olha_a_proposta(self):
+    def test_ronda_de_descartada_olha_a_proposta_e_o_recurso(self):
+        """Descartada fica na vigia diária: a proposta dele (convocação) e o
+        recurso — nada de diligência nem de propostas de todos."""
+
         self.descartar(self.pmdf)
 
         consultas = self.client.get("/api/sentinela/ronda/", HTTP_X_SENTINELA_CHAVE=CHAVE).data["consultas"]
 
         do_pmdf = [c for c in consultas if "92667005000562026" in c]
         self.assertTrue(do_pmdf)
-        self.assertTrue(all(c.endswith("/propostas?filtro=2") for c in do_pmdf))
+        self.assertTrue(all(c.endswith("/propostas?filtro=2") or "fase-recursal" in c for c in do_pmdf))
 
     def test_tarefa_de_desfavoritar_vai_e_volta(self):
         self.descartar(self.pmdf)

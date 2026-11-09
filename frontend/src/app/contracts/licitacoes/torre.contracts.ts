@@ -41,7 +41,7 @@ export interface ItemTorre {
   /** "Fornecedor habilitado", "Proposta aceita"… — vazio sem situação. */
   readonly situacao: string;
   readonly classificacao: number | null;
-  /** 2º lugar em diante: ainda pode ser chamado, fica em cinza. */
+  /** 2º lugar em diante (cinza). Quem é o próximo de verdade: `sinal`. */
   readonly perdendo: boolean;
   /** Por que se perdeu ("proposta desclassificada"); vazio se não. */
   readonly perdido: string;
@@ -80,6 +80,8 @@ export interface CartaoTorre {
   /** "ganhando 1 de 8": itens com 👍 e itens com posição conhecida. */
   readonly itens_ganhando: number;
   readonly itens_com_posicao: number;
+  /** 🟠 os que são o próximo a ser chamado de verdade. */
+  readonly itens_proximos: number;
   /** Já ordenadas: alerta, aviso, informação. */
   readonly etiquetas: readonly EtiquetaTorre[];
 }

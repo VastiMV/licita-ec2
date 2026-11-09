@@ -253,6 +253,20 @@ class ComprasGovClient:
             fim,
         )
 
+    def itens_de_ata_da_unidade(self, codigo_unidade: str, inicio: str, fim: str) -> list[dict[str, Any]]:
+        """Itens de atas de registro de preços de uma unidade (UASG) com
+        vigência iniciada entre `inicio` e `fim`: item, fornecedor e data de
+        assinatura. É como a vigia sabe que a ata foi assinada com outra
+        empresa (filtro testado ao vivo em 09/11/2026)."""
+
+        return self._paginar_por_periodo(
+            "/modulo-arp/2_consultarARPItem",
+            {"codigoUnidadeGerenciadora": codigo_unidade},
+            ("dataVigenciaInicialMin", "dataVigenciaInicialMax"),
+            inicio,
+            fim,
+        )
+
     def listar_itens(self, id_compra: str) -> list[dict[str, Any]]:
         """Lista os itens de uma contratação — o que efetivamente é precificado."""
 

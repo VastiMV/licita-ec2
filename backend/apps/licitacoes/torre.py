@@ -89,6 +89,11 @@ CENTAVO = Decimal("0.01")
 PLATAFORMA_COM_SENTINELA = "compras_gov"
 
 SITUACOES_QUE_ENCERRAM = {"RE": "Revogada", "AN": "Anulada", "FR": "Fracassada", "DE": "Deserta"}
+CHAVE_DA_SITUACAO = {"RE": "revogada", "AN": "anulada", "FR": "fracassada", "DE": "deserta"}
+SUSPENSA = "SU"
+# Situação da compra no PNCP (conferida 1x por dia pelo servidor).
+PNCP_SUSPENSA = "suspensa"
+PNCP_ENCERRADA = {"revogada": "Revogada (PNCP)", "anulada": "Anulada (PNCP)"}
 
 
 @dataclass(frozen=True)
@@ -116,12 +121,19 @@ def etapa_do_item(item, documentos, entregas, hoje: dt.date) -> EtapaDoItem:
     (sem item), que valem para todos os itens ganhos.
     """
 
-    if item.vencedor_e_a_empresa is False:
-        return EtapaDoItem(None, perdido="homologado para outro fornecedor")
-    if item.situacao_proposta in PROPOSTA_DESCLASSIFICADA:
-        return EtapaDoItem(None, perdido="proposta desclassificada")
-    if item.situacao_proposta == FORNECEDOR_INABILITADO:
-        return EtapaDoItem(None, perdido="fornecedor inabilitado")
+    # Convocação, pedido de desconto ou recurso em aberto: o item está vivo,
+    # mesmo que antes tenha sido dado como perdido (09/11/2026).
+    if not chamado_de_volta(item):
+        if item.vencedor_e_a_empresa is False:
+            return EtapaDoItem(None, perdido="homologado para outro fornecedor")
+        if item.situacao_proposta in PROPOSTA_DESCLASSIFICADA:
+            return EtapaDoItem(None, perdido="proposta desclassificada")
+        if item.situacao_proposta == FORNECEDOR_INABILITADO:
+            return EtapaDoItem(None, perdido="fornecedor inabilitado")
+        if item.situacao_proposta not in JA_JULGADA and primeiro_ja_habilitado(item):
+            # Na frente dele já aceitaram/habilitaram outra empresa: na prática
+            # perdeu; só volta por recurso ou se o outro não assinar (vigia).
+            return EtapaDoItem(None, perdido="1º já habilitado")
 
     tipos = _tipos(documentos)
     if "pagamento" in tipos:
@@ -211,20 +223,69 @@ def posicao_efetiva(item) -> int | None:
     return item.classificacao - caidas
 
 
+JA_JULGADA = {"3", "4", "6"}  # aceita, habilitado, adjudicada
+
+
+def _vivas_na_frente(item) -> list | None:
+    """As propostas de outras empresas na frente da dele que não caíram.
+    `None` = a lista de propostas ainda não foi lida."""
+
+    if not item.classificacao:
+        return None
+    propostas = list(item.propostas.all())
+    if not propostas:
+        return None
+    return [
+        p
+        for p in propostas
+        if not p.da_empresa
+        and p.classificacao
+        and p.classificacao < item.classificacao
+        and p.situacao not in PERDEU_A_VEZ
+    ]
+
+
+def primeiro_ja_habilitado(item) -> bool:
+    """Alguém na frente dele já foi aceito/habilitado/adjudicado."""
+
+    vivas = _vivas_na_frente(item)
+    return bool(vivas) and any(p.situacao in JA_JULGADA for p in vivas)
+
+
+def chamado_de_volta(item) -> bool:
+    """Convocação, pedido de desconto ou recurso que ainda pede resposta: o
+    item volta para a Torre, em vermelho, de onde estiver."""
+
+    if item.anexo_solicitado == "S" or (item.negociacao and item.negociacao != "E"):
+        return True
+    if getattr(item, "recursos", None):
+        if item.decisao_recurso in RECURSO_PROCEDENTE:
+            return True
+        if not item.decisao_recurso:
+            return True  # aguardando decisão
+    return False
+
+
 def sinal_do_item(item, etapa: EtapaDoItem) -> str:
-    """👍 "ganhando" (1º de verdade, ou ganhou) · 🟠 "proximo" (o próximo a ser
-    chamado) · 👎 "perdendo" (atrás disso, ou perdeu) · "" (sem posição)."""
+    """👍 "ganhando" (1º de verdade, ou ganhou) · 🟠 "proximo" (só o próximo
+    de verdade: na frente dele só sobrou quem está sendo analisado agora) ·
+    👎 "perdendo" (atrás disso, ou perdeu) · "" (sem posição).
+    Quem caiu na frente (desclassificado/inabilitado) não conta."""
 
     if etapa.etapa is None:
         return "perdendo"
     if item.vencedor_e_a_empresa or ORDEM[etapa.etapa] >= ORDEM["homologado"]:
         return "ganhando"
-    posicao = posicao_efetiva(item)
-    if posicao is None:
-        return ""
-    if posicao <= 1:
+    if item.situacao_proposta in JA_JULGADA:
         return "ganhando"
-    return "proximo" if posicao == 2 else "perdendo"
+    vivas = _vivas_na_frente(item)
+    if vivas is None:
+        if not item.classificacao:
+            return ""
+        return "ganhando" if item.classificacao <= 1 else "proximo" if item.classificacao == 2 else "perdendo"
+    if not vivas:
+        return "ganhando"
+    return "proximo" if len(vivas) == 1 else "perdendo"
 
 
 def _avisos_do_item(item, agora: dt.datetime | None = None) -> list[Etiqueta]:
@@ -283,7 +344,9 @@ def _valor_unitario(item) -> Decimal | None:
 @dataclass
 class Saida:
     para: str  # "encerradas" | "descartadas"
-    motivo: str
+    motivo: str  # o texto ("Perdida")
+    chave: str = ""  # a chave da lista (`encerradas.MOTIVOS` / `MOTIVOS_DESCARTE`)
+    data: dt.date | None = None  # quando saiu
 
 
 # Código da compra no Compras.gov: UASG (6) + modalidade (2) + número (5) + ano (4).
@@ -343,8 +406,14 @@ def _participacao_de(salva):
         return None
 
 
+def _data(momento) -> dt.date | None:
+    return timezone.localdate(momento) if momento else None
+
+
 def avaliar(salva: OportunidadeSalva, hoje: dt.date) -> tuple[dict | None, Saida | None]:
-    """O cartão da licitação na Torre, ou para onde ela saiu."""
+    """O cartão da licitação na Torre, ou para onde ela saiu (com o motivo e
+    a data). É a **única** regra: as listas de Encerradas e Descartadas e os
+    números do menu saem daqui (`encerradas.classificar`)."""
 
     participacao = _participacao_de(salva)
     itens = list(salva.itens_participados.all())
@@ -352,17 +421,38 @@ def avaliar(salva: OportunidadeSalva, hoje: dt.date) -> tuple[dict | None, Saida
     entregas = list(salva.entregas.all())
     prazo = salva.data_encerramento_proposta
     prazo_vencido = bool(prazo and prazo < hoje)
+    cotacao = _cotacao_de(salva)
 
     etiquetas: list[Etiqueta] = []
+    suspensa = salva.situacao_pncp == PNCP_SUSPENSA
     if participacao:
         if participacao.situacao_compra in SITUACOES_QUE_ENCERRAM:
-            return None, Saida("encerradas", SITUACOES_QUE_ENCERRAM[participacao.situacao_compra])
+            return None, Saida(
+                "encerradas",
+                SITUACOES_QUE_ENCERRAM[participacao.situacao_compra],
+                CHAVE_DA_SITUACAO[participacao.situacao_compra],
+                _data(participacao.atualizada_em),
+            )
         if participacao.convocacao_em_andamento:
             etiquetas.append(Etiqueta("alerta", "convocação em andamento"))
         if participacao.diligencia_em_andamento:
             etiquetas.append(Etiqueta("alerta", "diligência em andamento"))
-        if participacao.situacao_compra == "SU":
-            etiquetas.append(Etiqueta("info", "suspensa"))
+        suspensa = suspensa or participacao.situacao_compra == SUSPENSA
+    if salva.situacao_pncp in PNCP_ENCERRADA:
+        etiquetas.append(Etiqueta("alerta", PNCP_ENCERRADA[salva.situacao_pncp]))
+    if suspensa:
+        etiquetas.append(Etiqueta("aviso", "Compra suspensa"))
+    # Disputa agendada sem data (Butantan, 9/2026): o prazo passou, a sessão
+    # ainda não tem dia. A data nova vem pela Sentinela ou pelo PNCP.
+    sem_prazo = bool(
+        participacao
+        and participacao.fase_compra in FASES_COMPRA_ANTES_DA_SESSAO
+        and participacao.sessao_abre_em is None
+        and prazo_vencido
+        and not suspensa
+    )
+    if sem_prazo:
+        etiquetas.append(Etiqueta("aviso", "Sem prazo definido"))
 
     cartoes_itens = []
     etapa = None
@@ -397,22 +487,35 @@ def avaliar(salva: OportunidadeSalva, hoje: dt.date) -> tuple[dict | None, Saida
             if resultado.etapa and (etapa is None or ORDEM[resultado.etapa] > ORDEM[etapa]):
                 etapa = resultado.etapa
         if etapa is None:
-            return None, Saida("encerradas", "Perdida")
+            ultima = max((i.atualizado_em for i in itens if i.atualizado_em), default=None)
+            return None, Saida("encerradas", "Perdida", "perdida", _data(ultima) or prazo)
     elif participacao and participacao.proposta_cadastrada is False and (
         participacao.fase_compra not in FASES_COMPRA_ANTES_DA_SESSAO or prazo_vencido
-    ):
-        return None, Saida("descartadas", "Sem proposta cadastrada")
+    ) and not (suspensa or sem_prazo):
+        return None, Saida(
+            "descartadas", "Sem proposta cadastrada", "sem_proposta", _data(participacao.atualizada_em)
+        )
     elif participacao and participacao.proposta_cadastrada:
         etapa = "disputa" if participacao.fase_compra == FASE_COMPRA_EM_DISPUTA else "cadastro_proposta"
+    elif suspensa or sem_prazo:
+        # Suspensa ou sem data (09/11/2026): fica em Preparar esperando a data
+        # nova; nunca sai sozinha por prazo.
+        etapa = "cotacao" if cotacao else "oportunidade"
+    elif participacao and not cotacao and (
+        prazo_vencido or participacao.fase_compra not in FASES_COMPRA_ANTES_DA_SESSAO
+    ):
+        # Está em "Minhas participações", o prazo passou e não há cotação: ele
+        # só quer ver o resultado ("xeretar", 09/11/2026). Vai para Encerradas
+        # com relatório; se a vigia achar proposta dele, volta para a Torre.
+        return None, Saida("encerradas", "Acompanhando o resultado", "acompanhando", prazo)
     elif participacao and participacao.fase_compra not in FASES_COMPRA_ANTES_DA_SESSAO:
-        # A Sentinela viu a compra nas participações, já depois da sessão, mas
-        # ainda não leu os itens da empresa: não dá para saber se há proposta.
-        # Fica no quadro, pedindo a leitura (nunca vai sozinha para Descartadas).
+        # Com cotação, já depois da sessão, sem os itens lidos: não dá para
+        # saber se há proposta. Fica no quadro pedindo a leitura.
         etapa = "disputa" if participacao.fase_compra == FASE_COMPRA_EM_DISPUTA else "aguardando_julgamento"
         etiquetas.append(Etiqueta("aviso", "abrir a compra no Compras.gov"))
     elif prazo_vencido:
-        if not _cotacao_de(salva):
-            return None, Saida("descartadas", "Prazo venceu sem cotação")
+        if not cotacao:
+            return None, Saida("descartadas", "Prazo venceu sem cotação", "prazo_oportunidade", prazo)
         if salva.plataforma_id == PLATAFORMA_COM_SENTINELA:
             # Até a Sentinela ler o Compras.gov.br não dá para saber se a
             # proposta foi cadastrada: espera aqui em vez de ir para Descartadas.
@@ -424,9 +527,9 @@ def avaliar(salva: OportunidadeSalva, hoje: dt.date) -> tuple[dict | None, Saida
             etapa = "cadastro_proposta"
             etiquetas.append(Etiqueta("aviso", "confirmar participação"))
         else:
-            return None, Saida("descartadas", "Prazo venceu com cotação")
+            return None, Saida("descartadas", "Prazo venceu com cotação", "prazo_cotacao", prazo)
     else:
-        etapa = "cotacao" if _cotacao_de(salva) else "oportunidade"
+        etapa = "cotacao" if cotacao else "oportunidade"
 
     if ESTAGIO_DA_ETAPA[etapa] == "preparar" and salva.favorita_no_compras is False:
         # Ele tirou dos favoritos no Compras.gov (09/11/2026): o Licita avisa,
@@ -455,7 +558,7 @@ def avaliar(salva: OportunidadeSalva, hoje: dt.date) -> tuple[dict | None, Saida
         "data_encerramento_proposta": prazo,
         "valor_total_estimado": salva.valor_total_estimado,
         "link_plataforma": link_do_fornecedor(salva.link_plataforma),
-        "cotacao_id": cotacao.pk if (cotacao := _cotacao_de(salva)) else None,
+        "cotacao_id": cotacao.pk if cotacao else None,
         # Em Preparar o cartão abre os modais que já existem (visualizador da
         # oportunidade e Cotador), que precisam do registro inteiro.
         "salva": OportunidadeSalvaSerializer(salva).data if ESTAGIO_DA_ETAPA[etapa] == "preparar" else None,
@@ -464,6 +567,7 @@ def avaliar(salva: OportunidadeSalva, hoje: dt.date) -> tuple[dict | None, Saida
         # "ganhando 1 de 8": dos itens com posição conhecida.
         "itens_ganhando": sum(1 for c in cartoes_itens if c["sinal"] == "ganhando"),
         "itens_com_posicao": sum(1 for c in cartoes_itens if c["sinal"]),
+        "itens_proximos": sum(1 for c in cartoes_itens if c["sinal"] == "proximo"),
         "etiquetas": [{"nivel": e.nivel, "texto": e.texto} for e in _sem_repetir(etiquetas)],
     }
     return cartao, None
@@ -499,11 +603,9 @@ def montar_torre(hoje: dt.date | None = None) -> dict:
     )
 
     por_estagio: dict[str, list[dict]] = {chave: [] for chave, _, _ in ESTAGIOS}
-    saidas = {"encerradas": 0, "descartadas": 0}
     for salva in salvas:
         cartao, saida = avaliar(salva, hoje)
         if saida:
-            saidas[saida.para] += 1
             continue
         por_estagio[cartao["estagio"]].append(cartao)
 
@@ -526,4 +628,7 @@ def montar_torre(hoje: dt.date | None = None) -> dict:
                 "cartoes": cartoes,
             }
         )
-    return {"hoje": hoje, "estagios": estagios, "saidas": saidas}
+    from .encerradas import contar
+
+    # Os números das saídas são os das listas (a mesma regra, `classificar`).
+    return {"hoje": hoje, "estagios": estagios, "saidas": contar(hoje)}

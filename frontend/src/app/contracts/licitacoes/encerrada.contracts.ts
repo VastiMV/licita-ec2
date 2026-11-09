@@ -6,13 +6,30 @@
 
 import { OportunidadeSalvaResponse } from './oportunidade-salva.contracts';
 
-/** Encerrada é só quem participou do certame. Os motivos chegam com as
- * etapas Disputa e Empenho; até lá a lista é vazia e tudo que saiu do
- * ciclo está em Descartadas (ver `encerradas.py`). */
+/** Encerrada: quem participou do certame e saiu, ou a compra que ele só
+ * acompanha para ver o resultado ("xeretar", 09/11/2026). As chaves são as
+ * de `MOTIVOS` em `apps/licitacoes/encerradas.py`. */
 export type MotivoEncerramento =
-  'desclassificada' | 'perdido_disputa' | 'falhou_empenho' | 'concluido';
+  | 'perdida'
+  | 'acompanhando'
+  | 'revogada'
+  | 'anulada'
+  | 'fracassada'
+  | 'deserta'
+  // Os desfechos do modal do processo (`processo.model.ts`) ainda usam estes.
+  | 'desclassificada'
+  | 'perdido_disputa'
+  | 'falhou_empenho'
+  | 'concluido';
 
-export const MOTIVOS_ENCERRAMENTO: readonly { value: MotivoEncerramento; label: string }[] = [];
+export const MOTIVOS_ENCERRAMENTO: readonly { value: MotivoEncerramento; label: string }[] = [
+  { value: 'perdida', label: 'Perdida' },
+  { value: 'acompanhando', label: 'Acompanhando o resultado' },
+  { value: 'revogada', label: 'Revogada' },
+  { value: 'anulada', label: 'Anulada' },
+  { value: 'fracassada', label: 'Fracassada' },
+  { value: 'deserta', label: 'Deserta' },
+];
 
 export interface EncerradaResponse extends OportunidadeSalvaResponse {
   readonly encerrada_em: string;
@@ -59,7 +76,12 @@ export type EtapaCiclo = 'oportunidade' | 'cotacao' | 'proposta' | 'disputa' | '
  * quem tirou da lista); desclassificada, perdida na disputa, falha no
  * empenho e concluído entram com as etapas. */
 export type TipoDesfecho =
-  MotivoEncerramento | 'descartada' | 'prazo_oportunidade' | 'prazo_cotacao';
+  | MotivoEncerramento
+  | 'descartada'
+  | 'descartada_manual'
+  | 'sem_proposta'
+  | 'prazo_oportunidade'
+  | 'prazo_cotacao';
 
 export interface EventoDoProcesso {
   readonly id: number;

@@ -10,6 +10,11 @@ export const ENDPOINTS = {
     logout: 'auth/logout/',
   },
   /** O vigia da Sentinela (extensão do Chrome), para o botão do topo. */
+  /** O sino: últimas notificações e "marcar como lidas". */
+  notificacoes: {
+    lista: 'notificacoes/',
+    lidas: 'notificacoes/lidas/',
+  },
   sentinela: {
     estado: 'sentinela/estado/',
   },

@@ -297,3 +297,37 @@ Em ordem de prioridade (combinado com a operação):
 
 O plano detalhado, com caixas de seleção, está em
 [`Tarefas/feat-torre-de-controle.md`](Tarefas/feat-torre-de-controle.md).
+
+## Regras de 09/11/2026 (vigia, datas, acompanhadas e o sino)
+
+A regra de "onde está cada licitação" mora **num lugar só**: `torre.avaliar`.
+As listas de Encerradas e Descartadas e os números do menu saem dela
+(`encerradas.classificar`) — antes havia uma cópia da regra em forma de
+consulta, e o menu dizia 3 descartadas enquanto a lista mostrava 4.
+
+| Caso | Onde fica | Aviso |
+|---|---|---|
+| Compra **suspensa** (Compras.gov `SU` ou PNCP) | Preparar (Oportunidade/Cotação) | "Compra suspensa" |
+| Disputa agendada **sem data**, prazo vencido | Preparar | "Sem prazo definido" |
+| Em "Minhas participações", prazo vencido, **sem cotação** | Encerradas · "Acompanhando o resultado" (relatório para "xeretar") | — |
+| Item com o **1º já habilitado** (outra empresa) | item perdido; todos assim → Encerradas | 👎 "1º já habilitado" |
+| Item perdido com **convocação**, pedido de desconto ou **recurso** pendente/procedente | volta para a Torre, de onde estiver | vermelho |
+
+- **Sinais:** 👍 1º de verdade · 🟠 **só o próximo de verdade** (na frente dele
+  sobrou só quem está sendo analisado; quem caiu não conta) · 👎 o resto.
+- **Datas:** a Sentinela (compras favoritadas) e o PNCP (todas as de Preparar,
+  1x por dia, servidor) atualizam o prazo; a mudança vira linha no histórico
+  ("Data alterada pelo órgão: 10/11 → 17/11") e aviso no sino.
+- **Vigia de quem perdeu:** todo item em que ele deu preço segue vigiado 1x por
+  dia (proposta dele e recurso), esteja onde estiver, até a ata aparecer
+  assinada com outra empresa (Dados Abertos, por UASG) ou 180 dias depois da
+  homologação. Contrato sem ata não aparece nessa fonte: vale o limite.
+- **Acompanhadas:** os itens vêm do PNCP (`ItemAcompanhado`); as propostas, da
+  Sentinela, 1x por dia. Se aparecer proposta da Inside, o item vira dela e a
+  licitação volta para a Torre (rede de segurança).
+- **O sino** (`apps/notificacoes`): convocação, pedido de desconto, recurso,
+  data alterada, compra suspensa/revogada, fora dos favoritos, resultado de
+  item perdido/acompanhado e relatório completo. Uma notificação por fato
+  (`chave`); cada pessoa marca as suas como lidas.
+- **Conferência diária** (Celery Beat, seg–sex 7h45): `conferencia_diaria.py`.
+

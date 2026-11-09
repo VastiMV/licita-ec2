@@ -6,6 +6,7 @@ import logging
 
 from celery import shared_task
 
+from .conferencia_diaria import conferir as _conferir
 from .sincronia_pncp import sincronizar_pncp as _sincronizar_pncp
 from .sincronia_transparencia import sincronizar_transparencia as _sincronizar_transparencia
 
@@ -33,5 +34,15 @@ def sincronizar_transparencia() -> dict:
 
     resumo = _sincronizar_transparencia()
     logger.info("Portal da Transparência sincronizado: %s", resumo)
+    return resumo
+
+
+@shared_task(name="licitacoes.conferencia_diaria")
+def conferencia_diaria() -> dict:
+    """Seg–sex às 7h45 (migration `0018_agenda_conferencia_diaria`): datas e
+    situação no PNCP, itens das compras acompanhadas, fim da vigia."""
+
+    resumo = _conferir()
+    logger.info("Conferência diária: %s", resumo)
     return resumo
 

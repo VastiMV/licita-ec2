@@ -121,6 +121,7 @@
 }
 
 .sino {
+  position: relative;
   appearance: none;
   width: 44px;
   height: 44px;
@@ -190,4 +191,109 @@
   .pilula {
     padding: 0 12px;
   }
+}
+
+// O sino (09/11/2026): número vermelho com os não lidos e a lista.
+.contador {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 10px;
+  background: var(--color-danger);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 20px;
+  text-align: center;
+}
+
+.painel.avisos {
+  width: min(380px, calc(100vw - 32px));
+  max-height: 70vh;
+  overflow: auto;
+  padding: var(--space-3);
+}
+
+.avisos-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+
+  .link {
+    appearance: none;
+    border: 0;
+    background: none;
+    color: var(--color-blue);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    min-height: 32px;
+  }
+}
+
+.lista-avisos {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.aviso {
+  appearance: none;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  border: 0;
+  border-left: 4px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-fg);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--color-blue-soft);
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+
+  &.nao-lido {
+    background: var(--color-coluna);
+
+    .aviso-titulo {
+      font-weight: 700;
+    }
+  }
+
+  &[data-nivel='alerta'] {
+    border-left-color: var(--color-danger);
+  }
+
+  &[data-nivel='aviso'] {
+    border-left-color: var(--color-warn);
+  }
+
+  &[data-nivel='info'] {
+    border-left-color: var(--color-blue);
+  }
+}
+
+.aviso-texto {
+  color: var(--color-muted);
+}
+
+.aviso-quando {
+  font-size: 11px;
+  color: var(--color-muted);
 }

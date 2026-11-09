@@ -171,13 +171,21 @@ export function linhaDoCartao(cartao: CartaoTorre): string | null {
     .join(' · ');
 }
 
-/** "2 itens perdendo (podem ser chamados)" — em cinza, embaixo da linha. */
+/** "🟠 1 próximo a ser chamado · 👎 3 perdendo" — embaixo da linha. Só o
+ * próximo de verdade é 🟠 (09/11/2026): quem está em 23º enquanto analisam o
+ * 2º não "pode ser chamado" agora. */
 export function perdendoDoCartao(cartao: CartaoTorre): string | null {
-  const n = itensVivos(cartao).filter((item) => item.perdendo).length;
-  if (!n) return null;
-  return n === 1
-    ? '1 item perdendo (pode ser chamado)'
-    : `${n} itens perdendo (podem ser chamados)`;
+  const vivos = itensVivos(cartao);
+  const proximos = vivos.filter((item) => item.sinal === 'proximo').length;
+  const perdendo = vivos.filter((item) => item.perdendo && item.sinal !== 'proximo').length;
+  const partes: string[] = [];
+  if (proximos) {
+    partes.push(
+      `🟠 ${proximos} ${proximos === 1 ? 'próximo' : 'próximos'} a ser chamado${proximos === 1 ? '' : 's'}`,
+    );
+  }
+  if (perdendo) partes.push(`👎 ${perdendo} perdendo`);
+  return partes.length ? partes.join(' · ') : null;
 }
 
 /** "Proposta até 10/11" — só em Preparar. Aviso quando faltam 3 dias ou menos. */

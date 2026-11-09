@@ -179,6 +179,10 @@ class OportunidadeSalva(models.Model):
     # A compra ainda está nos favoritos do Compras.gov.br? A Sentinela confere
     # na ronda (09/11/2026). Falso = ele tirou de lá: a Torre avisa "fora dos
     # favoritos no Compras.gov" e ele decide se descarta. Nulo = não conferido.
+    # A situação da compra no PNCP, conferida pelo servidor 1x por dia
+    # (09/11/2026): suspensa, revogada ou anulada. Vazio = divulgada/normal.
+    situacao_pncp = models.CharField("situação no PNCP", max_length=12, blank=True)
+    pncp_conferido_em = models.DateTimeField("PNCP conferido em", null=True, blank=True)
     favorita_no_compras = models.BooleanField("favorita no Compras.gov", null=True, blank=True)
     favorita_conferida_em = models.DateTimeField("favorita conferida em", null=True, blank=True)
     removida_em = models.DateTimeField("removida em", null=True, blank=True)
@@ -339,6 +343,8 @@ class EventoOportunidadeSalva(models.Model):
         VOLTOU = "voltou", "Voltou para a Torre"
         # Correção de dado errado, com o porquê na descrição (09/11/2026).
         CORRECAO = "correcao", "Correção de dados"
+        # O órgão mudou o prazo da proposta ou a abertura da sessão (09/11/2026).
+        DATA_ALTERADA = "data_alterada", "Data alterada pelo órgão"
 
     oportunidade = models.ForeignKey(
         OportunidadeSalva,
@@ -546,6 +552,12 @@ class ItemParticipado(models.Model):
         help_text="Do resultado do PNCP. Nulo = sem resultado; falso = homologado para outro fornecedor.",
     )
 
+    # A vigia de quem já perdeu (09/11/2026): 1x por dia até a ata/contrato
+    # ser assinado com outra empresa, ou 180 dias depois da homologação.
+    vigiado_em = models.DateTimeField("vigiado em", null=True, blank=True)
+    vigia_encerrada_em = models.DateTimeField("vigia encerrada em", null=True, blank=True)
+    vigia_motivo = models.CharField("por que a vigia acabou", max_length=120, blank=True)
+
     propostas_lidas_em = models.DateTimeField(
         "propostas lidas em",
         null=True,
@@ -581,7 +593,21 @@ class PropostaDoItem(models.Model):
     """
 
     item = models.ForeignKey(
-        ItemParticipado, verbose_name="item", related_name="propostas", on_delete=models.CASCADE
+        ItemParticipado,
+        verbose_name="item",
+        related_name="propostas",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
+    # Ou um item de uma compra que ele só acompanha ("xeretar", 09/11/2026).
+    acompanhado = models.ForeignKey(
+        "ItemAcompanhado",
+        verbose_name="item acompanhado",
+        related_name="propostas",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
     )
     classificacao = models.PositiveIntegerField("posição", null=True, blank=True)
     cnpj = models.CharField("CNPJ/CPF", max_length=14, blank=True)
@@ -606,7 +632,38 @@ class PropostaDoItem(models.Model):
         ordering = ["item_id", "classificacao", "id"]
 
     def __str__(self) -> str:
-        return f"{self.classificacao}º {self.nome} · item {self.item.numero_item}"
+        dono = self.item or self.acompanhado
+        return f"{self.classificacao}º {self.nome} · item {dono.numero_item if dono else '?'}"
+
+
+class ItemAcompanhado(models.Model):
+    """Um item de uma compra que a empresa **acompanha sem ter dado preço**
+    (09/11/2026): está em "Minhas participações", o prazo venceu e não há
+    cotação — ele quer saber quem ganhou, com que marca e por quanto. A lista
+    de itens vem do PNCP; as propostas, da Sentinela (1x por dia)."""
+
+    oportunidade = models.ForeignKey(
+        OportunidadeSalva,
+        verbose_name="oportunidade",
+        related_name="itens_acompanhados",
+        on_delete=models.CASCADE,
+    )
+    numero_item = models.CharField("nº do item", max_length=20)
+    descricao = models.TextField("descrição", blank=True)
+    quantidade = models.DecimalField("quantidade", max_digits=16, decimal_places=4, null=True, blank=True)
+    propostas_lidas_em = models.DateTimeField("propostas lidas em", null=True, blank=True)
+    decidido = models.BooleanField("resultado saiu", default=False)
+
+    class Meta:
+        verbose_name = "item acompanhado"
+        verbose_name_plural = "itens acompanhados"
+        ordering = ["oportunidade_id", "id"]
+        constraints = [
+            models.UniqueConstraint(fields=["oportunidade", "numero_item"], name="item_acompanhado_unico")
+        ]
+
+    def __str__(self) -> str:
+        return f"Item {self.numero_item} (acompanhado) de {self.oportunidade}"
 
 
 class DocumentoFinanceiro(models.Model):

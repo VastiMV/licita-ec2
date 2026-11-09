@@ -31,6 +31,8 @@ export interface ItemDoRelatorio {
   readonly homologado: boolean;
   /** Nulo = ainda não decidido. */
   readonly empresa_venceu: boolean | null;
+  /** Item de compra que ele só acompanha ("xeretar"): sem a linha dele. */
+  readonly acompanhado: boolean;
   /** Homologado: quem ganhou. Antes disso: quem está em 1º. */
   readonly vencedor: PropostaDoRelatorio | null;
   readonly empresa: {
@@ -39,7 +41,7 @@ export interface ItemDoRelatorio {
     readonly marca: string;
     readonly modelo: string;
     readonly valor: string | null;
-  };
+  } | null;
   /** Valor da empresa − valor do vencedor (positivo = a empresa ficou acima). */
   readonly diferenca: string | null;
   readonly diferenca_percentual: string | null;
@@ -60,6 +62,7 @@ export interface RelatorioResponse {
     readonly com_propostas: number;
     readonly ganhos: number;
     readonly perdidos: number;
+    readonly acompanhados: number;
   };
 }
 

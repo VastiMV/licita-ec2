@@ -83,6 +83,12 @@ dos favoritos no Compras.gov"** nas compras de Preparar (a ronda pergunta ao
 Compras.gov quais ainda estão nos favoritos; Lavras, 60/2027, é o caso que
 motivou). Nada sai sozinho: ele decide pela lixeira.
 
+**0.2.3 (09/11/2026):** primeira ronda 1 minuto depois que o Chrome abre;
+a ronda inclui a **vigia diária** dos itens perdidos (na primeira ronda do
+dia — se o computador ligar às 10h, é às 10h; o servidor anota o dia de cada
+item, nenhum dia é pulado) e as compras que ele só acompanha. Regras em
+[`TORRE.md`](TORRE.md), "Regras de 09/11/2026".
+
 **Ainda não feito:** ler a caixa de mensagens sozinha a cada 3 min; avisar
 quando o lance digitado ficar abaixo do piso (precisa ver a tela real de
 disputa); Telegram; o sino com as mensagens.
