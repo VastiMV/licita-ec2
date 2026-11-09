@@ -1,8 +1,8 @@
 // Conferência das telas do Licita SÓ COM LEITURA (pedido de 09/11/2026).
 //
-// Não faz login: o cabeçalho `X-Licita-Leitura-Token` (a LEITURA_CHAVE do
-// servidor) chega pelo proxy do ambiente do assistente — este script nunca
-// vê a chave. A "renovação de sessão" do Licita é respondida aqui com um
+// Não faz login: a LEITURA_CHAVE do servidor chega pelo proxy do ambiente
+// do assistente (`Authorization: Bearer <chave>`, injetado no lugar do token
+// da tela) — este script nunca vê a chave. A "renovação de sessão" do Licita é respondida aqui com um
 // token de mentira só para a tela abrir; o backend autentica pela chave e
 // só aceita leitura (apps/accounts/leitura.py). Qualquer gravação → 401.
 //

@@ -42,3 +42,26 @@ class ChaveDeLeituraTests(APITestCase):
         usuario = leitura.leitor()
         self.assertFalse(usuario.is_active)
         self.assertFalse(usuario.has_usable_password())
+
+    def test_chave_no_authorization_bearer_tambem_le(self):
+        resposta = self.client.get("/api/licitacoes/torre/", HTTP_AUTHORIZATION=f"Bearer {CHAVE}")
+
+        self.assertEqual(resposta.status_code, 200)
+
+    def test_bearer_com_a_chave_nao_escreve(self):
+        resposta = self.client.post(
+            "/api/licitacoes/salvas/1/", {}, format="json", HTTP_AUTHORIZATION=f"Bearer {CHAVE}"
+        )
+
+        self.assertEqual(resposta.status_code, 401)
+
+    def test_login_normal_continua_funcionando(self):
+        from rest_framework_simplejwt.tokens import AccessToken
+
+        from .models import User
+
+        usuario = User.objects.create_user(email="op@empresa.com", password="x")
+        token = AccessToken.for_user(usuario)
+        resposta = self.client.get("/api/licitacoes/torre/", HTTP_AUTHORIZATION=f"Bearer {token}")
+
+        self.assertEqual(resposta.status_code, 200)
