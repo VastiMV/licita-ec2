@@ -274,6 +274,8 @@ def montar_processo(salva: OportunidadeSalva, hoje: dt.date | None = None) -> di
             item |= {"tipo": "prazo_encerrado", "texto": f"Prazo de proposta encerrado {sem}"}
         elif evento.tipo == Tipo.REMOVIDA:
             item |= {"tipo": "removida", "texto": "Removida da lista"}
+        elif evento.tipo == Tipo.CORRECAO:
+            item |= {"tipo": "correcao", "texto": evento.descricao or evento.get_tipo_display()}
         else:
             item |= {"tipo": evento.tipo, "texto": evento.get_tipo_display()}
         eventos.append({**item, "etapa": etapa})
