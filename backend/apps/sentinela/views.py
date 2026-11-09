@@ -1,7 +1,7 @@
 """API da Sentinela.
 
-A extensão usa a chave (`ChaveDaSentinela`): `pulso/`, `captura/` e
-`camada/<código>/`. O Licita (usuário logado) usa `estado/`.
+A extensão usa a chave (`ChaveDaSentinela`): `pulso/`, `captura/`,
+`camada/<código>/` e `ronda/`. O Licita (usuário logado) usa `estado/`.
 """
 
 from __future__ import annotations

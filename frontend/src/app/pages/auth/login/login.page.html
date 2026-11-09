@@ -9,13 +9,21 @@
       label="E-mail"
       type="email"
       formControlName="email"
-      [error]="form.controls.email.touched && form.controls.email.invalid ? 'Informe um e-mail válido.' : null"
+      [error]="
+        form.controls.email.touched && form.controls.email.invalid
+          ? 'Informe um e-mail válido.'
+          : null
+      "
     />
     <app-input-text
       label="Senha"
       type="password"
       formControlName="password"
-      [error]="form.controls.password.touched && form.controls.password.invalid ? 'Informe sua senha.' : null"
+      [error]="
+        form.controls.password.touched && form.controls.password.invalid
+          ? 'Informe sua senha.'
+          : null
+      "
     />
 
     @if (erro()) {
@@ -26,4 +34,10 @@
       {{ enviando() ? 'Entrando…' : 'Entrar' }}
     </app-button>
   </form>
+
+  <!-- O slogan do Licita (escolhido pela operação em 08/11/2026). -->
+  <div class="login-slogan">
+    <p class="slogan-principal">Do edital ao empenho, do empenho ao Pix.</p>
+    <p class="slogan-apoio">Você disputa. O Licita vigia.</p>
+  </div>
 </section>

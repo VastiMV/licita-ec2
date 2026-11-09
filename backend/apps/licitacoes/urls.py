@@ -19,6 +19,7 @@ from .views import (
     OportunidadesSalvasView,
     OportunidadesView,
     ProcessoView,
+    RelatorioView,
     TorreView,
 )
 
@@ -46,6 +47,7 @@ urlpatterns = [
     ),
     path("salvas/<int:pk>/processo/", ProcessoView.as_view(), name="licitacoes-salva-processo"),
     path("salvas/<int:pk>/descartar/", DescartarView.as_view(), name="licitacoes-salva-descartar"),
+    path("salvas/<int:pk>/relatorio/", RelatorioView.as_view(), name="licitacoes-salva-relatorio"),
     # Torre de Controle — lançamento manual do que nenhum sistema informa.
     path(
         "salvas/<int:pk>/documentos-financeiros/",

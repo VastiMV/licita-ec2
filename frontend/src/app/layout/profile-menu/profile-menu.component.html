@@ -6,7 +6,11 @@
   aria-haspopup="menu"
   aria-label="Menu de conta"
 >
-  <span class="inicial" aria-hidden="true">{{ inicial() }}</span>
+  @if (foto()) {
+    <img class="inicial foto" [src]="foto()" alt="" />
+  } @else {
+    <span class="inicial" aria-hidden="true">{{ inicial() }}</span>
+  }
 </button>
 
 @if (aberto()) {
@@ -24,6 +28,19 @@
       <app-icon name="edit" />
       Editar perfil
     </button>
+
+    <label class="dropdown-item">
+      <app-icon name="user" />
+      Trocar foto
+      <input class="sr-only" type="file" accept="image/*" (change)="escolherFoto($event)" />
+    </label>
+
+    @if (foto()) {
+      <button type="button" class="dropdown-item" (click)="tirarFoto()">
+        <app-icon name="trash" />
+        Tirar foto
+      </button>
+    }
 
     <button type="button" class="dropdown-item danger" (click)="sair()">
       <app-icon name="logout" />

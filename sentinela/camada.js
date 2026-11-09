@@ -48,8 +48,26 @@
       painel.classList.toggle("sentinela-recolhido", recolhido);
       botao.textContent = recolhido ? "+" : "–";
     });
-    topo.append(titulo, botao);
-    painel.append(topo, el("div", "sentinela-corpo"));
+    // Atualizar agora: depois de mexer na cotação no Licita.
+    const atualizar = el("button", "sentinela-recolher", "↻");
+    atualizar.type = "button";
+    atualizar.title = "Atualizar agora com a cotação do Licita";
+    atualizar.setAttribute(
+      "aria-label",
+      "Atualizar agora com a cotação do Licita",
+    );
+    atualizar.addEventListener(
+      "click",
+      () => codigoAtual && carregar(codigoAtual),
+    );
+    const botoes = el("div", "sentinela-botoes");
+    botoes.append(atualizar, botao);
+    topo.append(titulo, botoes);
+    painel.append(
+      topo,
+      el("div", "sentinela-corpo"),
+      el("p", "sentinela-hora", ""),
+    );
     document.body.append(painel);
   }
 
@@ -59,6 +77,9 @@
       `Sentinela · ${subtitulo}`;
     const corpo = painel.querySelector(".sentinela-corpo");
     corpo.replaceChildren(conteudo);
+    // Para ele saber se o número é recente (a cotação pode ter mudado no Licita).
+    painel.querySelector(".sentinela-hora").textContent =
+      `Atualizado às ${new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`;
     painel.hidden = false;
   }
 
@@ -153,6 +174,8 @@
     verificar();
     // O Compras.gov é uma página só: o endereço muda sem recarregar.
     setInterval(verificar, 1500);
+    // A cotação é lida ao abrir a compra e no F5 (pedido da operação,
+    // 08/11/2026: não precisa conferir a cada minuto). O ↻ lê na hora.
   }
 
   if (document.readyState === "loading")

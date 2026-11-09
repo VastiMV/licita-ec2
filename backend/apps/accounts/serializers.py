@@ -1,3 +1,6 @@
+import re
+import time
+
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
@@ -25,6 +28,9 @@ class LoginSerializer(TokenObtainPairSerializer):
         # permissão continua sendo do backend, isto é só para não oferecer o
         # que a pessoa não pode usar.
         token["is_superuser"] = user.is_superuser
+        # A hora da entrada: a renovação copia a claim para o refresh novo, e
+        # `RefreshView` recusa depois de `sessao_maxima_horas` (12h).
+        token["login_em"] = int(time.time())
         return token
 
 
@@ -98,7 +104,22 @@ class UsuarioSerializer(serializers.ModelSerializer):
 
 class PerfilSerializer(UsuarioSerializer):
     """O próprio usuário editando o perfil: o mesmo cadastro, mas o super
-    usuário não é dele para mudar — só aparece."""
+    usuário não é dele para mudar — só aparece. A foto vem junto (só aqui, não
+    na lista de usuários) e muda por `PUT/DELETE /api/usuarios/eu/foto/`."""
 
     class Meta(UsuarioSerializer.Meta):
-        read_only_fields = ["id", "criado_em", "is_superuser"]
+        fields = UsuarioSerializer.Meta.fields + ["foto"]
+        read_only_fields = ["id", "criado_em", "is_superuser", "foto"]
+
+
+FOTO_FORMATO = re.compile(r"^data:image/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$")
+FOTO_TAMANHO_MAXIMO = 400_000  # caracteres (~300 KB); a tela manda ~30 KB
+
+
+class FotoSerializer(serializers.Serializer):
+    foto = serializers.CharField(max_length=FOTO_TAMANHO_MAXIMO, trim_whitespace=True)
+
+    def validate_foto(self, foto: str) -> str:
+        if not FOTO_FORMATO.match(foto):
+            raise serializers.ValidationError("Envie uma imagem PNG, JPEG ou WEBP.")
+        return foto

@@ -33,6 +33,8 @@
   placeholderBusca="Busca no objeto e nos itens…"
   mensagemVazia="Nenhuma oportunidade descartada no período."
   (estadoMudou)="aoMudarEstado($event)"
+  [linhaClicavel]="true"
+  (linhaClicada)="verProcesso($event)"
 >
   <ng-template appTabelaAcoes let-linha>
     <app-menu [itens]="acoesDe(linha)" [descricao]="'Ações do processo ' + linha.chave" />

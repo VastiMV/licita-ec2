@@ -7,7 +7,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("licitacoes", "0012_lixeira_e_fase_recursal"),
+        ("licitacoes", "0015_lixeira_e_fase_recursal"),
         ("sentinela", "0001_initial"),
     ]
 

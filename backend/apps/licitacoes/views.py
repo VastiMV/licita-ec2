@@ -55,6 +55,7 @@ from .services import (
     buscar_oportunidades,
     detalhar_compra_cacheada,
 )
+from .relatorio import relatorio_da_compra
 from .torre import montar_torre
 
 # Mesma janela padrão do protótipo (`app/routers/licitacoes.py`) para o modo
@@ -471,6 +472,15 @@ class ProcessoView(APIView):
 
     def get(self, request: Request, pk: int) -> Response:
         return Response(montar_processo(get_object_or_404(OportunidadeSalva, pk=pk)))
+
+
+class RelatorioView(APIView):
+    """`GET /api/licitacoes/salvas/<id>/relatorio/` — o relatório da licitação,
+    item a item: vencedor, marca, modelo, valor e a diferença para o valor da
+    empresa (ver `relatorio.py`)."""
+
+    def get(self, request: Request, pk: int) -> Response:
+        return Response(relatorio_da_compra(get_object_or_404(OportunidadeSalva, pk=pk)))
 
 
 class _LancamentosDaSalvaView(APIView):

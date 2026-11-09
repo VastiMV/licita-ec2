@@ -220,9 +220,10 @@ salvas é uma tabela (`shared/ui/data-table`) com busca, ordenação por
 qualquer coluna e paginação — todas integradas ao endpoint, nunca em
 memória. Vencidas não aparecem (estão em Descartadas).
 
-Colunas: **UASG, modalidade, cidade, publicação, prazo da proposta e valor
-estimado**, mais um menu de ações por linha (visualizar/excluir). O objeto
-do edital **não** é coluna — é longo demais e empurrava a tabela para fora
+Colunas: **UASG, objeto (cortado em duas linhas, desde 08/11/2026),
+modalidade, cidade, publicação, prazo da proposta e valor estimado**, mais
+um menu de ações por linha (visualizar/excluir); clicar na linha abre a
+visualização. Antes de 08/11/2026 o objeto **não** era coluna — é longo demais e empurrava a tabela para fora
 da tela; ele continua sendo o que a busca varre, aparece como dica (`title`)
 na coluna de UASG e inteiro no modal. Pela mesma razão a cidade é cortada
 com reticências (a UF nunca some) e as ações ficam num menu em vez de
@@ -711,3 +712,8 @@ acima parecer estranha, a razão costuma estar aqui.
 | 08/11/2026 | **Lixeira** em todo cartão de Preparar e Disputar: uma pergunta (mostra o preço lançado), vai para **Descartadas** — que passa a aceitar quem participou quando é ele que descarta — com o motivo completo (quem, quando, etapa, preço). No Compras.gov só sai o favorito |
 | 08/11/2026 | Descartada fica em silêncio; **convocação traz de volta, em vermelho**. Tudo que pede resposta (convocação, pedido de desconto, **recurso**, diligência) é vermelho |
 | 08/11/2026 | **Recurso que ninguém viu** (56/2026, item 22, Brava Sul): a Sentinela passa a vigiar a fase recursal de cada item a cada 10 min |
+| 08/11/2026 | Slogan no login: **"Do edital ao empenho, do empenho ao Pix."** / "Você disputa. O Licita vigia." |
+| 08/11/2026 | **Login vale 12 horas** desde a entrada, mesmo com uso (`SESSAO_MAXIMA_HORAS`, claim `login_em` conferida em `RefreshView`); depois do login, abre a Torre |
+| 08/11/2026 | Cada usuário sobe a **própria foto** (menu da conta → Trocar foto); reduzida a 256×256 no navegador e guardada no cadastro (`User.foto`) |
+| 08/11/2026 | Listas de editais: **clicar em qualquer lugar da linha abre** (Salvas → card; Cotação → Cotador; Propostas → proposta; Encerradas/Descartadas → Ver processo; etapas da Torre → como o cartão). Salvas ganhou a coluna **Objeto**, cortada sem aumentar a linha |
+| 08/11/2026 | Menu: seção **Relatórios** (em breve), entre as saídas e os Cadastros |

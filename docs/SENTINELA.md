@@ -5,7 +5,8 @@ ponte entre o Compras.gov.br (a sessão **dele**, já logada) e o Licita. Sem
 ela, o estágio Disputar da Torre só anda quando o resultado sai no PNCP.
 
 Este documento junta o que foi pesquisado e decidido (07–08/11/2026) para
-quem for construir.
+quem for construir. **Todos os endereços do Compras.gov** (o que pede login,
+o que abre direto, o que pede captcha): [`COMPRAS_GOV.md`](COMPRAS_GOV.md).
 
 ## O que já existe (beta 0.1)
 
@@ -27,6 +28,10 @@ Construída em 08/11/2026. Código da extensão em [`sentinela/`](../sentinela/)
   Carlinhos abriu. Ler sozinha, de tempos em tempos, só o que não pede
   captcha (caixa de mensagens, a proposta de um item, a participação numa
   compra) — isso é a próxima etapa.
+- **A lista "Todos os itens"** (o padrão ao abrir a compra, `filtro=1`)
+  também traz a proposta da empresa dentro de cada item em que ela lançou
+  preço. Desde 08/11/2026 a Sentinela aproveita as duas listas: basta abrir
+  a compra, sem trocar o filtro.
 - **Estar em "participações" não prova proposta.** Quem prova é a lista
   "meus itens". (O Cubatão, 55/2026, que achávamos estar sem proposta, tem
   proposta no item 2, em 23º lugar — HAR de 08/11/2026. Ninguém lembrava: é
@@ -48,6 +53,35 @@ quando ele descarta no Licita. Seria a **primeira escrita** da Sentinela no
 Compras.gov — só com o clique dele, uma compra por vez, e só depois de um HAR
 mostrando o endereço que o próprio Compras.gov usa. Ver "Onde paramos" em
 `Tarefas/feat-torre-de-controle.md`.
+
+**0.1.4 (08/11/2026) — posição e relatório:** a Sentinela lê sozinha a lista
+de propostas de todos os participantes de cada item da empresa (sem captcha;
+`ronda.py`). O Licita guarda em `PropostaDoItem` e mostra:
+
+- **👍 / 🟠 / 👎** ao lado de cada item (lista da etapa) e "👍 ganhando 1 de 8"
+  no cartão. 👍 = 1º **de verdade** (descontando quem caiu na frente:
+  desclassificado ou inabilitado); 🟠 = o próximo a ser chamado (2º de
+  verdade); 👎 = atrás disso, ou perdeu (`torre.sinal_do_item`).
+- **Relatório da licitação** (botão "Relatório" na lista da etapa e "Ver
+  relatório" em Encerradas): item a item, vencedor (ou 1º), marca, modelo,
+  valor, a posição e o valor da Inside, a diferença em R$ e %, as marcas mais
+  ofertadas e a lista inteira. Valor absurdo (mais de 5× ou menos de 1/5 da
+  mediana) fica marcado e fora das contas (`relatorio.py`).
+- Item **homologado** (o campo `homologado` da lista): se a vencedora não é a
+  Inside, `vencedor_e_a_empresa = False` → item perdido; todos perdidos → a
+  licitação vai para Encerradas. Compra com itens ganhos e perdidos fica na
+  Torre (na etapa do item ganho), com os perdidos em 👎; o relatório mostra
+  todos.
+
+Ainda falta: confirmar o 🟠 com um caso real de "desclassificada" (os códigos
+vêm do manual); o painel da camada mostrar só o item aberto (precisa do HAR
+da tela de lances); relatórios gerais (seção Relatórios, com ECharts).
+
+**0.2.1 (09/11/2026) — no ar:** lixeira (descartar no Licita tira o
+favorito no Compras.gov), vigia de recurso e diligências, e o aviso **"fora
+dos favoritos no Compras.gov"** nas compras de Preparar (a ronda pergunta ao
+Compras.gov quais ainda estão nos favoritos; Lavras, 60/2027, é o caso que
+motivou). Nada sai sozinho: ele decide pela lixeira.
 
 **Ainda não feito:** ler a caixa de mensagens sozinha a cada 3 min; avisar
 quando o lance digitado ficar abaixo do piso (precisa ver a tela real de

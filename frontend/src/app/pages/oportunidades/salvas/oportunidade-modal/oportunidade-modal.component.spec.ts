@@ -159,4 +159,10 @@ describe('OportunidadeModalComponent', () => {
 
     expect(dialogRef.close).toHaveBeenCalled();
   });
+
+  it('compra sem itens guardados (trazida pela Sentinela) abre sem quebrar', () => {
+    montar({ ...SALVA, itens: [] });
+
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain(SALVA.orgao_nome);
+  });
 });

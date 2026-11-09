@@ -1,0 +1,1123 @@
+{
+ "url": "https://cnetmobile.estaleiro.serpro.gov.br/comprasnet-fase-externa/v1/compras/98637105000552026/em-selecao-fornecedores/itens/2/propostas?ordenacao-propostas=V",
+ "dados": [
+  {
+   "numero": 2,
+   "tipo": "I",
+   "criterioValor": "E",
+   "possuiOrcamentoSigiloso": false,
+   "exigenciaConteudoNacional": false,
+   "identificador": "2",
+   "tipoItemCatalogo": "M",
+   "descricao": "Cadeira De Rodas Manual Para Locomoção",
+   "criterioJulgamento": "1",
+   "homologado": false,
+   "numeroSessaoJulgHab": 2,
+   "tipoTratamentoDiferenciadoMeEpp": "1",
+   "participacaoExclusivaMeEppOuEquiparadas": true,
+   "utilizaMargemPreferencia": false,
+   "situacao": "1",
+   "fase": "JR",
+   "quantidadeSolicitada": 29,
+   "valorEstimadoUnitario": 1295.66,
+   "valorEstimadoTotal": 37574.14,
+   "possuiDiligenciaFinalizada": false,
+   "dataHoraReaberturaJulgHab": "2026-11-11T10:00:00",
+   "julgHabEncerrada": false,
+   "propostasItem": [
+    {
+     "quantidadeOfertada": 29,
+     "descricaoDetalhada": "Cadeira De Rodas Manual Para Locomoção - modelo construtivo: dobrável, c/ desengate rápido de roda, material da estrutura: liga de alumínio c/ revestimento, rodas dianteiras: rodízios, pneu maciço, rodas traseiras: rodas, pneu inflável, freios: c/ travas, assento: impermeável, encosto dorsal: fixo, apoio de braços: móvel, apoio de pés: móvel, capacidade: de 100 a 130, tamanho: adulto ",
+     "marcaFabricante": "Prolife ",
+     "modeloVersao": "Prolife ",
+     "declaracaoConteudoNacional": false,
+     "valores": {
+      "valorPropostaInicial": {
+       "valorInformado": 1295.66,
+       "valorCalculado": {
+        "valorUnitario": 1295.66,
+        "valorTotal": 37574.14
+       }
+      },
+      "valorPropostaInicialOuLances": {
+       "valorInformado": 825.04,
+       "valorCalculado": {
+        "valorUnitario": 825.04,
+        "valorTotal": 23926.16
+       }
+      }
+     },
+     "participante": {
+      "identificacao": "35569716000199",
+      "nome": "VL-LOJA DE VARIEDADES LTDA",
+      "tipo": "J",
+      "endereco": {
+       "uf": "MG"
+      }
+     },
+     "declaracaoMeEpp": true,
+     "declaracaoProgramasIntegridade": true,
+     "declaracaoEquidadeGenero": "O",
+     "canalChatAberto": false,
+     "situacaoUltimaSolicitacaoAnexos": "E",
+     "situacao": "4",
+     "classificacao": 1
+    },
+    {
+     "quantidadeOfertada": 29,
+     "marcaFabricante": "DELLAMED",
+     "modeloVersao": "D400 T44",
+     "declaracaoConteudoNacional": false,
+     "valores": {
+      "valorPropostaInicial": {
+       "valorInformado": 1295.7,
+       "valorCalculado": {
+        "valorUnitario": 1295.7,
+        "valorTotal": 37575.3
+       }
+      },
+      "valorPropostaInicialOuLances": {
+       "valorInformado": 828.5,
+       "valorCalculado": {
+        "valorUnitario": 828.5,
+        "valorTotal": 24026.5
+       }
+      }
+     },
+     "participante": {
+      "identificacao": "65248694000126",
+      "nome": "NACIONAL LICITACOES LTDA",
+      "tipo": "J",
+      "endereco": {
+       "uf": "DF"
+      }
+     },
+     "declaracaoMeEpp": true,
+     "declaracaoProgramasIntegridade": false,
+     "declaracaoEquidadeGenero": "N",
+     "canalChatAberto": false,
+     "classificacao": 2
+    },
+    {
+     "quantidadeOfertada": 29,
+     "descricaoDetalhada": "Cadeira De Rodas Manual Para Locomoção - modelo construtivo: dobrável, c/ desengate rápido de roda, material da estrutura: liga de alumínio c/ revestimento, rodas dianteiras: rodízios, pneu maciço, rodas traseiras: rodas, pneu inflável, freios: c/ travas, assento: impermeável, encosto dorsal: fixo, apoio de braços: móvel, apoio de pés: móvel, capacidade: de 100 a 130, tamanho: adulto ",
+     "marcaFabricante": "DELLAMED",
+     "modeloVersao": "D100 AÇO",
+     "declaracaoConteudoNacional": false,
+     "valores": {
+      "valorPropostaInicial": {
+       "valorInformado": 1662.0,
+       "valorCalculado": {
+        "valorUnitario": 1662.0,
+        "valorTotal": 48198.0
+       }
+      },
+      "valorPropostaInicialOuLances": {
+       "valorInformado": 831.52,
+       "valorCalculado": {
+        "valorUnitario": 831.52,
+        "valorTotal": 24114.08
+       }
+      }
+     },
+     "participante": {
+      "identificacao": "37955238000180",
+      "nome": "FUSION PRODUTOS HOSPITALARES E SAUDE LTDA",
+      "tipo": "J",
+      "endereco": {
+       "uf": "SP"
+      }
+     },
+     "declaracaoMeEpp": true,
+     "declaracaoProgramasIntegridade": false,
+     "declaracaoEquidadeGenero": "N",
+     "canalChatAberto": false,
+     "classificacao": 3
+    },
+    {
+     "quantidadeOfertada": 29,
+     "marcaFabricante": "DLM",
+     "modeloVersao": "D400 ou equivalente",
+     "declaracaoConteudoNacional": false,
+     "valores": {
+      "valorPropostaInicial": {
+       "valorInformado": 1400.0,
+       "valorCalculado": {
+        "valorUnitario": 1400.0,
+        "valorTotal": 40600.0
+       }
+      },
+      "valorPropostaInicialOuLances": {
+       "valorInformado": 960.51,
+       "valorCalculado": {
+        "valorUnitario": 960.51,
+        "valorTotal": 27854.79
+       }
+      }
+     },
+     "participante": {
+      "identificacao": "06224600000110",
+      "nome": "LICITA MOGI LTDA",
+      "tipo": "J",
+      "endereco": {
+       "uf": "SP"
+      }
+     },
+     "declaracaoMeEpp": true,
+     "declaracaoProgramasIntegridade": false,
+     "declaracaoEquidadeGenero": "N",
+     "canalChatAberto": false,
+     "classificacao": 4
+    },
+    {
+     "quantidadeOfertada": 29,
+     "marcaFabricante": "Dellamed ",
+     "modeloVersao": "D400 - T40",
+     "declaracaoConteudoNacional": false,
+     "valores": {
+      "valorPropostaInicial": {
+       "valorInformado": 1500.0,
+       "valorCalculado": {
+        "valorUnitario": 1500.0,
+        "valorTotal": 43500.0
+       }
+      },
+      "valorPropostaInicialOuLances": {
+       "valorInformado": 960.52,
+       "valorCalculado": {
+        "valorUnitario": 960.52,
+        "valorTotal": 27855.08
+       }
+      }
+     },
+     "participante": {
+      "identificacao": "64479591000104",
+      "nome": "64.479.591 WAGNER DIOGENES BAETA JUNIOR",
+      "tipo": "J",
+      "endereco": {
+       "uf": "MG"
+      }
+     },
+     "declaracaoMeEpp": true,
+     "declaracaoProgramasIntegridade": false,
+     "declaracaoEquidadeGenero": "N",
+     "canalChatAberto": false,
+     "classificacao": 5
+    },
+    {
+     "quantidadeOfertada": 29,
+     "marcaFabricante": " Dellamed",
+     "modeloVersao": " D100",
+     "declaracaoConteudoNacional": false,
+     "valores": {
+      "valorPropostaInicial": {
+       "valorInformado": 1295.0,
+       "valorCalculado": {
+        "valorUnitario": 1295.0,
+        "valorTotal": 37555.0
+       }
+      },
+      "valorPropostaInicialOuLances": {
+       "valorInformado": 967.6,
+       "valorCalculado": {
+        "valorUnitario": 967.6,
+        "valorTotal": 28060.4
+       }
+      }
+     },
+     "participante": {
+      "identificacao": "52706000000105",
+      "nome": "52.706.000 ELAINE CATUREBA DE SOUZA POUZO",
+      "tipo": "J",
+      "endereco": {
+       "uf": "SP"
+      }
+     },
+     "declaracaoMeEpp": true,
+     "declaracaoProgramasIntegridade": true,
+     "declaracaoEquidadeGenero": "P",
+     "canalChatAberto": false,
+     "classificacao": 6
+    },
+    {
+     "quantidadeOfertada": 29,
+     "marcaFabricante": "Dellamed",
+     "modeloVersao": "Dellamed",
+     "declaracaoConteudoNacional": false,
+     "valores": {
+      "valorPropostaInicial": {
+       "valorInformado": 1295.0,
+       "valorCalculado": {
+        "valorUnitario": 1295.0,
+        "valorTotal": 37555.0
+       }
+      },
+      "valorPropostaInicialOuLances": {
+       "valorInformado": 998.0,
+       "valorCalculado": {
+        "valorUnitario": 998.0,
+        "valorTotal": 28942.0
+       }
+      }
+     },
+     "participante": {
+      "identificacao": "15743182000168",
+      "nome": "KLM LTDA",
+      "tipo": "J",
+      "endereco": {
+       "uf": "SP"
+      }
+     },
+     "declaracaoMeEpp": true,
+     "declaracaoProgramasIntegridade": false,
+     "declaracaoEquidadeGenero": "N",
+     "canalChatAberto": false,
+     "classificacao": 7
+    },
+    {
+     "quantidadeOfertada": 29,
+     "marcaFabricante": "DELLAMED",
+     "modeloVersao": "D400 T 44",
+     "declaracaoConteudoNacional": false,
+     "valores": {
+      "valorPropostaInicial": {
+       "valorInformado": 1295.66,
+       "valorCalculado": {
+        "valorUnitario": 1295.66,
+        "valorTotal": 37574.14
+       }
+      },
+      "valorPropostaInicialOuLances": {
+       "valorInformado": 1000.0,
+       "valorCalculado": {
+        "valorUnitario": 1000.0,
+        "valorTotal": 29000.0
+       }
+      }
+     },
+     "participante": {
+      "identificacao": "08380296000125",
+      "nome": "VISAMED COMERCIO DE MATERIAL HOSPITALAR LTDA",
+      "tipo": "J",
+      "endereco": {
+       "uf": "MG"
+      }
+     },
+     "declaracaoMeEpp": true,
+     "declaracaoProgramasIntegridade": true,
+     "declaracaoEquidadeGenero": "O",
+     "canalChatAberto": false,
+     "classificacao": 8
+    },
+    {
+     "quantidadeOfertada": 29,
+     "marcaFabricante": "Dellamed",
+     "modeloVersao": "Cadeira de Rodas Dobrável em Aço",
+     "declaracaoConteudoNacional": false,
+     "valores": {
+      "valorPropostaInicial": {
+       "valorInformado": 1000.0,
+       "valorCalculado": {
+        "valorUnitario": 1000.0,
+        "valorTotal": 29000.0
+       }
+      },
+      "valorPropostaInicialOuLances": {
+       "valorInformado": 1000.0,
+       "valorCalculado": {
+        "valorUnitario": 1000.0,
+        "valorTotal": 29000.0
+       }
+      }
+     },
+     "participante": {
+      "identificacao": "35621227000139",
+      "nome": "FMJ CONFECCAO E COMERCIO LTDA",
+      "tipo": "J",
+      "endereco": {
+       "uf": "SP"
+      }
+     },
+     "declaracaoMeEpp": true,
+     "declaracaoProgramasIntegridade": true,
+     "declaracaoEquidadeGenero": "N",
+     "canalChatAberto": false,
+     "classificacao": 9
+    },
+    {
+     "quantidadeOfertada": 29,
+     "descricaoDetalhada": "Cadeira De Rodas Manual Para Locomoção - modelo construtivo: dobrável, c/ desengate rápido de roda, material da estrutura: liga de alumínio c/ revestimento, rodas dianteiras: rodízios, pneu maciço, rodas traseiras: rodas, pneu inflável, freios: c/ travas, assento: impermeável, encosto dorsal: fixo, apoio de braços: móvel, apoio de pés: móvel, capacidade: de 100 a 130, tamanho: adulto ",
+     "marcaFabricante": "ORTO",
+     "modeloVersao": "ADULTO",
+     "declaracaoConteudoNacional": false,
+     "valores": {
+      "valorPropostaInicial": {
+       "valorInformado": 1295.6,
+       "valorCalculado": {
+        "valorUnitario": 1295.6,
+        "valorTotal": 37572.4
+       }
+      },
+      "valorPropostaInicialOuLances": {
+       "valorInformado": 1030.55,
+       "valorCalculado": {
+        "valorUnitario": 1030.55,
+        "valorTotal": 29885.95
+       }
+      }
+     },
+     "participante": {
+      "identificacao": "17932562000176",
+      "nome": "DORAMEL LTDA",
+      "tipo": "J",
+      "endereco": {
+       "uf": "MG"
+      }
+     },
+     "declaracaoMeEpp": true,
+     "declaracaoProgramasIntegridade": true,
+     "declaracaoEquidadeGenero": "O",
+     "canalChatAberto": false,
+     "classificacao": 10
+    },
+    {
+     "quantidadeOfertada": 29,
+     "marcaFabricante": "Compatível",
+     "modeloVersao": " Cadeira De Rodas Manual Para Locomoção",
+     "declaracaoConteudoNacional": false,
+     "valores": {
+      "valorPropostaInicial": {
+       "valorInformado": 1295.66,
+       "valorCalculado": {
+        "valorUnitario": 1295.66,
+        "valorTotal": 37574.14
+       }
+      },
+      "valorPropostaInicialOuLances": {
+       "valorInformado": 1031.25,
+       "valorCalculado": {
+        "valorUnitario": 1031.25,
+        "valorTotal": 29906.25
+       }
+      }
+     },
+     "participante": {
+      "identificacao": "54279764000197",
+      "nome": "DUARTE & BARBOSA LTDA",
+      "tipo": "J",
+      "endereco": {
+       "uf": "SC"
+      }
+     },
+     "declaracaoMeEpp": true,
+     "declaracaoProgramasIntegridade": false,
+     "declaracaoEquidadeGenero": "N",
+     "canalChatAberto": false,
+     "classificacao": 11
+    },
+    {
+     "quantidadeOfertada": 29,
+     "marcaFabricante": "DELLAMED",
+     "modeloVersao": "D400",
+     "declaracaoConteudoNacional": false,
+     "valores": {
+      "valorPropostaInicial": {
+       "valorInformado": 1295.0,
+       "valorCalculado": {
+        "valorUnitario": 1295.0,
+        "valorTotal": 37555.0
+       }
+      },
+      "valorPropostaInicialOuLances": {
+       "valorInformado": 1050.0,
+       "valorCalculado": {
+        "valorUnitario": 1050.0,
+        "valorTotal": 30450.0
+       }
+      }
+     },
+     "participante": {
+      "identificacao": "30619938000155",
+      "nome": "MEDCOLI DISTRIBUIDOR DE PRODUTOS MEDICOS COZINHA E LIMPEZA LTDA",
+      "tipo": "J",
+      "endereco": {
+       "uf": "SP"
+      }
+     },
+     "declaracaoMeEpp": true,
+     "declaracaoProgramasIntegridade": false,
+     "declaracaoEquidadeGenero": "N",
+     "canalChatAberto": false,
+     "classificacao": 12
+    },
+    {
+     "quantidadeOfertada": 29,
+     "marcaFabricante": "dellamed",
+     "modeloVersao": "d400",
+     "declaracaoConteudoNacional": false,
+     "valores": {
+      "valorPropostaInicial": {
+       "valorInformado": 1295.0,
+       "valorCalculado": {
+        "valorUnitario": 1295.0,
+        "valorTotal": 37555.0
+       }
+      },
+      "valorPropostaInicialOuLances": {
+       "valorInformado": 1057.0,
+       "valorCalculado": {
+        "valorUnitario": 1057.0,
+        "valorTotal": 30653.0
+       }
+      }
+     },
+     "participante": {
+      "identificacao": "27971028000122",
+      "nome": "EQSAUDE COMERCIO DE EQUIPAMENTOS HOSPITALARES LTDA.",
+      "tipo": "J",
+      "endereco": {
+       "uf": "SP"
+      }
+     },
+     "declaracaoMeEpp": true,
+     "declaracaoProgramasIntegridade": false,
+     "declaracaoEquidadeGenero": "N",
+     "canalChatAberto": false,
+     "classificacao": 13
+    },
+    {
+     "quantidadeOfertada": 29,
+     "descricaoDetalhada": "Cadeira De Rodas Manual Para Locomoção - modelo construtivo: dobrável, c/ desengate rápido de roda, material da estrutura: liga de alumínio c/ revestimento, rodas dianteiras: rodízios, pneu maciço, rodas traseiras: rodas, pneu inflável, freios: c/ travas, assento: impermeável, encosto dorsal: fixo, apoio de braços: móvel, apoio de pés: móvel, capacidade: de 100 a 130, tamanho: adulto ",
+     "marcaFabricante": "ORTOMOBIL",
+     "modeloVersao": "OS",
+     "declaracaoConteudoNacional": false,
+     "valores": {
+      "valorPropostaInicial": {
+       "valorInformado": 1295.66,
+       "valorCalculado": {
+        "valorUnitario": 1295.66,
+        "valorTotal": 37574.14
+       }
+      },
+      "valorPropostaInicialOuLances": {
+       "valorInformado": 1079.52,
+       "valorCalculado": {
+        "valorUnitario": 1079.52,
+        "valorTotal": 31306.08
+       }
+      }
+     },
+     "participante": {
+      "identificacao": "51954194000103",
+      "nome": "ZAMPIERE VOLPATTO SOLUCOES INTEGRADAS LTDA",
+      "tipo": "J",
+      "endereco": {
+       "uf": "PR"
+      }
+     },
+     "declaracaoMeEpp": true,
+     "declaracaoProgramasIntegridade": true,
+     "declaracaoEquidadeGenero": "N",
+     "canalChatAberto": false,
+     "classificacao": 14
+    },
+    {
+     "quantidadeOfertada": 29,
+     "marcaFabricante": "DLMD",
+     "modeloVersao": "modelo construtivo: dobrável, c/ desengate rápido ",
+     "declaracaoConteudoNacional": false,
+     "valores": {
+      "valorPropostaInicial": {
+       "valorInformado": 50000.0,
+       "valorCalculado": {
+        "valorUnitario": 50000.0,
+        "valorTotal": 1450000.0
+       }
+      },
+      "valorPropostaInicialOuLances": {
+       "valorInformado": 1107.04,
+       "valorCalculado": {
+        "valorUnitario": 1107.04,
+        "valorTotal": 32104.16
+       }
+      }
+     },
+     "participante": {
+      "identificacao": "54337541000139",
+      "nome": "THIAGO VIANA FERREIRA DE LIMA",
+      "tipo": "J",
+      "endereco": {
+       "uf": "SP"
+      }
+     },
+     "declaracaoMeEpp": true,
+     "declaracaoProgramasIntegridade": false,
+     "declaracaoEquidadeGenero": "N",
+     "canalChatAberto": false,
+     "classificacao": 15
+    },
+    {
+     "quantidadeOfertada": 29,
+     "marcaFabricante": "DELLAMED",
+     "modeloVersao": "D400 + ADEQUAÇÃO",
+     "declaracaoConteudoNacional": false,
+     "valores": {
+      "valorPropostaInicial": {
+       "valorInformado": 1295.66,
+       "valorCalculado": {
+        "valorUnitario": 1295.66,
+        "valorTotal": 37574.14
+       }
+      },
+      "valorPropostaInicialOuLances": {
+       "valorInformado": 1107.05,
+       "valorCalculado": {
+        "valorUnitario": 1107.05,
+        "valorTotal": 32104.45
+       }
+      }
+     },
+     "participante": {
+      "identificacao": "46151309000183",
+      "nome": "LUZS CONSULTORIA E SOLUCOES INTEGRADAS LTDA",
+      "tipo": "J",
+      "endereco": {
+       "uf": "SP"
+      }
+     },
+     "declaracaoMeEpp": true,
+     "declaracaoProgramasIntegridade": true,
+     "declaracaoEquidadeGenero": "O",
+     "canalChatAberto": false,
+     "classificacao": 16
+    },
+    {
+     "quantidadeOfertada": 29,
+     "marcaFabricante": "DUNE",
+     "modeloVersao": "ACTIVE ADULTO NM EP",
+     "declaracaoConteudoNacional": false,
+     "valores": {
+      "valorPropostaInicial": {
+       "valorInformado": 1295.7,
+       "valorCalculado": {
+        "valorUnitario": 1295.7,
+        "valorTotal": 37575.3
+       }
+      },
+      "valorPropostaInicialOuLances": {
+       "valorInformado": 1131.05,
+       "valorCalculado": {
+        "valorUnitario": 1131.05,
+        "valorTotal": 32800.45
+       }
+      }
+     },
+     "participante": {
+      "identificacao": "58011241000116",
+      "nome": "PATERMED PRODUTOS PARA SAUDE LTDA",
+      "tipo": "J",
+      "endereco": {
+       "uf": "PR"
+      }
+     },
+     "declaracaoMeEpp": true,
+     "declaracaoProgramasIntegridade": false,
+     "declaracaoEquidadeGenero": "N",
+     "canalChatAberto": false,
+     "classificacao": 17
+    },
+    {
+     "quantidadeOfertada": 29,
+     "marcaFabricante": "DELLAMED",
+     "modeloVersao": "MANUAL",
+     "declaracaoConteudoNacional": false,
+     "valores": {
+      "valorPropostaInicial": {
+       "valorInformado": 1295.7,
+       "valorCalculado": {
+        "valorUnitario": 1295.7,
+        "valorTotal": 37575.3
+       }
+      },
+      "valorPropostaInicialOuLances": {
+       "valorInformado": 1151.0999,
+       "valorCalculado": {
+        "valorUnitario": 1151.0999,
+        "valorTotal": 33381.8971
+       }
+      }
+     },
+     "participante": {
+      "identificacao": "54823333000140",
+      "nome": "RGR ENGENHARIA DE SERVICOS LTDA",
+      "tipo": "J",
+      "endereco": {
+       "uf": "MG"
+      }
+     },
+     "declaracaoMeEpp": true,
+     "declaracaoProgramasIntegridade": true,
+     "declaracaoEquidadeGenero": "N",
+     "canalChatAberto": false,
+     "classificacao": 18
+    },
+    {
+     "quantidadeOfertada": 29,
+     "marcaFabricante": "DELLAMED",
+     "modeloVersao": "D400",
+     "declaracaoConteudoNacional": false,
+     "valores": {
+      "valorPropostaInicial": {
+       "valorInformado": 5900.0,
+       "valorCalculado": {
+        "valorUnitario": 5900.0,
+        "valorTotal": 171100.0
+       }
+      },
+      "valorPropostaInicialOuLances": {
+       "valorInformado": 1189.89,
+       "valorCalculado": {
+        "valorUnitario": 1189.89,
+        "valorTotal": 34506.81
+       }
+      }
+     },
+     "participante": {
+      "identificacao": "53640283000100",
+      "nome": "HIPER COMERCIO & SERVICOS LTDA",
+      "tipo": "J",
+      "endereco": {
+       "uf": "RJ"
+      }
+     },
+     "declaracaoMeEpp": true,
+     "declaracaoProgramasIntegridade": false,
+     "declaracaoEquidadeGenero": "N",
+     "canalChatAberto": false,
+     "classificacao": 19
+    },
+    {
+     "quantidadeOfertada": 29,
+     "marcaFabricante": "similar",
+     "modeloVersao": "similar",
+     "declaracaoConteudoNacional": false,
+     "valores": {
+      "valorPropostaInicial": {
+       "valorInformado": 1295.65,
+       "valorCalculado": {
+        "valorUnitario": 1295.65,
+        "valorTotal": 37573.85
+       }
+      },
+      "valorPropostaInicialOuLances": {
+       "valorInformado": 1189.9,
+       "valorCalculado": {
+        "valorUnitario": 1189.9,
+        "valorTotal": 34507.1
+       }
+      }
+     },
+     "participante": {
+      "identificacao": "57390381000180",
+      "nome": "JC SOLUCOES FACILITADORA DE NEGOCIOS LTDA",
+      "tipo": "J",
+      "endereco": {
+       "uf": "RS"
+      }
+     },
+     "declaracaoMeEpp": true,
+     "declaracaoProgramasIntegridade": true,
+     "declaracaoEquidadeGenero": "N",
+     "canalChatAberto": false,
+     "classificacao": 20
+    },
+    {
+     "quantidadeOfertada": 29,
+     "marcaFabricante": "similar",
+     "modeloVersao": "similar",
+     "declaracaoConteudoNacional": false,
+     "valores": {
+      "valorPropostaInicial": {
+       "valorInformado": 1295.65,
+       "valorCalculado": {
+        "valorUnitario": 1295.65,
+        "valorTotal": 37573.85
+       }
+      },
+      "valorPropostaInicialOuLances": {
+       "valorInformado": 1189.95,
+       "valorCalculado": {
+        "valorUnitario": 1189.95,
+        "valorTotal": 34508.55
+       }
+      }
+     },
+     "participante": {
+      "identificacao": "01448443000102",
+      "nome": "DROGARIA ORO LTDA.",
+      "tipo": "J",
+      "endereco": {
+       "uf": "RS"
+      }
+     },
+     "declaracaoMeEpp": true,
+     "declaracaoProgramasIntegridade": true,
+     "declaracaoEquidadeGenero": "N",
+     "canalChatAberto": false,
+     "classificacao": 21
+    },
+    {
+     "quantidadeOfertada": 29,
+     "marcaFabricante": "Prolife Plus",
+     "modeloVersao": "Prolife Plus",
+     "declaracaoConteudoNacional": false,
+     "valores": {
+      "valorPropostaInicial": {
+       "valorInformado": 1295.66,
+       "valorCalculado": {
+        "valorUnitario": 1295.66,
+        "valorTotal": 37574.14
+       }
+      },
+      "valorPropostaInicialOuLances": {
+       "valorInformado": 1190.0,
+       "valorCalculado": {
+        "valorUnitario": 1190.0,
+        "valorTotal": 34510.0
+       }
+      }
+     },
+     "participante": {
+      "identificacao": "37581390000140",
+      "nome": "3S VISION HOSPITALAR - COMERCIO ATACADISTA DE PRODUTOS HOSPITALARES E EQUIPAMENT",
+      "tipo": "J",
+      "endereco": {
+       "uf": "PR"
+      }
+     },
+     "declaracaoMeEpp": true,
+     "declaracaoProgramasIntegridade": false,
+     "declaracaoEquidadeGenero": "N",
+     "canalChatAberto": false,
+     "classificacao": 22
+    },
+    {
+     "quantidadeOfertada": 29,
+     "marcaFabricante": "Dellamed",
+     "modeloVersao": "D600",
+     "declaracaoConteudoNacional": false,
+     "valores": {
+      "valorPropostaInicial": {
+       "valorInformado": 1200.0,
+       "valorCalculado": {
+        "valorUnitario": 1200.0,
+        "valorTotal": 34800.0
+       }
+      },
+      "valorPropostaInicialOuLances": {
+       "valorInformado": 1200.0,
+       "valorCalculado": {
+        "valorUnitario": 1200.0,
+        "valorTotal": 34800.0
+       }
+      }
+     },
+     "participante": {
+      "identificacao": "22015414000127",
+      "nome": "INSIDE SOLUTIONS LTDA",
+      "tipo": "J",
+      "endereco": {
+       "uf": "SP"
+      }
+     },
+     "declaracaoMeEpp": true,
+     "declaracaoProgramasIntegridade": false,
+     "declaracaoEquidadeGenero": "N",
+     "canalChatAberto": false,
+     "classificacao": 23
+    },
+    {
+     "quantidadeOfertada": 29,
+     "marcaFabricante": "Cadeira De Rodas",
+     "modeloVersao": "Cadeira De Rodas",
+     "declaracaoConteudoNacional": false,
+     "valores": {
+      "valorPropostaInicial": {
+       "valorInformado": 1249.0,
+       "valorCalculado": {
+        "valorUnitario": 1249.0,
+        "valorTotal": 36221.0
+       }
+      },
+      "valorPropostaInicialOuLances": {
+       "valorInformado": 1249.0,
+       "valorCalculado": {
+        "valorUnitario": 1249.0,
+        "valorTotal": 36221.0
+       }
+      }
+     },
+     "participante": {
+      "identificacao": "49962490000104",
+      "nome": "LOVEMED LTDA",
+      "tipo": "J",
+      "endereco": {
+       "uf": "MG"
+      }
+     },
+     "declaracaoMeEpp": true,
+     "declaracaoProgramasIntegridade": false,
+     "declaracaoEquidadeGenero": "N",
+     "canalChatAberto": false,
+     "classificacao": 24
+    },
+    {
+     "quantidadeOfertada": 29,
+     "marcaFabricante": "DELLAMED / DELLAMED",
+     "modeloVersao": "D400 + SUPORTE PERNAS",
+     "declaracaoConteudoNacional": false,
+     "valores": {
+      "valorPropostaInicial": {
+       "valorInformado": 1295.0,
+       "valorCalculado": {
+        "valorUnitario": 1295.0,
+        "valorTotal": 37555.0
+       }
+      },
+      "valorPropostaInicialOuLances": {
+       "valorInformado": 1288.52,
+       "valorCalculado": {
+        "valorUnitario": 1288.52,
+        "valorTotal": 37367.08
+       }
+      }
+     },
+     "participante": {
+      "identificacao": "21276825000103",
+      "nome": "SILVIO VIGIDO",
+      "tipo": "J",
+      "endereco": {
+       "uf": "SP"
+      }
+     },
+     "declaracaoMeEpp": true,
+     "declaracaoProgramasIntegridade": false,
+     "declaracaoEquidadeGenero": "N",
+     "canalChatAberto": false,
+     "classificacao": 25
+    },
+    {
+     "quantidadeOfertada": 29,
+     "marcaFabricante": "modelo construtivo: dobrável, c/ desengate rápido ",
+     "modeloVersao": "modelo construtivo: dobrável, c/ desengate rápido ",
+     "declaracaoConteudoNacional": false,
+     "valores": {
+      "valorPropostaInicial": {
+       "valorInformado": 1291.99,
+       "valorCalculado": {
+        "valorUnitario": 1291.99,
+        "valorTotal": 37467.71
+       }
+      },
+      "valorPropostaInicialOuLances": {
+       "valorInformado": 1291.99,
+       "valorCalculado": {
+        "valorUnitario": 1291.99,
+        "valorTotal": 37467.71
+       }
+      }
+     },
+     "participante": {
+      "identificacao": "59126048000193",
+      "nome": "59.126.048 SILVIA ERGANG MATOS",
+      "tipo": "J",
+      "endereco": {
+       "uf": "DF"
+      }
+     },
+     "declaracaoMeEpp": true,
+     "declaracaoProgramasIntegridade": true,
+     "declaracaoEquidadeGenero": "O",
+     "canalChatAberto": false,
+     "classificacao": 26
+    },
+    {
+     "quantidadeOfertada": 29,
+     "marcaFabricante": "ORTOMOBIL",
+     "modeloVersao": "OS1 + ELEVAÇÃO DE PERNAS",
+     "declaracaoConteudoNacional": false,
+     "valores": {
+      "valorPropostaInicial": {
+       "valorInformado": 1295.0,
+       "valorCalculado": {
+        "valorUnitario": 1295.0,
+        "valorTotal": 37555.0
+       }
+      },
+      "valorPropostaInicialOuLances": {
+       "valorInformado": 1295.0,
+       "valorCalculado": {
+        "valorUnitario": 1295.0,
+        "valorTotal": 37555.0
+       }
+      }
+     },
+     "participante": {
+      "identificacao": "57464289000117",
+      "nome": "HEALTH LIFE SOLUCOES MEDICAS E ORTOPEDICAS LTDA",
+      "tipo": "J",
+      "endereco": {
+       "uf": "MG"
+      }
+     },
+     "declaracaoMeEpp": true,
+     "declaracaoProgramasIntegridade": false,
+     "declaracaoEquidadeGenero": "N",
+     "canalChatAberto": false,
+     "classificacao": 27
+    },
+    {
+     "quantidadeOfertada": 29,
+     "marcaFabricante": "Dellamed",
+     "modeloVersao": "cadeira de rodas D400 \t",
+     "declaracaoConteudoNacional": false,
+     "valores": {
+      "valorPropostaInicial": {
+       "valorInformado": 1295.65,
+       "valorCalculado": {
+        "valorUnitario": 1295.65,
+        "valorTotal": 37573.85
+       }
+      },
+      "valorPropostaInicialOuLances": {
+       "valorInformado": 1295.65,
+       "valorCalculado": {
+        "valorUnitario": 1295.65,
+        "valorTotal": 37573.85
+       }
+      }
+     },
+     "participante": {
+      "identificacao": "54879295000147",
+      "nome": "CATOTECH LTDA",
+      "tipo": "J",
+      "endereco": {
+       "uf": "RS"
+      }
+     },
+     "declaracaoMeEpp": true,
+     "declaracaoProgramasIntegridade": false,
+     "declaracaoEquidadeGenero": "N",
+     "canalChatAberto": false,
+     "classificacao": 28
+    },
+    {
+     "quantidadeOfertada": 29,
+     "marcaFabricante": "DELLAMED",
+     "modeloVersao": "D400",
+     "declaracaoConteudoNacional": false,
+     "valores": {
+      "valorPropostaInicial": {
+       "valorInformado": 1295.66,
+       "valorCalculado": {
+        "valorUnitario": 1295.66,
+        "valorTotal": 37574.14
+       }
+      },
+      "valorPropostaInicialOuLances": {
+       "valorInformado": 1295.66,
+       "valorCalculado": {
+        "valorUnitario": 1295.66,
+        "valorTotal": 37574.14
+       }
+      }
+     },
+     "participante": {
+      "identificacao": "67680402000155",
+      "nome": "MEDICAL IMPORT LTDA",
+      "tipo": "J",
+      "endereco": {
+       "uf": "PR"
+      }
+     },
+     "declaracaoMeEpp": true,
+     "declaracaoProgramasIntegridade": true,
+     "declaracaoEquidadeGenero": "O",
+     "canalChatAberto": false,
+     "classificacao": 29
+    },
+    {
+     "quantidadeOfertada": 29,
+     "marcaFabricante": "TR",
+     "modeloVersao": "TR",
+     "declaracaoConteudoNacional": false,
+     "valores": {
+      "valorPropostaInicial": {
+       "valorInformado": 1295.7,
+       "valorCalculado": {
+        "valorUnitario": 1295.7,
+        "valorTotal": 37575.3
+       }
+      },
+      "valorPropostaInicialOuLances": {
+       "valorInformado": 1295.7,
+       "valorCalculado": {
+        "valorUnitario": 1295.7,
+        "valorTotal": 37575.3
+       }
+      }
+     },
+     "participante": {
+      "identificacao": "61741106000130",
+      "nome": "GLEMAC COMERCIO E SERVICOS LTDA",
+      "tipo": "J",
+      "endereco": {
+       "uf": "SP"
+      }
+     },
+     "declaracaoMeEpp": true,
+     "declaracaoProgramasIntegridade": false,
+     "declaracaoEquidadeGenero": "N",
+     "canalChatAberto": false,
+     "classificacao": 30
+    },
+    {
+     "quantidadeOfertada": 29,
+     "marcaFabricante": "DUNE",
+     "modeloVersao": "DUNE",
+     "declaracaoConteudoNacional": false,
+     "valores": {
+      "valorPropostaInicial": {
+       "valorInformado": 199999.0,
+       "valorCalculado": {
+        "valorUnitario": 199999.0,
+        "valorTotal": 5799971.0
+       }
+      },
+      "valorPropostaInicialOuLances": {
+       "valorInformado": 199733.32,
+       "valorCalculado": {
+        "valorUnitario": 199733.32,
+        "valorTotal": 5792266.28
+       }
+      }
+     },
+     "participante": {
+      "identificacao": "51198427000187",
+      "nome": "CH TREVISAN DIAS LTDA",
+      "tipo": "J",
+      "endereco": {
+       "uf": "SP"
+      }
+     },
+     "declaracaoMeEpp": true,
+     "declaracaoProgramasIntegridade": false,
+     "declaracaoEquidadeGenero": "N",
+     "canalChatAberto": false,
+     "classificacao": 31
+    }
+   ],
+   "disputaPorValorUnitario": true
+  }
+ ]
+}

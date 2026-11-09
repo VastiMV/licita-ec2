@@ -145,6 +145,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
+        # Antes do JWT: a chave de leitura (só GET) — ver apps/accounts/leitura.py.
+        "apps.accounts.leitura.ChaveDeLeitura",
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": [
@@ -154,7 +156,11 @@ REST_FRAMEWORK = {
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=env.jwt_access_lifetime_minutes),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=env.jwt_refresh_lifetime_days),
+    # O login vale no máximo `sessao_maxima_horas` desde a entrada (claim
+    # `login_em`, conferida em `RefreshView`); o refresh nunca dura mais que isso.
+    "REFRESH_TOKEN_LIFETIME": min(
+        timedelta(days=env.jwt_refresh_lifetime_days), timedelta(hours=env.sessao_maxima_horas)
+    ),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
     "UPDATE_LAST_LOGIN": True,

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Sentinela · Licita",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Lê o Compras.gov.br na sua própria sessão e manda para o Licita. Nunca resolve captcha, nunca guarda senha, nunca escreve no Compras.gov.",
   "permissions": ["storage", "alarms", "tabs"],
   "host_permissions": [
@@ -12,7 +12,9 @@
     "http://localhost/*",
     "http://127.0.0.1/*"
   ],
-  "background": { "service_worker": "fundo.js" },
+  "background": {
+    "service_worker": "fundo.js"
+  },
   "content_scripts": [
     {
       "matches": ["https://cnetmobile.estaleiro.serpro.gov.br/*"],
@@ -24,6 +26,17 @@
       "matches": ["https://cnetmobile.estaleiro.serpro.gov.br/*"],
       "js": ["ponte.js", "camada.js"],
       "css": ["camada.css"],
+      "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "https://insidelicitacoes.com.br/*",
+        "https://www.insidelicitacoes.com.br/*",
+        "https://16-59-20-70.sslip.io/*",
+        "http://localhost/*",
+        "http://127.0.0.1/*"
+      ],
+      "js": ["licita.js"],
       "run_at": "document_start"
     }
   ],

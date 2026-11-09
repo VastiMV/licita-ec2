@@ -37,6 +37,8 @@ export const ENDPOINTS = {
     /** A história no formato do modal do processo: etapa de cada evento,
      * valores e o desfecho. */
     processo: (id: number) => `licitacoes/salvas/${id}/processo/`,
+    /** O relatório da licitação: vencedor, marca e diferença, item a item. */
+    relatorio: (id: number) => `licitacoes/salvas/${id}/relatorio/`,
   },
   /** Fabricante › Marca › Modelo e a tabela de preços (`apps/produtos`). */
   produtos: {
@@ -64,6 +66,8 @@ export const ENDPOINTS = {
     lista: 'usuarios/',
     /** O próprio perfil — qualquer usuário logado. */
     perfil: 'usuarios/eu/',
+    /** A própria foto: PUT `{foto: "data:image/jpeg;base64,…"}`, DELETE tira. */
+    foto: 'usuarios/eu/foto/',
     detalhe: (id: number) => `usuarios/${id}/`,
   },
   /** O dossiê de habilitação da empresa (`apps/documentos`) — certidões,

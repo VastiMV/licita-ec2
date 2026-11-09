@@ -1,5 +1,7 @@
-// O fundo da Sentinela: manda ao Licita o que a página capturou e, a cada
-// 3 minutos, o sinal de vida (o "vigia" do topo do Licita).
+// O fundo da Sentinela: manda ao Licita o que a página capturou; a cada
+// 3 minutos, o sinal de vida (o "vigia" do topo do Licita); a cada 10
+// minutos, em horário de trabalho, a ronda (propostas dos itens da empresa,
+// lidas na aba do Compras.gov — só endereços sem captcha).
 //
 // Configuração (opcoes.html): o endereço do Licita e a chave da Sentinela.
 // A chave é a SENTINELA_CHAVE do servidor — não é senha de ninguém.
@@ -73,13 +75,6 @@ async function vigiar() {
   );
 }
 
-// -- consultas feitas na aba do Compras.gov (com a sessão da página) ---------
-
-async function abaDoCompras() {
-  const abas = await chrome.tabs.query({ url: COMPRAS });
-  return abas[0] || null;
-}
-
 // Manda à aba uma lista de consultas; ela faz uma de cada vez, com pausa.
 async function executarNaAba(pedidos) {
   const aba = await abaDoCompras();
@@ -89,7 +84,7 @@ async function executarNaAba(pedidos) {
   } catch (erro) {
     await guardarUltimo(
       "ultimoErro",
-      `Aba do Compras.gov não respondeu: ${erro.message || erro}`,
+      `Aba do Compras.gov não respondeu (aperte F5 nela): ${erro.message || erro}`,
     );
     return null;
   }
@@ -102,7 +97,7 @@ function avisarSeASessaoCaiu(resultados) {
   if (!falha) return false;
   const detalhe =
     falha.erro === "sem_sessao"
-      ? "Abra ou atualize a aba do Compras.gov (a Sentinela ainda não viu a sessão)"
+      ? "Aperte F5 na aba do Compras.gov (a Sentinela ainda não viu a sessão)"
       : "O Compras.gov pediu login de novo";
   pulso("sessao_caiu", detalhe);
   return true;
@@ -149,11 +144,12 @@ async function fazerTarefas() {
 function emHorarioDeTrabalho(agora = new Date()) {
   const dia = agora.getDay();
   const hora = agora.getHours();
-  return dia >= 1 && dia <= 5 && hora >= 8 && hora < 18;
+  return dia >= 1 && dia <= 5 && hora >= 8 && hora < 19;
 }
 
-// A ronda: proposta, fase recursal e diligências de cada item com proposta
-// (só endereços sem captcha). A resposta vai para o Licita como captura.
+// A ronda: favoritos, proposta, recurso, diligências e as propostas de todos
+// (só endereços sem captcha; a lista vem do Licita, `ronda/`). A resposta vai
+// para o Licita como captura — a mesma leitura de quando o Carlinhos abre a tela.
 async function fazerRonda(forcar = false) {
   if (!forcar && !emHorarioDeTrabalho()) return;
   let lista;
@@ -213,7 +209,36 @@ chrome.alarms.onAlarm.addListener((alarme) => {
   if (alarme.name === "ronda") fazerRonda();
 });
 
+// "Abrir" do Licita: abre a compra numa cópia da aba do Compras.gov que já
+// está logada (a sessão do Compras.gov vale por aba). Sem aba logada, abre
+// uma aba nova — aí o Compras.gov pede login, como antes.
+async function abrirCompra(url) {
+  const aba = await abaDoCompras();
+  if (!aba) {
+    await chrome.tabs.create({ url });
+    return;
+  }
+  const copia = await chrome.tabs.duplicate(aba.id);
+  await chrome.tabs.update(copia.id, { url, active: true });
+  if (copia.windowId !== undefined)
+    await chrome.windows.update(copia.windowId, { focused: true });
+}
+
+async function abaDoCompras() {
+  const abas = await chrome.tabs.query({ url: COMPRAS });
+  // Prefere a aba logada (área do fornecedor).
+  return (
+    abas.find((a) => (a.url || "").includes("/seguro/")) || abas[0] || null
+  );
+}
+
 chrome.runtime.onMessage.addListener((mensagem, _remetente, responder) => {
+  if (mensagem.tipo === "abrir_compra") {
+    abrirCompra(mensagem.url).catch((erro) =>
+      guardarUltimo("ultimoErro", String(erro.message || erro)),
+    );
+    return false;
+  }
   if (mensagem.tipo === "captura") {
     licita("captura/", {
       method: "POST",

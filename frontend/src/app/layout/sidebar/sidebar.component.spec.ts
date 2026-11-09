@@ -39,7 +39,7 @@ describe('SidebarComponent', () => {
     fixture.detectChanges();
   });
 
-  const SECOES = ['Preparar', 'Disputar', 'Contratar', 'Receber', 'Cadastros'];
+  const SECOES = ['Preparar', 'Disputar', 'Contratar', 'Receber', 'Relatórios', 'Cadastros'];
 
   const secoes = () =>
     fixture.debugElement
@@ -83,6 +83,7 @@ describe('SidebarComponent', () => {
       'Encerradas',
       'Descartadas',
       'Propostas (PDF)',
+      'Em breve',
       'Empresas',
       'Fornecedores',
       'Produtos',
@@ -121,7 +122,7 @@ describe('SidebarComponent', () => {
     fixture = TestBed.createComponent(SidebarComponent);
     fixture.detectChanges();
 
-    expect(itens().length).toBe(21);
+    expect(itens().length).toBe(22);
   });
 
   it('Configurações só aparece para administrador', () => {

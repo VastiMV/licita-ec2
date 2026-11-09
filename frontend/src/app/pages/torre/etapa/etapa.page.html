@@ -32,17 +32,28 @@
         </thead>
         <tbody>
           @for (cartao of cartoes(); track cartao.id) {
-            <tr>
+            <!-- Clicar em qualquer lugar da linha abre (pedido de 08/11/2026);
+                 o botão "Abrir" continua para quem navega por teclado. -->
+            <tr class="clicavel" (click)="abrirLinha(cartao, $event)">
               <td>
                 <div class="orgao">{{ orgao(cartao) }}</div>
                 <div class="local">{{ local(cartao) }}</div>
                 @if (cartao.orgao_nome) {
-                  <div class="obj">{{ titulo(cartao.objeto) }}</div>
+                  <div class="obj" [attr.title]="cartao.objeto">{{ titulo(cartao.objeto) }}</div>
                 }
               </td>
               <td>
                 @for (item of cartao.itens; track item.numero) {
-                  <div [class.cinza]="item.perdendo || !!item.perdido">
+                  <div
+                    [class.cinza]="item.sinal !== 'proximo' && (item.perdendo || !!item.perdido)"
+                    [class.ganhando]="item.sinal === 'ganhando'"
+                  >
+                    @if (sinal(item); as s) {
+                      <span class="sinal" [attr.data-sinal]="item.sinal" [attr.title]="s.texto"
+                        ><span aria-hidden="true">{{ s.icone }}</span
+                        ><span class="sr-only">{{ s.texto }}:</span></span
+                      >
+                    }
                     {{ resumoDoItem(item) }}
                   </div>
                 } @empty {
@@ -65,6 +76,11 @@
               <td class="valor">{{ moeda(cartao.valor_ganho) ?? '—' }}</td>
               <td class="acoes">
                 <button type="button" class="abrir" (click)="abrir(cartao)">Abrir</button>
+                @if (temRelatorio(cartao)) {
+                  <button type="button" class="abrir relatorio" (click)="relatorio(cartao)">
+                    Relatório
+                  </button>
+                }
               </td>
             </tr>
           }

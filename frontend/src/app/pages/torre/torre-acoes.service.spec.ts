@@ -6,7 +6,7 @@ import { ModalService } from '../../shared/overlay/modal.service';
 import { ToastService } from '../../shared/ui/toast/toast.service';
 import { CotadorModalComponent } from '../oportunidades/cotador-modal/cotador-modal.component';
 import { OportunidadeModalComponent } from '../oportunidades/salvas/oportunidade-modal/oportunidade-modal.component';
-import { TorreAcoesService } from './torre-acoes.service';
+import { TorreAcoesService, abrirNoCompras } from './torre-acoes.service';
 import { COTADA, FARROUPILHA } from './torre.testing';
 
 describe('TorreAcoesService', () => {
@@ -107,6 +107,40 @@ describe('TorreAcoesService', () => {
 
       expect(torre.descartar).not.toHaveBeenCalled();
       expect(recargas).toEqual([false]);
+    });
+  });
+
+  describe('abrir no Compras.gov', () => {
+    afterEach(() => delete document.documentElement.dataset['sentinela']);
+
+    it('com a Sentinela no Chrome, pede a ela (aba logada), sem abrir aba vazia', () => {
+      document.documentElement.dataset['sentinela'] = '0.1.3';
+      const postMessage = vi.spyOn(window, 'postMessage').mockImplementation(() => undefined);
+      const open = vi.spyOn(window, 'open').mockImplementation(() => null);
+
+      abrirNoCompras('https://cnetmobile.estaleiro.serpro.gov.br/x');
+
+      expect(postMessage).toHaveBeenCalledWith(
+        {
+          licita: true,
+          tipo: 'abrir_no_compras',
+          url: 'https://cnetmobile.estaleiro.serpro.gov.br/x',
+        },
+        location.origin,
+      );
+      expect(open).not.toHaveBeenCalled();
+    });
+
+    it('sem Sentinela, abre uma aba nova como antes', () => {
+      const open = vi.spyOn(window, 'open').mockImplementation(() => null);
+
+      abrirNoCompras('https://cnetmobile.estaleiro.serpro.gov.br/x');
+
+      expect(open).toHaveBeenCalledWith(
+        'https://cnetmobile.estaleiro.serpro.gov.br/x',
+        '_blank',
+        'noopener',
+      );
     });
   });
 });

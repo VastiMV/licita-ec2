@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { EMPTY, Observable, catchError, concatMap, map, of } from 'rxjs';
 
+import { RelatorioCabecalho } from '../../contracts/licitacoes/relatorio.contracts';
 import { CartaoTorre } from '../../contracts/licitacoes/torre.contracts';
 import { OportunidadeSalvaResponse } from '../../contracts/licitacoes/oportunidade-salva.contracts';
 import { TorreService } from '../../services/licitacoes/torre.service';
@@ -15,6 +16,7 @@ import {
   OportunidadeModalComponent,
   OportunidadeModalResultado,
 } from '../oportunidades/salvas/oportunidade-modal/oportunidade-modal.component';
+import { RelatorioModalComponent } from './relatorio-modal/relatorio-modal.component';
 
 /**
  * O que acontece ao clicar num cartão da Torre — num lugar só, para o
@@ -83,10 +85,15 @@ export class TorreAcoesService {
     }
     if (cartao.cotacao_id !== null && cartao.salva) return this.cotar(cartao);
     if (cartao.link_plataforma) {
-      window.open(cartao.link_plataforma, '_blank', 'noopener');
+      abrirNoCompras(cartao.link_plataforma);
       return of(false);
     }
     return EMPTY;
+  }
+
+  /** O relatório da licitação: vencedor, marca e diferença, item a item. */
+  relatorio(cabecalho: RelatorioCabecalho): Observable<void | undefined> {
+    return this.modal.abrir<void, RelatorioCabecalho>(RelatorioModalComponent, cabecalho);
   }
 
   private cotar(cartao: CartaoTorre): Observable<boolean> {
@@ -99,4 +106,18 @@ export class TorreAcoesService {
       .abrir<unknown, CotadorModalData>(CotadorModalComponent, dados)
       .pipe(concatMap(() => of(true)));
   }
+}
+
+/**
+ * Abre a compra no Compras.gov. A sessão de lá vale **por aba**: uma aba nova
+ * cai no login. Com a Sentinela no Chrome (ela marca a página com
+ * `data-sentinela`), quem abre é ela, numa cópia da aba já logada — a aba
+ * original não é tocada. Sem Sentinela, aba nova como antes.
+ */
+export function abrirNoCompras(url: string): void {
+  if (document.documentElement.dataset['sentinela']) {
+    window.postMessage({ licita: true, tipo: 'abrir_no_compras', url }, location.origin);
+    return;
+  }
+  window.open(url, '_blank', 'noopener');
 }

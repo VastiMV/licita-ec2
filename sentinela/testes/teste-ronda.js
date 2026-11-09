@@ -71,6 +71,12 @@ const SESSAO = "Bearer TOKEN-DE-TESTE";
       }
       if (u.pathname.endsWith("/favorita") && req.method() === "DELETE")
         return route.fulfill({ status: 200, body: "" });
+      if (u.pathname.endsWith("/favoritas/dentre-opcoes"))
+        return route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: "[]",
+        });
       if (u.pathname.endsWith("/diligencias"))
         return route.fulfill({
           status: 200,

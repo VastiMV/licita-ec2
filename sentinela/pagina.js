@@ -5,9 +5,10 @@
 // 2. LEMBRA A SESSÃO: quando a página manda o cabeçalho `authorization`, guarda
 //    o valor numa variável desta função — só na memória desta aba. Nunca é
 //    gravado, nunca sai do computador, nunca vai para o Licita.
-// 3. CONSULTA SOZINHA, a pedido da ponte, só uma lista fechada de endereços
-//    que NÃO pedem captcha (proposta do item, fase recursal, diligências) e o
-//    "tirar favorito" de uma compra. Nunca toca em tela com captcha.
+// 3. CONSULTA SOZINHA, a pedido da ponte, só o que está em PERMITIDO: leituras
+//    que NÃO pedem captcha (favoritos, proposta do item, propostas de todos,
+//    fase recursal, diligências) e o "tirar favorito" de uma compra (lixeira,
+//    só com o clique de alguém). Nunca toca em tela com captcha.
 (() => {
   "use strict";
 
@@ -20,11 +21,24 @@
     /\/comprasnet-fase-externa\/v1\/compras\/\d{17}\/itens\/aguardando-abertura-sessao-publica(\/[^/]+\/itens-grupo)?\/?$/,
     /\/comprasnet-fase-externa\/v1\/compras\/\d{17}\/itens\/[^/]+\/fase-recursal-fornecedor\/\d+\/?$/,
     /\/comprasnet-fase-externa\/v1\/compras\/\d{17}\/itens\/[^/]+\/participacoes\/\d{14}\/diligencias\/?$/,
+    /\/comprasnet-fase-externa\/v1\/compras\/\d{17}\/em-selecao-fornecedores\/itens\/[^/]+\/propostas\/?$/,
+    /\/comprasnet-oportunidade\/v1\/compras\/favoritas\/dentre-opcoes\/?$/,
   ];
+
   const RETOKEN = /\/comprasnet-usuario\/v2\/sessao\/fornecedor\/retoken\/?$/;
 
   // O que a Sentinela pode consultar sozinha (nenhum pede captcha).
   const PERMITIDO = [
+    {
+      metodo: "GET",
+      padrao:
+        /^\/comprasnet-fase-externa\/v1\/compras\/\d{17}\/em-selecao-fornecedores\/itens\/[A-Za-z0-9-]+\/propostas\?ordenacao-propostas=V$/,
+    },
+    {
+      metodo: "GET",
+      padrao:
+        /^\/comprasnet-oportunidade\/v1\/compras\/favoritas\/dentre-opcoes\?compras=\d{17}(,\d{17}){0,29}$/,
+    },
     {
       metodo: "GET",
       padrao:

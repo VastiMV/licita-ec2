@@ -195,6 +195,42 @@ chave, apague a linha `SENTINELA_CHAVE` do `.env`, rode de novo o primeiro
 comando e cole a nova na extensão. Instalação da extensão:
 [`sentinela/README.md`](../../sentinela/README.md).
 
+## Conferência pelo assistente (só leitura)
+
+Desde 09/11/2026 o assistente confere o Licita no ar **sem senha de ninguém
+e sem poder mudar nada**, de dois jeitos:
+
+1. **Botão "Consultar EC2"** (GitHub → Actions → Consultar EC2 → Run
+   workflow): roda `python manage.py diagnostico` no servidor —
+   `itens-suspeitos`, `compra <código>`, `torre`, `sentinela`. Só lê. O
+   resultado fica no registro do job (visível para quem acessa o
+   repositório). Usa os mesmos segredos do deploy.
+2. **Chave de leitura** (`LEITURA_CHAVE`): com ela no cabeçalho
+   `X-Licita-Leitura-Token` ou em `Authorization: Bearer <chave>` (o formato
+   que o cofre do ambiente do assistente aceita), o Licita responde **só a consultas (GET)** como o
+   usuário "Leitura" (inativo, não faz login). Qualquer gravação com ela é
+   recusada. É o que permite ao assistente abrir as telas
+   (`deploy/conferencia/conferir-telas.js`). Criar (uma vez), no terminal do EC2:
+
+```bash
+CHAVE=$(openssl rand -hex 24); echo "LEITURA_CHAVE=$CHAVE" | sudo tee -a /opt/licita/.env > /dev/null; echo "$CHAVE"
+```
+
+```bash
+cd /opt/licita && sudo docker compose up -d --force-recreate backend worker beat
+```
+
+A chave aparece **uma vez**: cole só no formulário seguro que o assistente
+abre (cofre do ambiente dele; o proxy injeta o cabeçalho), nunca em chat.
+**Desligar:** apague a linha `LEITURA_CHAVE` do `.env` e rode o segundo
+comando.
+
+## Tempo de login
+
+O login vale **12 horas desde a entrada**, mesmo com uso (depois disso o
+Licita pede para entrar de novo). Para mudar, ponha no `.env`
+`SESSAO_MAXIMA_HORAS=<horas>` e reinicie `backend`.
+
 ## Backup do banco (automático)
 
 Todo deploy faz um backup do banco **antes** de rodar as migrações

@@ -20,8 +20,12 @@
     background var(--transition-fast),
     border-color var(--transition-fast);
 
-  &:hover {
-    background: var(--color-blue-soft);
+  border-radius: 50%;
+
+  // O círculo (foto ou inicial) já é o botão: no hover só um anel, nada de
+  // quadrado de fundo.
+  &:hover .inicial {
+    box-shadow: 0 0 0 3px var(--color-blue-soft);
   }
 
   &:focus-visible {
@@ -29,7 +33,7 @@
   }
 }
 
-// A conta: círculo escuro com a inicial (protótipo v2).
+// A conta: círculo escuro com a inicial (protótipo v2), ou a foto.
 .inicial {
   width: 44px;
   height: 44px;
@@ -123,4 +127,22 @@
     background: var(--color-danger-bg);
     color: var(--color-danger);
   }
+}
+
+.foto {
+  object-fit: cover;
+  background: var(--color-surface);
+}
+
+label.dropdown-item {
+  cursor: pointer;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }

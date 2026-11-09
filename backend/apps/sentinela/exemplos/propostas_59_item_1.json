@@ -1,0 +1,175 @@
+{
+ "url": "https://cnetmobile.estaleiro.serpro.gov.br/comprasnet-fase-externa/v1/compras/98998305000592026/em-selecao-fornecedores/itens/1/propostas?ordenacao-propostas=V",
+ "dados": [
+  {
+   "numero": 1,
+   "tipo": "I",
+   "criterioValor": "E",
+   "possuiOrcamentoSigiloso": false,
+   "exigenciaConteudoNacional": false,
+   "identificador": "1",
+   "tipoItemCatalogo": "M",
+   "descricao": "Laringoscópio",
+   "criterioJulgamento": "1",
+   "homologado": false,
+   "numeroSessaoJulgHab": 1,
+   "tipoTratamentoDiferenciadoMeEpp": "1",
+   "participacaoExclusivaMeEppOuEquiparadas": true,
+   "utilizaMargemPreferencia": false,
+   "situacao": "1",
+   "fase": "HE",
+   "quantidadeSolicitada": 3,
+   "valorEstimadoUnitario": 637.71,
+   "valorEstimadoTotal": 1913.13,
+   "possuiDiligenciaFinalizada": false,
+   "prazosFaseRecursal": {},
+   "julgHabEncerrada": true,
+   "propostasItem": [
+    {
+     "quantidadeOfertada": 3,
+     "marcaFabricante": "PRMED ",
+     "modeloVersao": "KIT",
+     "declaracaoConteudoNacional": false,
+     "valores": {
+      "valorPropostaInicial": {
+       "valorInformado": 2000.0,
+       "valorCalculado": {
+        "valorUnitario": 2000.0,
+        "valorTotal": 6000.0
+       }
+      },
+      "valorPropostaInicialOuLances": {
+       "valorInformado": 410.0,
+       "valorCalculado": {
+        "valorUnitario": 410.0,
+        "valorTotal": 1230.0
+       }
+      }
+     },
+     "participante": {
+      "identificacao": "67680402000155",
+      "nome": "MEDICAL IMPORT LTDA",
+      "tipo": "J",
+      "endereco": {
+       "uf": "PR"
+      }
+     },
+     "declaracaoMeEpp": true,
+     "declaracaoProgramasIntegridade": true,
+     "declaracaoEquidadeGenero": "O",
+     "canalChatAberto": false,
+     "situacaoUltimaSolicitacaoAnexos": "E",
+     "situacao": "4",
+     "classificacao": 1
+    },
+    {
+     "quantidadeOfertada": 3,
+     "marcaFabricante": "DOCTOR DEVICES / DOCTOR DEVICES - PAQUISTÃO",
+     "modeloVersao": "FIBRA ÓPTICA",
+     "declaracaoConteudoNacional": false,
+     "valores": {
+      "valorPropostaInicial": {
+       "valorInformado": 635.0,
+       "valorCalculado": {
+        "valorUnitario": 635.0,
+        "valorTotal": 1905.0
+       }
+      },
+      "valorPropostaInicialOuLances": {
+       "valorInformado": 420.0,
+       "valorCalculado": {
+        "valorUnitario": 420.0,
+        "valorTotal": 1260.0
+       }
+      }
+     },
+     "participante": {
+      "identificacao": "34680592000151",
+      "nome": "BRASIL DEVICES EQUIPAMENTOS HOSPITALARES LTDA",
+      "tipo": "J",
+      "endereco": {
+       "uf": "PR"
+      }
+     },
+     "declaracaoMeEpp": true,
+     "declaracaoProgramasIntegridade": false,
+     "declaracaoEquidadeGenero": "N",
+     "canalChatAberto": false,
+     "classificacao": 2
+    },
+    {
+     "quantidadeOfertada": 3,
+     "marcaFabricante": "MD / KIT",
+     "modeloVersao": "MD / KIT",
+     "declaracaoConteudoNacional": false,
+     "valores": {
+      "valorPropostaInicial": {
+       "valorInformado": 637.71,
+       "valorCalculado": {
+        "valorUnitario": 637.71,
+        "valorTotal": 1913.13
+       }
+      },
+      "valorPropostaInicialOuLances": {
+       "valorInformado": 469.99,
+       "valorCalculado": {
+        "valorUnitario": 469.99,
+        "valorTotal": 1409.97
+       }
+      }
+     },
+     "participante": {
+      "identificacao": "57498660000161",
+      "nome": "STARMEDICAL IMPORTACAO E EXPORTACAO DE PRODUTOS HOSPITALARES LTDA",
+      "tipo": "J",
+      "endereco": {
+       "uf": "PR"
+      }
+     },
+     "declaracaoMeEpp": true,
+     "declaracaoProgramasIntegridade": false,
+     "declaracaoEquidadeGenero": "N",
+     "canalChatAberto": false,
+     "classificacao": 3
+    },
+    {
+     "quantidadeOfertada": 3,
+     "descricaoDetalhada": "Laringoscópio - Laringoscópio, Tipo Lâmpada:De Fibra Ótica, Componentes:C/ 5 Lâminas, Componentes Adicionais:C/Cabo, Material 2:Em Aço Inoxidável, Tamanho Cabo:Adulto, Embalagem*:C/ Estojo, Características Adicionais*:Compatível C/ Ambiente Ressonância Magnética - Mri ",
+     "marcaFabricante": "DYASIST",
+     "modeloVersao": "AD 5 LAM",
+     "declaracaoConteudoNacional": false,
+     "valores": {
+      "valorPropostaInicial": {
+       "valorInformado": 1300.0,
+       "valorCalculado": {
+        "valorUnitario": 1300.0,
+        "valorTotal": 3900.0
+       }
+      },
+      "valorPropostaInicialOuLances": {
+       "valorInformado": 470.0,
+       "valorCalculado": {
+        "valorUnitario": 470.0,
+        "valorTotal": 1410.0
+       }
+      }
+     },
+     "participante": {
+      "identificacao": "54322844000188",
+      "nome": "ITAPEMED IMPORTADORA E EXPORTADORA DE EQUIPAMENTOS HOSPITALARES LTDA",
+      "tipo": "J",
+      "endereco": {
+       "uf": "SC"
+      }
+     },
+     "declaracaoMeEpp": true,
+     "declaracaoProgramasIntegridade": true,
+     "declaracaoEquidadeGenero": "O",
+     "canalChatAberto": false,
+     "classificacao": 4
+    }
+   ],
+   "disputaPorValorUnitario": true
+  }
+ ]
+}

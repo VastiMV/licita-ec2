@@ -88,6 +88,23 @@ tbody tr:last-child td {
 
 .acoes {
   text-align: right;
+  white-space: nowrap;
+
+  .abrir + .abrir {
+    margin-left: 6px;
+  }
+}
+
+// O item em que ele está ganhando salta aos olhos (08/11/2026).
+.ganhando {
+  font-weight: 700;
+}
+
+// 👍 / 🟠 / 👎: o emoji fica com a cor dele, mesmo com o item em cinza.
+.sinal {
+  display: inline-block;
+  min-width: 1.4em;
+  font-size: 1.05em;
 }
 
 .abrir {
@@ -119,4 +136,21 @@ tbody tr:last-child td {
 
 .sr-only {
   @include visually-hidden;
+}
+
+tr.clicavel {
+  cursor: pointer;
+
+  &:hover td {
+    background: var(--color-coluna);
+  }
+}
+
+// O objeto em até duas linhas, como nas outras listas (08/11/2026): o texto
+// inteiro fica na dica.
+.obj {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
 }

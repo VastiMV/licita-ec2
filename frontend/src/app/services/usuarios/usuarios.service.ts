@@ -28,6 +28,15 @@ export class UsuariosService {
     return this.api.put<UsuarioResponse, UsuarioRequest>(ENDPOINTS.usuarios.detalhe(id), usuario);
   }
 
+  /** A própria foto, já reduzida (ver `reduzirFoto`). */
+  trocarFoto(foto: string): Observable<UsuarioResponse> {
+    return this.api.put<UsuarioResponse, { foto: string }>(ENDPOINTS.usuarios.foto, { foto });
+  }
+
+  tirarFoto(): Observable<UsuarioResponse> {
+    return this.api.delete<UsuarioResponse>(ENDPOINTS.usuarios.foto);
+  }
+
   perfil(): Observable<UsuarioResponse> {
     return this.api.get<UsuarioResponse>(ENDPOINTS.usuarios.perfil);
   }

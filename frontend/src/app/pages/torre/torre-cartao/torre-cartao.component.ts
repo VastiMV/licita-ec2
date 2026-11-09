@@ -4,6 +4,7 @@ import { CartaoTorre } from '../../../contracts/licitacoes/torre.contracts';
 import { IconComponent } from '../../../shared/ui/icon/icon.component';
 import {
   compraDoCartao,
+  ganhandoDoCartao,
   linhaDoCartao,
   localDoCartao,
   nivelDoCartao,
@@ -47,6 +48,7 @@ export class TorreCartaoComponent {
   protected readonly compra = computed(() => compraDoCartao(this.cartao()));
   protected readonly linha = computed(() => linhaDoCartao(this.cartao()));
   protected readonly perdendo = computed(() => perdendoDoCartao(this.cartao()));
+  protected readonly ganhando = computed(() => ganhandoDoCartao(this.cartao()));
   protected readonly trilha = computed(() => trilhaDoCartao(this.cartao()));
   protected readonly prazo = computed(() => prazoDoCartao(this.cartao()));
 }

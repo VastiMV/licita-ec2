@@ -19,6 +19,8 @@
   placeholderBusca="Busca na descrição e nos itens…"
   mensagemVazia="Nenhuma proposta. Gere uma no Cotador (Ciclo de Licitação / Cotador)."
   (estadoMudou)="aoMudarEstado($event)"
+  [linhaClicavel]="true"
+  (linhaClicada)="abrir($event)"
 >
   <ng-template appTabelaAcoes let-linha>
     <app-menu [itens]="acoesDe(linha)" [descricao]="'Ações da proposta ' + linha.chave" />

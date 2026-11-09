@@ -1,0 +1,60 @@
+name: Consultar EC2
+
+# Consultas de conferência no Licita em produção — SÓ LEITURA. Roda
+# `python manage.py diagnostico` (backend/apps/licitacoes/management/commands/diagnostico.py)
+# dentro do backend no EC2 e mostra o resultado no registro deste job.
+# Mesmos segredos do deploy (EC2_HOST, EC2_SSH_KEY). Nada aqui grava no banco.
+on:
+  workflow_dispatch:
+    inputs:
+      consulta:
+        description: "O que consultar"
+        type: choice
+        options:
+          - itens-suspeitos
+          - compra
+          - torre
+          - sentinela
+      argumento:
+        description: "Para 'compra': o código de 17 dígitos ou o id da salva"
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group: consultar-ec2
+  cancel-in-progress: false
+
+jobs:
+  consultar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Conferir a entrada
+        env:
+          ARGUMENTO: ${{ inputs.argumento }}
+        run: |
+          if ! [[ "$ARGUMENTO" =~ ^[0-9]{0,17}$ ]]; then
+            echo "::error::O argumento só pode ter números (até 17)."
+            exit 1
+          fi
+
+      - name: Chave SSH
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$EC2_SSH_KEY" > ~/.ssh/ec2.pem
+          chmod 600 ~/.ssh/ec2.pem
+          ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Consultar
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          CONSULTA: ${{ inputs.consulta }}
+          ARGUMENTO: ${{ inputs.argumento }}
+        run: |
+          ssh -i ~/.ssh/ec2.pem "ubuntu@$EC2_HOST" \
+            "cd /opt/licita && sudo docker compose exec -T backend python manage.py diagnostico $CONSULTA $ARGUMENTO"

@@ -19,6 +19,7 @@ Toda a leitura mora aqui, em Python, testável com as respostas reais
 atualizando os fatos dela em silêncio, mas ela fica em Descartadas — **exceto
 convocação** (anexo pedido ou chamada de remanescente): aí volta para a Torre
 (`lixeira.voltar_por_convocacao`).
+| `compras/{código}/em-selecao-fornecedores/itens/{n}/propostas` | as propostas de **todos** os participantes de um item da empresa (`PropostaDoItem`): quem está na frente, quem ganhou, marca, valor |
 
 **Captcha:** a lista de participações e a de itens são telas que pedem
 captcha. A Sentinela **nunca** gera nem resolve captcha: ela só repassa o que
@@ -38,6 +39,7 @@ from urllib.parse import parse_qs, urlsplit
 from zoneinfo import ZoneInfo
 
 from django.db import transaction
+from django.utils import timezone
 
 from apps.empresas.models import Empresa
 from apps.integracoes.clients.compras_gov import montar_link_compras_gov, montar_link_pncp
@@ -48,8 +50,9 @@ from apps.licitacoes.models import (
     ItemParticipado,
     OportunidadeSalva,
     ParticipacaoCompra,
+    PropostaDoItem,
 )
-from apps.licitacoes.torre import MODALIDADE_COMPRAS_GOV
+from apps.licitacoes.torre import MODALIDADE_COMPRAS_GOV, proposta_vencedora
 
 BRASILIA = ZoneInfo("America/Sao_Paulo")
 
@@ -80,6 +83,11 @@ ROTAS = [
         ),
         "diligencias",
     ),
+    (
+        re.compile(_BASE + r"/(?P<codigo>\d{17})/em-selecao-fornecedores/itens/(?P<item>[^/]+)/propostas/?$"),
+        "propostas_do_item",
+    ),
+    (re.compile(r"/comprasnet-oportunidade/v1/compras/favoritas/dentre-opcoes/?$"), "favoritas"),
 ]
 
 SITUACOES_DA_COMPRA = {c.value for c in ParticipacaoCompra.Situacao}
@@ -135,10 +143,17 @@ def _ler_participacao(dados, params, codigo, **_) -> dict:
 
 
 def _ler_itens(dados, params, codigo, **_) -> dict:
-    """Só a lista "meus itens" (`filtro=2`) diz o que é da empresa."""
+    """A lista de itens da compra, nos dois filtros da tela:
 
-    if params.get("filtro") != "2":
-        return {"itens": 0, "motivo": "lista de todos os itens (filtro≠2) não diz quais são da empresa"}
+    - **"Itens em que estou participando"** (`filtro=2`): só os itens da
+      empresa. Primeira página vazia = participa sem proposta.
+    - **"Todos os itens"** (`filtro=1`, o padrão ao abrir a compra): traz a
+      proposta da empresa **dentro** de cada item em que ela lançou preço
+      (HARs de 08/11/2026: 61 com os itens 11, 12, 22, 24–27; 56 com 6 e 9;
+      Cubatão com o 2). Só esses entram. Uma página sem proposta não prova
+      nada — a lista vem de 10 em 10.
+    """
+
     if not isinstance(dados, list):
         raise CapturaInvalida("itens: era esperada uma lista")
     salva = _salva_pelo_codigo(codigo)
@@ -146,10 +161,20 @@ def _ler_itens(dados, params, codigo, **_) -> dict:
         return {"itens": 0, "motivo": "compra desconhecida: abra antes as participações"}
 
     cnpjs = _cnpjs_da_empresa()
-    gravados = sum(_gravar_item(salva, item, cnpjs) for item in dados)
+    so_da_empresa = params.get("filtro") == "2"
+    if so_da_empresa:
+        gravados = sum(_gravar_item(salva, item, cnpjs) for item in dados)
+    else:
+        com_proposta = [
+            item
+            for item in dados
+            if isinstance(item, dict)
+            and ((item.get("propostaItem") or {}).get("participante") or {}).get("identificacao") in cnpjs
+        ]
+        gravados = sum(_gravar_item(salva, item, cnpjs) for item in com_proposta)
     primeira_pagina = params.get("pagina", "0") in ("0", "")
-    if gravados or primeira_pagina:
-        # Com item, há proposta. Primeira página vazia: participa sem proposta.
+    if gravados or (so_da_empresa and primeira_pagina):
+        # Com item, há proposta. "Meus itens" vazio na primeira página: sem proposta.
         _marcar_proposta(salva, bool(gravados))
     _talvez_voltar(salva)
     return {"itens": gravados}
@@ -235,6 +260,88 @@ def _ler_diligencias(dados, params, codigo, item, cnpj, **_) -> dict:
     return {"itens": 1, "diligencias": len(abertas)}
 
 
+def _ler_propostas_do_item(dados, params, codigo, item, **_) -> dict:
+    """As propostas de todos os participantes de um item (HARs de 08/11/2026:
+    59/2026 item 1, 4 propostas; Cubatão 55/2026 item 2, 31 propostas — a
+    lista vem inteira numa resposta só, ordenada por valor).
+
+    Só vale para item em que a empresa participa: os outros não interessam
+    (e o Licita nem sabe deles). A linha da empresa também atualiza o
+    `ItemParticipado` (posição, situação, valores)."""
+
+    registros = dados if isinstance(dados, list) else [dados]
+    registro = next((r for r in registros if isinstance(r, dict)), None)
+    if registro is None:
+        raise CapturaInvalida("propostas do item: era esperado um item")
+    salva = _salva_pelo_codigo(codigo)
+    if not salva:
+        return {"propostas": 0, "motivo": "compra desconhecida: abra antes as participações"}
+    numero = str(registro.get("identificador") or registro.get("numero") or item).strip()
+    participado = ItemParticipado.objects.filter(oportunidade=salva, numero_item=numero).first()
+    if not participado:
+        return {"propostas": 0, "motivo": "item em que a empresa não participa"}
+
+    cnpjs = _cnpjs_da_empresa()
+    propostas = [p for p in registro.get("propostasItem") or [] if isinstance(p, dict)]
+    novas = []
+    for proposta in propostas:
+        participante = proposta.get("participante") or {}
+        valores = proposta.get("valores") or {}
+        cnpj = str(participante.get("identificacao") or "")[:14]
+        novas.append(
+            PropostaDoItem(
+                item=participado,
+                classificacao=proposta.get("classificacao") or None,
+                cnpj=cnpj,
+                nome=(participante.get("nome") or "")[:255],
+                uf=((participante.get("endereco") or {}).get("uf") or "")[:2],
+                marca=(proposta.get("marcaFabricante") or "").strip()[:255],
+                modelo=(proposta.get("modeloVersao") or "").strip()[:255],
+                valor_inicial=_valor(valores.get("valorPropostaInicial")),
+                valor_final=_valor(valores.get("valorPropostaInicialOuLances")),
+                situacao=str(proposta.get("situacao") or "")[:2],
+                da_empresa=cnpj in cnpjs,
+            )
+        )
+    participado.propostas.all().delete()
+    PropostaDoItem.objects.bulk_create(novas)
+
+    da_empresa = next((p for p in propostas if ((p.get("participante") or {}).get("identificacao")) in cnpjs), None)
+    if da_empresa:
+        _gravar_item(salva, {**registro, "propostaItem": da_empresa}, cnpjs)
+        participado.refresh_from_db()
+    if registro.get("homologado") is True:
+        vencedora = proposta_vencedora(novas)
+        if vencedora is not None:
+            participado.vencedor_e_a_empresa = vencedora.da_empresa
+    participado.propostas_lidas_em = timezone.now()
+    participado.save(update_fields=["vencedor_e_a_empresa", "propostas_lidas_em"])
+    return {"propostas": len(novas)}
+
+
+def _ler_favoritas(dados, params, **_) -> dict:
+    """"Destas compras, quais estão nos favoritos?" — a resposta é a lista das
+    que estão (HAR de 08/11/2026: `["98637105000552026"]`). A que foi
+    perguntada e não voltou saiu dos favoritos no Compras.gov.br."""
+
+    if not isinstance(dados, list):
+        raise CapturaInvalida("favoritas: era esperada uma lista")
+    perguntadas = {c for c in (params.get("compras") or "").split(",") if re.fullmatch(r"\d{17}", c)}
+    favoritas = {str(c) for c in dados}
+    agora = timezone.now()
+    mudou = 0
+    for codigo in perguntadas:
+        salva = _salva_pelo_codigo(codigo)
+        if not salva:
+            continue
+        favorita = codigo in favoritas
+        mudou += int(salva.favorita_no_compras is not favorita)
+        salva.favorita_no_compras = favorita
+        salva.favorita_conferida_em = agora
+        salva.save(update_fields=["favorita_no_compras", "favorita_conferida_em"])
+    return {"conferidas": len(perguntadas), "fora": len(perguntadas - favoritas), "mudaram": mudou}
+
+
 LEITORES = {
     "participacoes": _ler_participacoes,
     "participacao": _ler_participacao,
@@ -243,6 +350,8 @@ LEITORES = {
     "itens_antes_da_sessao": _ler_itens_antes_da_sessao,
     "fase_recursal": _ler_fase_recursal,
     "diligencias": _ler_diligencias,
+    "propostas_do_item": _ler_propostas_do_item,
+    "favoritas": _ler_favoritas,
 }
 
 
@@ -393,7 +502,14 @@ def _gravar_item(salva: OportunidadeSalva, item: dict, cnpjs: set[str]) -> int:
 
     proposta = item.get("propostaItem") or {}
     participante = (proposta.get("participante") or {}).get("identificacao")
+    # Só com a proposta **da empresa** na resposta. Abrir no Compras.gov um
+    # item em que ela não entrou devolve o item sem proposta nenhuma — e isso
+    # virava item da empresa (59/2026, item 1; corrigido em 09/11/2026).
+    # Antes da sessão a proposta vem sem o CNPJ (só a própria empresa a vê):
+    # vale se tiver preço. Com CNPJ, tem que ser o da empresa.
     if participante and participante not in cnpjs:
+        return 0
+    if not participante and not (proposta.get("valores") or {}).get("valorPropostaInicial"):
         return 0
     numero = str(item.get("identificador") or item.get("numero") or "").strip()
     if not numero:

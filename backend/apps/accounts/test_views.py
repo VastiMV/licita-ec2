@@ -1,3 +1,4 @@
+import time
 import base64
 import json
 
@@ -88,6 +89,28 @@ class RefreshViewTests(APITestCase):
         self.assertIn("access", response.data)
         refresh_novo = response.cookies[REFRESH_COOKIE_NAME].value
         self.assertNotEqual(refresh_novo, refresh_antigo)
+
+    def test_renovar_nao_estica_o_login_alem_de_12_horas(self):
+        """Pedido da operação (08/11/2026): o login vale 12 horas desde a
+        entrada, mesmo com uso — a renovação guarda a hora da entrada."""
+
+        from unittest import mock
+
+        self._login()
+        agora = time.time()
+        with mock.patch("apps.accounts.views.time.time", return_value=agora + 11 * 3600):
+            self.assertEqual(self.client.post("/api/auth/refresh/").status_code, 200)
+        with mock.patch("apps.accounts.views.time.time", return_value=agora + 12 * 3600 + 60):
+            response = self.client.post("/api/auth/refresh/")
+
+        self.assertEqual(response.status_code, 401)
+        self.assertIn("12 horas", response.data["detail"])
+        self.assertEqual(response.cookies[REFRESH_COOKIE_NAME].value, "")
+
+    def test_refresh_dura_no_maximo_12_horas(self):
+        from django.conf import settings
+
+        self.assertLessEqual(settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"].total_seconds(), 12 * 3600)
 
     def test_refresh_com_cookie_invalido_devolve_401_e_limpa_cookie(self):
         self.client.cookies[REFRESH_COOKIE_NAME] = "token-invalido"

@@ -37,12 +37,19 @@ const COLUNAS: readonly ColunaTabela<OportunidadeSalvaResponse>[] = [
     titulo: 'UASG',
     valor: (salva) => salva.uasg || '—',
     secundario: (salva) => salva.orgao_nome || null,
-    // O objeto saiu da tabela (gastava a largura toda), mas continua sendo
-    // o que identifica a oportunidade — fica na dica da primeira coluna e
-    // inteiro no modal.
-    dica: (salva) => salva.objeto || null,
     // Sem `umaLinha`: o nome da unidade embaixo precisa quebrar, senão
     // estica a tabela (igual a Encerradas).
+  },
+  {
+    // O objeto voltou (pedido da operação, 08/11/2026), mas cortado em duas
+    // linhas: nunca aumenta a altura da linha — a UASG com o órgão embaixo
+    // já ocupa isso. O texto inteiro fica na dica e no card.
+    chave: 'objeto',
+    titulo: 'Objeto',
+    valor: (salva) => normalizarTitulo(salva.objeto) || '—',
+    dica: (salva) => salva.objeto || null,
+    limiteLinhas: 2,
+    ordenavel: false,
   },
   { chave: 'modalidade', titulo: 'Modalidade', valor: (salva) => salva.modalidade || '—' },
   {

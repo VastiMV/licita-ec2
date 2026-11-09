@@ -1,11 +1,14 @@
 import { COTADA, FARROUPILHA, PMDF } from './torre.testing';
 import {
+  ganhandoDoCartao,
   localDoCartao,
   moeda,
   nivelDoCartao,
   prazoDoCartao,
   resumoDoItem,
   rotaDaEtapa,
+  sinalDoItem,
+  temRelatorio,
   trilhaDoCartao,
 } from './torre.utils';
 
@@ -56,5 +59,30 @@ describe('torre.utils', () => {
       'Cotação',
       'Cadastro de proposta',
     ]);
+  });
+
+  it('👍 / 🟠 / 👎 de cada item e "ganhando 1 de 3" no cartão', () => {
+    expect(sinalDoItem(FARROUPILHA.itens[0])?.icone).toBe('👍');
+    expect(sinalDoItem({ ...PMDF.itens[0], sinal: 'proximo' })).toEqual({
+      icone: '🟠',
+      texto: 'Próximo a ser chamado',
+    });
+    expect(
+      sinalDoItem({ ...PMDF.itens[0], perdido: 'homologado para outro fornecedor' })?.texto,
+    ).toBe('Perdeu: homologado para outro fornecedor');
+    expect(sinalDoItem({ ...PMDF.itens[0], sinal: '' })).toBeNull();
+    expect(ganhandoDoCartao(PMDF)).toBe('👍 ganhando 1 de 3');
+    expect(ganhandoDoCartao({ ...PMDF, itens_com_posicao: 0 })).toBeNull();
+    expect(ganhandoDoCartao({ ...PMDF, itens_ganhando: 0, itens_com_posicao: 6 })).toBe(
+      '👎 ganhando 0 de 6',
+    );
+    expect(resumoDoItem({ ...PMDF.itens[0], classificacao: 2, sinal: 'proximo' })).toBe(
+      'Item 6 · 2º · próximo a ser chamado · R$\u00a013.750,00',
+    );
+  });
+
+  it('relatório só do Disputar em diante, com itens', () => {
+    expect(temRelatorio(PMDF)).toBe(true);
+    expect(temRelatorio(COTADA)).toBe(false);
   });
 });

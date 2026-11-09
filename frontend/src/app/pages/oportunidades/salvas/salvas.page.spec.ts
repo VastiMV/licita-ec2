@@ -123,21 +123,23 @@ describe('SalvasPage', () => {
 
     // O nome da unidade vem embaixo da UASG.
     expect(celulas[0]).toBe('925997Prefeitura de Campinas');
-    expect(celulas[1]).toBe('Pregão Eletrônico');
-    expect(celulas[2]).toBe('Campinas / SP');
-    expect(celulas[3]).toBe('20/08/2026');
-    expect(celulas[4]).toBe('10/09/2026');
-    expect(celulas[5]).toBe('R$ 1.850,00');
+    expect(celulas[1]).toBe('Aquisição de café e açúcar');
+    expect(celulas[2]).toBe('Pregão Eletrônico');
+    expect(celulas[3]).toBe('Campinas / SP');
+    expect(celulas[4]).toBe('20/08/2026');
+    expect(celulas[5]).toBe('10/09/2026');
+    expect(celulas[6]).toBe('R$ 1.850,00');
   });
 
-  it('o objeto saiu da tabela, mas continua na dica da coluna de UASG', () => {
-    const uasg = linhas()[0].queryAll(By.css('td'))[0].nativeElement;
+  it('o objeto tem coluna própria, cortada em duas linhas, com o texto inteiro na dica', () => {
+    const objeto = linhas()[0].queryAll(By.css('td'))[1].nativeElement as HTMLElement;
 
-    expect(uasg.getAttribute('title')).toBe('Aquisição de café e açúcar');
+    expect(objeto.getAttribute('title')).toBe('Aquisição de café e açúcar');
+    expect(objeto.querySelector('.celula-conteudo.limitada')).toBeTruthy();
   });
 
   it('cidade longa é cortada com reticências, sem perder a UF nem quebrar linha', () => {
-    const cidade = linhas()[1].queryAll(By.css('td'))[2].nativeElement;
+    const cidade = linhas()[1].queryAll(By.css('td'))[3].nativeElement;
 
     expect(cidade.textContent.trim()).toBe('São Miguel do Oeste dos… / SC');
     expect(cidade.className).toContain('uma-linha');

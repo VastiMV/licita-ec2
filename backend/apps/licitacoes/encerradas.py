@@ -290,6 +290,8 @@ def montar_processo(salva: OportunidadeSalva, hoje: dt.date | None = None) -> di
         elif evento.tipo in (Tipo.DESCARTADA, Tipo.VOLTOU):
             # O texto completo (quem, quando, etapa, preço) é a própria descrição.
             item |= {"tipo": evento.tipo, "texto": evento.descricao}
+        elif evento.tipo == Tipo.CORRECAO:
+            item |= {"tipo": "correcao", "texto": evento.descricao or evento.get_tipo_display()}
         else:
             item |= {"tipo": evento.tipo, "texto": evento.get_tipo_display()}
         eventos.append({**item, "etapa": etapa})

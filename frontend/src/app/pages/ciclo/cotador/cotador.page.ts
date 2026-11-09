@@ -43,7 +43,16 @@ const COLUNAS: readonly ColunaTabela<EmCotacaoResponse>[] = [
     titulo: 'UASG',
     valor: (linha) => linha.uasg || '—',
     secundario: (linha) => linha.orgao_nome || null,
+  },
+  {
+    // Como em Salvas (08/11/2026): o objeto em até duas linhas, sem aumentar
+    // a altura da linha; o texto inteiro fica na dica.
+    chave: 'objeto',
+    titulo: 'Objeto',
+    valor: (linha) => normalizarTitulo(linha.objeto) || '—',
     dica: (linha) => linha.objeto || null,
+    limiteLinhas: 2,
+    ordenavel: false,
   },
   {
     chave: 'cidade',

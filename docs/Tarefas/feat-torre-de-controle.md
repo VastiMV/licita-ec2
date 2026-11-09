@@ -14,7 +14,7 @@
 
 **Falta o Carlinhos fazer:** abrir os **"Meus itens"** de cada compra que já
 passou da sessão (56, 55, 59, 61). Até lá elas ficam em Aguardando
-julgamento com o aviso "abrir “meus itens” no Compras.gov".
+julgamento com o aviso "abrir a compra no Compras.gov" (desde 08/11 basta abrir a compra: a lista "Todos os itens" também traz a proposta).
 
 **08/11 (manhã):** HAR do Cubatão (55/2026): **tem proposta** no item 2
 (cadeira de rodas Dellamed D600, 29 un., R$ 1.200,00, 23º lugar, fase
@@ -205,4 +205,13 @@ cd /opt/licita && sudo docker compose exec backend python manage.py sincronizar_
 
 A API de Dados Abertos aceita no máximo 365 dias por consulta; o cliente
 divide o período sozinho.
+
+## Publicado em 09/11/2026
+
+A lixeira e o vigia de recurso (Sentinela 0.2) saíram da espera e foram
+juntados com tudo o que entrou em 08–09/11 (propostas de todos, relatório,
+conferência só de leitura) e com o aviso "fora dos favoritos no Compras.gov".
+Extensão 0.2.1. Ainda em aberto: o relatório das descartadas ("xeretar"),
+o 2º lugar com o 1º já habilitado (🟠 ou 👎), compras de "Minhas
+participações" indo para Descartadas, e a contagem de Descartadas.
 

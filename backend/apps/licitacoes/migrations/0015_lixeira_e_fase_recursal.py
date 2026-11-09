@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("licitacoes", "0011_negociacao_do_item"),
+        ("licitacoes", "0014_remover_itens_falsos"),
     ]
 
     operations = [

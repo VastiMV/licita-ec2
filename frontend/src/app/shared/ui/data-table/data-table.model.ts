@@ -37,6 +37,9 @@ export interface ColunaTabela<T> {
   readonly dica?: (linha: T) => string | null;
   /** Destaque condicional da célula — `null` = célula normal. */
   readonly tom?: (linha: T) => TomCelula | null;
+  /** Corta o texto em N linhas com "…" (o completo vai na `dica`). Para
+   * texto longo que não pode aumentar a altura da linha (o objeto do edital). */
+  readonly limiteLinhas?: number;
 }
 
 /** Tudo que o endpoint precisa saber para devolver a página certa. A tabela

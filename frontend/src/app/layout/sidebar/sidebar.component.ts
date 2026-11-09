@@ -187,6 +187,13 @@ const MENU: readonly Entrada[] = [
   // O PDF da proposta comercial (proposta ajustada, enviada depois de ganhar).
   { tipo: 'item', path: '/ciclo/propostas', label: 'Propostas (PDF)', icon: 'proposta' },
   { tipo: 'linha' },
+  // Relatórios: só o lugar por enquanto (08/11/2026).
+  {
+    tipo: 'secao',
+    label: 'Relatórios',
+    itens: [{ path: '/relatorios', label: 'Em breve', icon: 'spreadsheet' }],
+  },
+  { tipo: 'linha' },
   // Os cadastros que o Cotador usa: com quem eu disputo, de quem eu compro
   // e o que eu vendo.
   {

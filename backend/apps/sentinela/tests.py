@@ -117,7 +117,7 @@ class IngestaoTests(TestCase):
         cartao = cartao_na_torre(pmdf)
 
         self.assertEqual(cartao["etapa"], "aguardando_julgamento")
-        self.assertIn("abrir “meus itens” no Compras.gov", [e["texto"] for e in cartao["etiquetas"]])
+        self.assertIn("abrir a compra no Compras.gov", [e["texto"] for e in cartao["etiquetas"]])
 
     def test_participacao_de_uma_compra(self):
         resumo = self.receber("participacao_56")
@@ -182,14 +182,32 @@ class IngestaoTests(TestCase):
         self.assertFalse(cubatao.participacao.proposta_cadastrada)
         self.assertIsNone(etapa_na_torre(cubatao))
 
-    def test_lista_de_todos_os_itens_nao_diz_o_que_e_da_empresa(self):
+    def test_lista_de_todos_os_itens_traz_so_os_itens_com_proposta_da_empresa(self):
+        """O padrão ao abrir a compra é "Todos os itens": a proposta da
+        empresa vem dentro do item. Item sem proposta (ou de outro CNPJ) não entra."""
+
+        self.receber("participacoes")
+        dados = exemplo("meus_itens_56")["dados"]
+        sem_proposta = {**dados[0], "identificador": "3", "numero": 3}
+        sem_proposta.pop("propostaItem")
+        de_outro = {**dados[1], "identificador": "4", "numero": 4}
+        de_outro["propostaItem"] = {**dados[1]["propostaItem"], "participante": {"identificacao": "11111111000111"}}
+        url = exemplo("meus_itens_56")["url"].replace("filtro=2", "filtro=1")
+
+        resumo = receber(url, [*dados, sem_proposta, de_outro])
+
+        self.assertEqual(resumo["itens"], 3)
+        pmdf = OportunidadeSalva.objects.get(uasg="926670")
+        self.assertEqual(sorted(pmdf.itens_participados.values_list("numero_item", flat=True)), ["22", "6", "9"])
+        self.assertTrue(pmdf.participacao.proposta_cadastrada)
+
+    def test_pagina_de_todos_os_itens_sem_proposta_nao_prova_que_nao_ha(self):
         self.receber("participacoes")
         url = exemplo("meus_itens_56")["url"].replace("filtro=2", "filtro=1")
 
-        resumo = receber(url, exemplo("meus_itens_56")["dados"])
+        receber(url, [{"identificador": "1", "numero": 1, "fase": "HE"}])
 
-        self.assertEqual(resumo["itens"], 0)
-        self.assertFalse(ItemParticipado.objects.exists())
+        self.assertIsNone(OportunidadeSalva.objects.get(uasg="926670").participacao.proposta_cadastrada)
 
     def test_proposta_de_um_item(self):
         self.receber("participacoes")

@@ -176,6 +176,11 @@ class OportunidadeSalva(models.Model):
     )
     criada_em = models.DateTimeField("salva em", auto_now_add=True)
 
+    # A compra ainda está nos favoritos do Compras.gov.br? A Sentinela confere
+    # na ronda (09/11/2026). Falso = ele tirou de lá: a Torre avisa "fora dos
+    # favoritos no Compras.gov" e ele decide se descarta. Nulo = não conferido.
+    favorita_no_compras = models.BooleanField("favorita no Compras.gov", null=True, blank=True)
+    favorita_conferida_em = models.DateTimeField("favorita conferida em", null=True, blank=True)
     removida_em = models.DateTimeField("removida em", null=True, blank=True)
     removida_por = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -332,6 +337,8 @@ class EventoOportunidadeSalva(models.Model):
         DESCARTADA = "descartada", "Descartada manualmente"
         # Descartada que voltou sozinha porque houve convocação.
         VOLTOU = "voltou", "Voltou para a Torre"
+        # Correção de dado errado, com o porquê na descrição (09/11/2026).
+        CORRECAO = "correcao", "Correção de dados"
 
     oportunidade = models.ForeignKey(
         OportunidadeSalva,
@@ -539,6 +546,13 @@ class ItemParticipado(models.Model):
         help_text="Do resultado do PNCP. Nulo = sem resultado; falso = homologado para outro fornecedor.",
     )
 
+    propostas_lidas_em = models.DateTimeField(
+        "propostas lidas em",
+        null=True,
+        blank=True,
+        help_text="Última leitura da lista de propostas de todos os participantes (Sentinela).",
+    )
+
     fonte = models.CharField("fonte", max_length=16, choices=Fonte.choices, default=Fonte.SENTINELA)
     atualizado_em = models.DateTimeField("atualizado em", auto_now=True)
 
@@ -554,6 +568,45 @@ class ItemParticipado(models.Model):
 
     def __str__(self) -> str:
         return f"Item {self.numero_item} de {self.oportunidade}"
+
+
+class PropostaDoItem(models.Model):
+    """Uma proposta de **qualquer** participante num item em que a empresa
+    também está — a lista "propostas do item" do Compras.gov.br, lida pela
+    Sentinela (`em-selecao-fornecedores/itens/{n}/propostas`, sem captcha).
+
+    É daqui que sai quem está na frente, quem ganhou, com que marca e por
+    quanto (relatório da licitação e o 👍/🟠/👎 da Torre). A lista é trocada
+    inteira a cada leitura.
+    """
+
+    item = models.ForeignKey(
+        ItemParticipado, verbose_name="item", related_name="propostas", on_delete=models.CASCADE
+    )
+    classificacao = models.PositiveIntegerField("posição", null=True, blank=True)
+    cnpj = models.CharField("CNPJ/CPF", max_length=14, blank=True)
+    nome = models.CharField("fornecedor", max_length=255, blank=True)
+    uf = models.CharField("UF", max_length=2, blank=True)
+    marca = models.CharField("marca/fabricante", max_length=255, blank=True)
+    modelo = models.CharField("modelo/versão", max_length=255, blank=True)
+    valor_inicial = models.DecimalField(
+        "proposta inicial (unitário)", max_digits=18, decimal_places=4, null=True, blank=True
+    )
+    valor_final = models.DecimalField(
+        "valor final (unitário)", max_digits=18, decimal_places=4, null=True, blank=True
+    )
+    situacao = models.CharField(
+        "situação", max_length=2, blank=True, help_text="SituacaoPropostaItemEnum (vazio = sem decisão ainda)."
+    )
+    da_empresa = models.BooleanField("é a empresa", default=False)
+
+    class Meta:
+        verbose_name = "proposta do item"
+        verbose_name_plural = "propostas do item"
+        ordering = ["item_id", "classificacao", "id"]
+
+    def __str__(self) -> str:
+        return f"{self.classificacao}º {self.nome} · item {self.item.numero_item}"
 
 
 class DocumentoFinanceiro(models.Model):

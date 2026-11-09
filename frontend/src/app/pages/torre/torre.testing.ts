@@ -28,12 +28,15 @@ export const FARROUPILHA: CartaoTorre = {
       classificacao: 1,
       perdendo: false,
       perdido: '',
+      sinal: 'ganhando',
       quantidade: '20.0000',
       valor_unitario: '11999.0000',
       valor_total: '239980.00',
     },
   ],
   valor_ganho: '239980.00',
+  itens_ganhando: 1,
+  itens_com_posicao: 1,
   etiquetas: [{ nivel: 'alerta', texto: 'convocação em andamento' }],
 };
 
@@ -54,6 +57,7 @@ export const PMDF: CartaoTorre = {
       numero: '6',
       classificacao: 4,
       perdendo: true,
+      sinal: 'perdendo',
       valor_total: '13750.00',
     },
     {
@@ -61,6 +65,7 @@ export const PMDF: CartaoTorre = {
       numero: '9',
       classificacao: 13,
       perdendo: true,
+      sinal: 'perdendo',
       valor_total: '95000.00',
     },
     {
@@ -72,6 +77,8 @@ export const PMDF: CartaoTorre = {
     },
   ],
   valor_ganho: '15500.00',
+  itens_ganhando: 1,
+  itens_com_posicao: 3,
   etiquetas: [],
 };
 

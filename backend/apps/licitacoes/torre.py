@@ -173,6 +173,60 @@ RECURSO_INDEFERIDO = {"N", "M"}
 RECURSO_PROCEDENTE = {"P", "R"}
 
 
+PERDEU_A_VEZ = {"1", "2", "9", "5"}  # desclassificada (1, 2, 9) ou inabilitado (5)
+FICOU_COM_O_ITEM = {"6", "4", "3"}  # adjudicada, habilitado, aceita
+
+
+def proposta_vencedora(propostas: list):
+    """Num item homologado: a adjudicada; senão a melhor habilitada/aceita;
+    senão a mais bem classificada que não caiu."""
+
+    def posicao(p):
+        return p.classificacao or 10**6
+
+    for situacoes in ({"6"}, FICOU_COM_O_ITEM):
+        candidatas = sorted((p for p in propostas if p.situacao in situacoes), key=posicao)
+        if candidatas:
+            return candidatas[0]
+    restantes = sorted((p for p in propostas if p.situacao not in PERDEU_A_VEZ), key=posicao)
+    return restantes[0] if restantes else None
+
+
+def posicao_efetiva(item) -> int | None:
+    """Em que lugar da fila a empresa está **de verdade**: a posição menos
+    quem, na frente dela, já caiu (desclassificado ou inabilitado). Sem a
+    lista de propostas (`PropostaDoItem`), vale a posição que veio."""
+
+    if not item.classificacao:
+        return None
+    propostas = list(item.propostas.all())
+    if not propostas:
+        return item.classificacao
+    na_frente = [
+        p
+        for p in propostas
+        if not p.da_empresa and p.classificacao and p.classificacao < item.classificacao
+    ]
+    caidas = sum(1 for p in na_frente if p.situacao in PROPOSTA_DESCLASSIFICADA | {FORNECEDOR_INABILITADO})
+    return item.classificacao - caidas
+
+
+def sinal_do_item(item, etapa: EtapaDoItem) -> str:
+    """👍 "ganhando" (1º de verdade, ou ganhou) · 🟠 "proximo" (o próximo a ser
+    chamado) · 👎 "perdendo" (atrás disso, ou perdeu) · "" (sem posição)."""
+
+    if etapa.etapa is None:
+        return "perdendo"
+    if item.vencedor_e_a_empresa or ORDEM[etapa.etapa] >= ORDEM["homologado"]:
+        return "ganhando"
+    posicao = posicao_efetiva(item)
+    if posicao is None:
+        return ""
+    if posicao <= 1:
+        return "ganhando"
+    return "proximo" if posicao == 2 else "perdendo"
+
+
 def _avisos_do_item(item, agora: dt.datetime | None = None) -> list[Etiqueta]:
     """O que pede ação agora, item a item (Sentinela). Tudo que pede
     resposta da empresa é vermelho: convocação, pedido de desconto, recurso,
@@ -242,6 +296,18 @@ MODALIDADE_COMPRAS_GOV = {
     "20": "Concurso",
 }
 _CODIGO_DA_COMPRA = re.compile(r"compra=(\d{6})(\d{2})(\d{5})(\d{4})")
+
+
+def link_do_fornecedor(link: str) -> str:
+    """Na Torre o "Abrir" vai para a página **do fornecedor** (logada), que
+    tem "Itens em que estou participando", a proposta da empresa — e é onde a
+    Sentinela lê. A página pública (`/public/compras/`) não tem nada disso
+    (pedido da operação, 08/11/2026). A busca continua com o link público."""
+
+    return (link or "").replace(
+        "/comprasnet-web/public/compras/acompanhamento-compra",
+        "/comprasnet-web/seguro/fornecedor/acompanhamento-compra",
+    )
 
 
 def rotulo_da_compra(salva) -> str:
@@ -322,6 +388,7 @@ def avaliar(salva: OportunidadeSalva, hoje: dt.date) -> tuple[dict | None, Saida
                     "classificacao": item.classificacao,
                     "perdendo": resultado.perdendo,
                     "perdido": resultado.perdido,
+                    "sinal": sinal_do_item(item, resultado),
                     "quantidade": item.quantidade,
                     "valor_unitario": valor,
                     "valor_total": total,
@@ -342,7 +409,7 @@ def avaliar(salva: OportunidadeSalva, hoje: dt.date) -> tuple[dict | None, Saida
         # ainda não leu os itens da empresa: não dá para saber se há proposta.
         # Fica no quadro, pedindo a leitura (nunca vai sozinha para Descartadas).
         etapa = "disputa" if participacao.fase_compra == FASE_COMPRA_EM_DISPUTA else "aguardando_julgamento"
-        etiquetas.append(Etiqueta("aviso", "abrir “meus itens” no Compras.gov"))
+        etiquetas.append(Etiqueta("aviso", "abrir a compra no Compras.gov"))
     elif prazo_vencido:
         if not _cotacao_de(salva):
             return None, Saida("descartadas", "Prazo venceu sem cotação")
@@ -360,6 +427,11 @@ def avaliar(salva: OportunidadeSalva, hoje: dt.date) -> tuple[dict | None, Saida
             return None, Saida("descartadas", "Prazo venceu com cotação")
     else:
         etapa = "cotacao" if _cotacao_de(salva) else "oportunidade"
+
+    if ESTAGIO_DA_ETAPA[etapa] == "preparar" and salva.favorita_no_compras is False:
+        # Ele tirou dos favoritos no Compras.gov (09/11/2026): o Licita avisa,
+        # quem decide descartar é ele (lixeira).
+        etiquetas.append(Etiqueta("aviso", "fora dos favoritos no Compras.gov"))
 
     if etapa == "cadastro_proposta" and prazo and not prazo_vencido and (prazo - hoje).days <= 1:
         etiquetas.insert(0, Etiqueta("alerta", "proposta até hoje" if prazo == hoje else "proposta até amanhã"))
@@ -382,13 +454,16 @@ def avaliar(salva: OportunidadeSalva, hoje: dt.date) -> tuple[dict | None, Saida
         "objeto": salva.objeto,
         "data_encerramento_proposta": prazo,
         "valor_total_estimado": salva.valor_total_estimado,
-        "link_plataforma": salva.link_plataforma,
+        "link_plataforma": link_do_fornecedor(salva.link_plataforma),
         "cotacao_id": cotacao.pk if (cotacao := _cotacao_de(salva)) else None,
         # Em Preparar o cartão abre os modais que já existem (visualizador da
         # oportunidade e Cotador), que precisam do registro inteiro.
         "salva": OportunidadeSalvaSerializer(salva).data if ESTAGIO_DA_ETAPA[etapa] == "preparar" else None,
         "itens": cartoes_itens,
         "valor_ganho": sum(ganhos, Decimal(0)) if ganhos else None,
+        # "ganhando 1 de 8": dos itens com posição conhecida.
+        "itens_ganhando": sum(1 for c in cartoes_itens if c["sinal"] == "ganhando"),
+        "itens_com_posicao": sum(1 for c in cartoes_itens if c["sinal"]),
         "etiquetas": [{"nivel": e.nivel, "texto": e.texto} for e in _sem_repetir(etiquetas)],
     }
     return cartao, None
@@ -420,7 +495,7 @@ def montar_torre(hoje: dt.date | None = None) -> dict:
     salvas = (
         OportunidadeSalva.objects.ativas()
         .select_related("cotacao", "participacao", "proposta")
-        .prefetch_related("itens_participados", "documentos_financeiros", "entregas")
+        .prefetch_related("itens_participados__propostas", "documentos_financeiros", "entregas")
     )
 
     por_estagio: dict[str, list[dict]] = {chave: [] for chave, _, _ in ESTAGIOS}

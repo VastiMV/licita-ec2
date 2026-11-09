@@ -89,6 +89,12 @@ class Environment:
     # no servidor (`openssl rand -hex 24`) e colada nas opções da extensão.
     # Sem ela, a API da Sentinela recusa tudo.
     sentinela_chave: str = field(default_factory=lambda: os.environ.get("SENTINELA_CHAVE", ""))
+    # Chave de LEITURA (só GET): quem a manda no cabeçalho
+    # `X-Licita-Leitura-Token` lê o Licita como o usuário "Leitura", sem
+    # poder mudar nada. É o acesso do assistente para conferir as telas
+    # depois de cada publicação. Gerada no servidor (`openssl rand -hex 24`).
+    # Vazia = desligada.
+    leitura_chave: str = field(default_factory=lambda: os.environ.get("LEITURA_CHAVE", ""))
     portal_transparencia_base_url: str = field(
         default_factory=lambda: os.environ.get(
             "PORTAL_TRANSPARENCIA_BASE_URL", "https://api.portaldatransparencia.gov.br/api-de-dados"
@@ -125,6 +131,10 @@ class Environment:
     jwt_refresh_lifetime_days: int = field(
         default_factory=lambda: _get_int("JWT_REFRESH_LIFETIME_DAYS", default=30)
     )
+    # Tempo máximo de um login, contado da hora em que a pessoa entrou — a
+    # renovação automática não estica (pedido da operação, 08/11/2026: "pra
+    # não ficar com conexão aberta"). Ver `accounts.views.RefreshView`.
+    sessao_maxima_horas: int = field(default_factory=lambda: _get_int("SESSAO_MAXIMA_HORAS", default=12))
 
     @property
     def database_options(self) -> dict[str, str | int]:

@@ -11,6 +11,7 @@ import { UsuariosService } from '../../services/usuarios/usuarios.service';
 import { ModalService } from '../../shared/overlay/modal.service';
 import { IconComponent } from '../../shared/ui/icon/icon.component';
 import { ToastService } from '../../shared/ui/toast/toast.service';
+import { reduzirFoto } from './reduzir-foto';
 
 /**
  * Substitui os links horizontais de conta na topbar por um único gatilho
@@ -39,6 +40,45 @@ export class ProfileMenuComponent {
 
   protected readonly aberto = signal(false);
   protected readonly usuario = this.auth.usuario;
+
+  /** A foto do próprio perfil (`usuarios/eu/`); vazia = a inicial. */
+  protected readonly foto = signal('');
+
+  constructor() {
+    // Lida uma vez ao montar o topo; troca na hora quando a pessoa muda.
+    this.usuarios.perfil().subscribe({
+      next: (eu) => this.foto.set(eu.foto ?? ''),
+      error: () => undefined,
+    });
+  }
+
+  /** "Trocar foto": reduz no navegador e envia. */
+  protected escolherFoto(evento: Event): void {
+    const campo = evento.target as HTMLInputElement;
+    const arquivo = campo.files?.[0];
+    campo.value = '';
+    if (!arquivo) return;
+    this.aberto.set(false);
+    reduzirFoto(arquivo)
+      .then((foto) =>
+        this.usuarios.trocarFoto(foto).subscribe({
+          next: (eu) => {
+            this.foto.set(eu.foto ?? '');
+            this.toast.sucesso('Foto atualizada.');
+          },
+          error: () => this.toast.erro('Não foi possível salvar a foto agora.'),
+        }),
+      )
+      .catch((erro: Error) => this.toast.erro(erro.message));
+  }
+
+  protected tirarFoto(): void {
+    this.aberto.set(false);
+    this.usuarios.tirarFoto().subscribe({
+      next: () => this.foto.set(''),
+      error: () => this.toast.erro('Não foi possível tirar a foto agora.'),
+    });
+  }
 
   /** A inicial do nome no círculo escuro, como no protótipo v2. */
   protected readonly inicial = computed(() =>

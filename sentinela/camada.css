@@ -90,3 +90,17 @@
 .sentinela-impossivel td {
   background: #fde8e6;
 }
+
+.sentinela-botoes {
+  display: flex;
+  gap: 6px;
+}
+.sentinela-hora {
+  margin: 0;
+  padding: 0 12px 8px;
+  font-size: 11px;
+  color: #4d5a75;
+}
+.sentinela-recolhido .sentinela-hora {
+  display: none;
+}

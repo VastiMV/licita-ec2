@@ -7,6 +7,7 @@ import { ModalShellComponent } from '../../../../shared/overlay/modal-shell/moda
 import { ButtonComponent } from '../../../../shared/ui/button/button.component';
 import { EditalCardComponent } from '../../edital-card/edital-card.component';
 import { DetalheEstado, EditalCard } from '../../edital-card/edital-card.model';
+import { OportunidadeResponse } from '../../../../contracts/licitacoes/oportunidade.contracts';
 
 /**
  * Visualizar uma oportunidade salva: o **mesmo card** da busca, com os
@@ -41,7 +42,9 @@ export class OportunidadeModalComponent implements OnInit {
 
   protected readonly card: EditalCard = {
     chave: this.salva.chave,
-    contratacao: this.salva.itens[0],
+    // Compra trazida pela Sentinela ou pelo PNCP não tem os itens da busca
+    // guardados: o card se monta com os dados da própria compra.
+    contratacao: this.salva.itens[0] ?? contratacaoDaSalva(this.salva),
     itens: this.salva.itens,
   };
 
@@ -97,4 +100,37 @@ export class OportunidadeModalComponent implements OnInit {
         }),
     });
   }
+}
+
+/** Os dados da compra no formato de um item da busca, para o card. */
+export function contratacaoDaSalva(salva: OportunidadeSalvaResponse): OportunidadeResponse {
+  return {
+    numero_item: null,
+    descricao_resumida: null,
+    descricao_detalhada: null,
+    quantidade: null,
+    unidade_medida: null,
+    valor_unitario_estimado: null,
+    valor_total: null,
+    tipo_beneficio: null,
+    criterio_julgamento: null,
+    contratacao_uf: salva.uf || null,
+    contratacao_modalidade: salva.modalidade || null,
+    contratacao_srp: false,
+    contratacao_situacao: salva.situacao || null,
+    situacao_item: null,
+    contratacao_data_publicacao: salva.data_publicacao,
+    contratacao_data_encerramento_proposta: salva.data_encerramento_proposta,
+    contratacao_orgao_nome: salva.orgao_nome || null,
+    contratacao_municipio: salva.municipio || null,
+    contratacao_uasg: salva.uasg || null,
+    contratacao_objeto: salva.objeto || null,
+    contratacao_cnpj_orgao: salva.cnpj_orgao,
+    contratacao_ano_compra: salva.ano_compra,
+    contratacao_sequencial_compra: salva.sequencial_compra,
+    plataforma_id: salva.plataforma_id,
+    link_plataforma: salva.link_plataforma,
+    link_pncp: salva.link_pncp || null,
+    capag: salva.capag,
+  };
 }
