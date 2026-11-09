@@ -30,7 +30,7 @@ describe('EtapaPage', () => {
   it('lista as licitações da etapa, com os itens e o valor', () => {
     const el = montar('aguardando_adjudicacao');
 
-    expect(el.querySelector('h1')?.textContent).toContain('Aguardando adjudicação');
+    expect(el.querySelector('h1')?.textContent).toContain('Habilitada (aguardando adjudicação)');
     const linhas = el.querySelectorAll('tbody tr');
     expect(linhas.length).toBe(1);
     expect(linhas[0].textContent).toContain('UASG 926670');

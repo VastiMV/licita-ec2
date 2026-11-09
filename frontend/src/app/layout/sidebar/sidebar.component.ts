@@ -151,10 +151,10 @@ const MENU: readonly Entrada[] = [
         label: 'Aguardando julgamento',
         icon: 'calendar',
       },
-      { path: '/torre/etapa/julgado_habilitado', label: 'Julgado e habilitado', icon: 'check' },
+      { path: '/torre/etapa/julgado_habilitado', label: 'Aceita e habilitada', icon: 'check' },
       {
         path: '/torre/etapa/aguardando_adjudicacao',
-        label: 'Aguardando adjudicação',
+        label: 'Habilitada (aguardando adjudicação)',
         icon: 'calendar',
       },
     ],

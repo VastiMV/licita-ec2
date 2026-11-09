@@ -23,8 +23,8 @@ São **4 estágios** e **13 etapas**, nesta ordem (a ordem importa: a etapa
 | Preparar | Cadastro de proposta (`cadastro_proposta`) | a proposta (os preços) foi cadastrada no Compras.gov e a sessão ainda não abriu | Sentinela |
 | Disputar | Disputa (`disputa`) | sessão aberta, item em disputa (lances) | Sentinela |
 | Disputar | Aguardando julgamento (`aguardando_julgamento`) | disputa encerrada, proposta ainda sem situação | Sentinela |
-| Disputar | Julgado e habilitado (`julgado_habilitado`) | proposta **aceita** e depois **fornecedor habilitado**; com recurso aberto fica aqui com etiqueta | Sentinela |
-| Disputar | Aguardando adjudicação (`aguardando_adjudicacao`) | habilitado, recurso encerrado, ainda não adjudicado | Sentinela |
+| Disputar | Aceita e habilitada (`julgado_habilitado`) | proposta **aceita** e depois **fornecedor habilitado**; com recurso aberto fica aqui com etiqueta | Sentinela |
+| Disputar | Habilitada (aguardando adjudicação) (`aguardando_adjudicacao`) | habilitado, recurso encerrado, ainda não adjudicado | Sentinela |
 | Contratar | Homologado (`homologado`) | proposta adjudicada **ou** resultado homologado no PNCP. Abre o estágio Contratar: ganhou, agora é esperar contrato ou empenho (pedido do Carlinhos, 08/11/2026) | Sentinela + PNCP (dias úteis) |
 | Contratar | Contrato (`contrato`) | contrato ou **ata** de registro de preços | PNCP (ata, diário) · contrato à mão |
 | Contratar | Empenho / OF (`empenho`) | empenho ou ordem de fornecimento | Portal da Transparência (federal, diário) · OF e estados/prefeituras à mão |
@@ -60,9 +60,9 @@ trás e para no primeiro que encontra:
 5. Tem **empenho** ou **ordem de fornecimento** → Empenho / OF.
 6. Tem **contrato** ou **ata** → Contrato.
 7. Adjudicado (situação 6, fase `AE`) ou **vencedor no PNCP** → Homologado.
-8. Fornecedor habilitado (4): com recurso aberto → Julgado e habilitado
-   (com etiqueta); sem recurso → Aguardando adjudicação.
-9. Proposta aceita (3) → Julgado e habilitado.
+8. Fornecedor habilitado (4): com recurso aberto → Aceita e habilitada
+   (com etiqueta); sem recurso → Habilitada (aguardando adjudicação).
+9. Proposta aceita (3) → Aceita e habilitada.
 10. Fase do item em disputa (lances) → Disputa.
 11. Fase depois da disputa, ou já tem classificação → Aguardando julgamento.
 12. Senão → Cadastro de proposta.

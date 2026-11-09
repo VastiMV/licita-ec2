@@ -67,8 +67,8 @@ de disputa mostra "Sem cotação".
 | Preparar | Cadastro de proposta | proposta cadastrada no Compras.gov e sessão ainda não aberta |
 | Disputar | Disputa | sessão aberta, item em disputa |
 | Disputar | Aguardando julgamento | item com disputa encerrada, proposta sem situação |
-| Disputar | Julgado e habilitado | proposta **aceita** (3) e depois **fornecedor habilitado** (4) |
-| Disputar | Aguardando adjudicação | habilitado, recurso encerrado, ainda não adjudicado |
+| Disputar | Aceita e habilitada | proposta **aceita** (3) e depois **fornecedor habilitado** (4) |
+| Disputar | Habilitada (aguardando adjudicação) | habilitado, recurso encerrado, ainda não adjudicado |
 | Contratar | Homologado | proposta **adjudicada** (6) e resultado publicado no **PNCP** (era Disputar; foi para Contratar em 08/11/2026, pedido do Carlinhos) |
 | Contratar | Contrato | contrato ou **ata** publicada no PNCP (registro de preços = ata) |
 | Contratar | Empenho / Ordem de Fornecimento | empenho no **Portal da Transparência** (federal) ou OF lançada à mão |
@@ -92,7 +92,7 @@ Saídas do quadro:
   portais o prazo vencido com cotação continua indo para Descartadas, a não
   ser que tenha proposta gerada no fluxo antigo.
 - **Suspensa** não é saída: é etiqueta no cartão. **Recurso** também é
-  etiqueta (entre Julgado e habilitado e Aguardando adjudicação).
+  etiqueta (entre Aceita e habilitada e Habilitada (aguardando adjudicação)).
 - Item **perdendo** (2º lugar em diante) fica em cinza até a homologação: pode
   ser chamado como remanescente.
 

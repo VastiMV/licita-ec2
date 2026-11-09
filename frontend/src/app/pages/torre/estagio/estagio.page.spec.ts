@@ -34,8 +34,8 @@ describe('EstagioPage', () => {
     expect(colunas).toEqual([
       'Disputa',
       'Aguardando julgamento',
-      'Julgado e habilitado',
-      'Aguardando adjudicação',
+      'Aceita e habilitada',
+      'Habilitada (aguardando adjudicação)',
     ]);
     const coluna = el.querySelectorAll('.coluna')[1];
     expect(coluna.querySelectorAll('app-torre-cartao').length).toBe(1);

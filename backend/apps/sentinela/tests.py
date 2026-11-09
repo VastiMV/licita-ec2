@@ -454,7 +454,7 @@ class LixeiraERecursoTests(APITestCase):
         linha = next(l for l in lista if l["id"] == self.pmdf.pk)
         self.assertEqual(linha["motivo"], "descartada_manual")
         self.assertIn("Descartada manualmente por Carlinhos", linha["motivo_detalhe"])
-        self.assertIn("na etapa Aguardando adjudicação", linha["motivo_detalhe"])
+        self.assertIn("na etapa Habilitada (aguardando adjudicação)", linha["motivo_detalhe"])
         self.assertIn("Tinha preço no item 6", linha["motivo_detalhe"])
         tarefa = Tarefa.objects.get()
         self.assertEqual((tarefa.tipo, tarefa.compra), ("desfavoritar", "92667005000562026"))
