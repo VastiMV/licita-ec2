@@ -24,7 +24,7 @@ class FornecedorSerializer(serializers.ModelSerializer):
     # o `max_length` herdado do model reprovaria o payload **antes** de
     # `validate_cnpj` tirar a pontuação — e o erro apareceria como "no
     # máximo 14 caracteres", que não diz nada a quem digitou certo.
-    cnpj = serializers.CharField(max_length=32)
+    cnpj = serializers.CharField(max_length=32, required=False, allow_blank=True)
 
     # Derivados, para a tabela não ter que remontá-los em JS (e para a
     # planilha do Cotador usar o mesmo texto que a tela).
@@ -78,7 +78,9 @@ class FornecedorSerializer(serializers.ModelSerializer):
     def validate_cnpj(self, cnpj: str) -> str:
         digitos = somente_digitos(cnpj)
         if not digitos:
-            raise serializers.ValidationError("O CNPJ/CPF é obrigatório.")
+            # Opcional (GEN-19, 10/11/2026): sem documento não há o que
+            # conferir nem com quem colidir.
+            return ""
         if not documento_valido(digitos):
             raise serializers.ValidationError(
                 "CNPJ/CPF inválido — confira os dígitos verificadores."

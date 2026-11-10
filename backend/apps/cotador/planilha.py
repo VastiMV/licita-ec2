@@ -660,7 +660,7 @@ def _aba_comparativo(workbook: Workbook, cotacao: Cotacao) -> Worksheet:
             aba.cell(
                 row=linha,
                 column=4,
-                value=formatar_documento(fornecedor.cnpj) if fornecedor else "—",
+                value=formatar_documento(fornecedor.cnpj) if fornecedor and fornecedor.cnpj else "—",
             )
             aba.cell(
                 row=linha,

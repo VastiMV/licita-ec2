@@ -56,8 +56,8 @@ const CAMPOS = [
   'prazo_entrega_dias',
 ] as const;
 
-/** Campo vazio fica para o `required` reclamar — dois erros no mesmo campo
- * confundem mais do que ajudam. Função de módulo (e não método) porque o
+/** Documento é opcional (GEN-19, 10/11/2026): vazio passa; digitado, tem
+ * que ser válido. Função de módulo (e não método) porque o
  * `form` é inicializado na declaração do campo, antes de qualquer membro de
  * instância existir. */
 function validarDocumento(controle: AbstractControl): ValidationErrors | null {
@@ -119,7 +119,8 @@ export class FornecedorModalComponent {
     tipo: [this.fornecedor?.tipo ?? 'pj'],
     cnpj: [
       this.fornecedor ? mascararDocumento(this.fornecedor.cnpj) : '',
-      [Validators.required, validarDocumento],
+      // Opcional (GEN-19): no Cotador o fornecedor nasce sem CNPJ.
+      [validarDocumento],
     ],
     inscricao_estadual: [this.fornecedor?.inscricao_estadual ?? ''],
     categoria: [this.fornecedor?.categoria ?? 'materiais', Validators.required],
@@ -133,7 +134,7 @@ export class FornecedorModalComponent {
     cidade: [this.fornecedor?.cidade ?? ''],
 
     responsavel: [this.fornecedor?.responsavel ?? ''],
-    email: [this.fornecedor?.email ?? '', [Validators.required, Validators.email]],
+    email: [this.fornecedor?.email ?? '', [Validators.email]],
     telefone: [this.fornecedor ? mascararTelefone(this.fornecedor.telefone) : ''],
     celular: [this.fornecedor ? mascararTelefone(this.fornecedor.celular) : ''],
 
