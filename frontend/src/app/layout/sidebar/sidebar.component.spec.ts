@@ -83,7 +83,7 @@ describe('SidebarComponent', () => {
       'Encerradas',
       'Descartadas',
       'Propostas (PDF)',
-      'Em breve',
+      'Mês a mês',
       'Empresas',
       'Fornecedores',
       'Produtos',

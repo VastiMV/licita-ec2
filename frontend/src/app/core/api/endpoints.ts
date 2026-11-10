@@ -44,6 +44,8 @@ export const ENDPOINTS = {
     processo: (id: number) => `licitacoes/salvas/${id}/processo/`,
     /** O relatório da licitação: vencedor, marca e diferença, item a item. */
     relatorio: (id: number) => `licitacoes/salvas/${id}/relatorio/`,
+    /** O relatório do mês (participou, ganhou, perdeu, faturamento, lucro). */
+    relatorioMensal: 'licitacoes/relatorios/mensal/',
   },
   /** Fabricante › Marca › Modelo e a tabela de preços (`apps/produtos`). */
   produtos: {

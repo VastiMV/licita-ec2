@@ -30,7 +30,14 @@ from apps.tenants.atual import tenant_atual
 
 from . import autenticacao
 from .ingestao import receber
-from .ronda import INTERVALO, caminho_das_propostas, consultas
+from .ronda import INTERVALO, MENSAGENS, caminho_das_propostas
+from .ronda import consultas as _consultas
+
+
+def consultas():
+    """A ronda sem a caixa de mensagens (que vem sempre, em primeiro)."""
+
+    return [c for c in _consultas() if c != MENSAGENS]
 
 EXEMPLOS = Path(__file__).parent / "exemplos"
 CNPJ = "22015414000127"
@@ -282,7 +289,7 @@ class ApiTests(APITestCase):
     def test_ronda_pede_a_chave(self):
         self.assertEqual(self.client.get("/api/sentinela/ronda/").status_code, 403)
         resposta = self.client.get("/api/sentinela/ronda/", HTTP_X_SENTINELA_CHAVE="chave")
-        self.assertEqual((resposta.status_code, resposta.json()), (200, {"consultas": []}))
+        self.assertEqual((resposta.status_code, resposta.json()), (200, {"consultas": [MENSAGENS]}))
 
     def test_relatorio_para_quem_esta_logado(self):
         salva = OportunidadeSalva.objects.create(cnpj_orgao="1", ano_compra="2026", sequencial_compra="5")

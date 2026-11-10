@@ -77,19 +77,11 @@ export const routes: Routes = [
       },
       // O que sobrou do Ciclo de Licitação e a Torre ainda usa: Cotador,
       // Propostas (PDF), Encerradas e Descartadas.
-      // Relatórios: a seção já tem lugar no menu (pedido de 08/11/2026); os
-      // relatórios em si ainda serão definidos com a operação.
+      // Relatórios (09/11/2026): o mês a mês e o "perdeu por pouco".
       {
         path: 'relatorios',
-        data: {
-          titulo: 'Relatórios',
-          descricao:
-            'Em breve: o que foi ganho, o que falta receber e como vão as disputas, tudo num lugar só.',
-        },
         loadComponent: () =>
-          import('./pages/ciclo/etapa-a-construir/etapa-a-construir.page').then(
-            (m) => m.EtapaAConstruirPage,
-          ),
+          import('./pages/relatorios/relatorios.page').then((m) => m.RelatoriosPage),
       },
       {
         path: 'ciclo',

@@ -56,6 +56,7 @@ from .services import (
     detalhar_compra_cacheada,
 )
 from .relatorio import relatorio_da_compra
+from .relatorio_mensal import relatorio_mensal
 from .torre import montar_torre
 
 # Mesma janela padrão do protótipo (`app/routers/licitacoes.py`) para o modo
@@ -472,6 +473,18 @@ class ProcessoView(APIView):
 
     def get(self, request: Request, pk: int) -> Response:
         return Response(montar_processo(get_object_or_404(OportunidadeSalva, pk=pk)))
+
+
+class RelatorioMensalView(APIView):
+    """`GET /api/licitacoes/relatorios/mensal/?meses=12` — o relatório do mês
+    (ver `relatorio_mensal.py`)."""
+
+    def get(self, request: Request) -> Response:
+        try:
+            meses = max(1, min(int(request.query_params.get("meses", 12)), 36))
+        except ValueError:
+            meses = 12
+        return Response(relatorio_mensal(meses))
 
 
 class RelatorioView(APIView):

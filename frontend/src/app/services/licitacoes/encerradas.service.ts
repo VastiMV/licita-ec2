@@ -10,7 +10,10 @@ import {
   EncerradasParams,
   ProcessoResponse,
 } from '../../contracts/licitacoes/encerrada.contracts';
-import { RelatorioResponse } from '../../contracts/licitacoes/relatorio.contracts';
+import {
+  RelatorioMensalResponse,
+  RelatorioResponse,
+} from '../../contracts/licitacoes/relatorio.contracts';
 import { ApiClient } from '../../core/api/api-client';
 import { ENDPOINTS } from '../../core/api/endpoints';
 
@@ -35,5 +38,10 @@ export class EncerradasService {
   /** O relatório da licitação, item a item (`apps/licitacoes/relatorio.py`). */
   relatorio(id: number): Observable<RelatorioResponse> {
     return this.api.get<RelatorioResponse>(ENDPOINTS.licitacoes.relatorio(id));
+  }
+
+  /** O relatório do mês (`apps/licitacoes/relatorio_mensal.py`). */
+  relatorioMensal(meses = 12): Observable<RelatorioMensalResponse> {
+    return this.api.get<RelatorioMensalResponse>(ENDPOINTS.licitacoes.relatorioMensal, { meses });
   }
 }

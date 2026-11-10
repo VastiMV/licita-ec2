@@ -8,7 +8,8 @@ export type TipoNotificacao =
   | 'situacao'
   | 'favorito'
   | 'resultado'
-  | 'relatorio';
+  | 'relatorio'
+  | 'mensagem';
 
 export interface Notificacao {
   readonly id: number;

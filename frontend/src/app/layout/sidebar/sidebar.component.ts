@@ -191,7 +191,7 @@ const MENU: readonly Entrada[] = [
   {
     tipo: 'secao',
     label: 'Relatórios',
-    itens: [{ path: '/relatorios', label: 'Em breve', icon: 'spreadsheet' }],
+    itens: [{ path: '/relatorios', label: 'Mês a mês', icon: 'spreadsheet' }],
   },
   { tipo: 'linha' },
   // Os cadastros que o Cotador usa: com quem eu disputo, de quem eu compro

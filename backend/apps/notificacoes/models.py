@@ -21,6 +21,8 @@ class Notificacao(models.Model):
         FAVORITO = "favorito", "Fora dos favoritos"
         RESULTADO = "resultado", "Resultado saiu"
         RELATORIO = "relatorio", "Relatório completo"
+        # A caixa de mensagens do fornecedor no Compras.gov.br (09/11/2026).
+        MENSAGEM = "mensagem", "Mensagem do Compras.gov"
 
     class Nivel(models.TextChoices):
         ALERTA = "alerta", "Alerta"
