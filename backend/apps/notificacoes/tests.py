@@ -56,3 +56,20 @@ class ChaveNuncaApareceTests(TestCase):
 
         self.assertNotIn("123:abc", str(erro.exception))
         self.assertIn("404", str(erro.exception))
+
+
+class TesteTelegramApiTests(TestCase):
+    def test_botao_de_teste_manda_para_os_chats(self):
+        from rest_framework.test import APIClient
+
+        from apps.accounts.models import User
+
+        cliente = APIClient()
+        cliente.force_authenticate(User.objects.create_user(email="v@x.com", password="x", nome="Vasti"))
+        with mock.patch.object(telegram, "env", LIGADO), mock.patch.object(
+            telegram.httpx, "post", return_value=mock.Mock(status_code=200)
+        ) as post:
+            resposta = cliente.post("/api/notificacoes/teste-telegram/", {}, format="json")
+
+        self.assertEqual(resposta.json(), {"ligado": True, "enviados": 2, "chats": 2})
+        self.assertIn("Pedido por Vasti", post.call_args.kwargs["json"]["text"])

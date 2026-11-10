@@ -39,11 +39,19 @@ const AVISOS: NotificacoesResponse = {
 describe('TopoStatusComponent', () => {
   let fixture: ComponentFixture<TopoStatusComponent>;
   let el: HTMLElement;
-  let avisos: { listar: ReturnType<typeof vi.fn>; marcarLidas: ReturnType<typeof vi.fn> };
+  let avisos: {
+    listar: ReturnType<typeof vi.fn>;
+    marcarLidas: ReturnType<typeof vi.fn>;
+    testarTelegram: ReturnType<typeof vi.fn>;
+  };
   let modal: { abrir: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
-    avisos = { listar: vi.fn(() => of(AVISOS)), marcarLidas: vi.fn(() => of({ ok: true })) };
+    avisos = {
+      listar: vi.fn(() => of(AVISOS)),
+      marcarLidas: vi.fn(() => of({ ok: true })),
+      testarTelegram: vi.fn(() => of({ ligado: true, enviados: 2, chats: 2 })),
+    };
     modal = { abrir: vi.fn(() => of(undefined)) };
     TestBed.configureTestingModule({
       imports: [TopoStatusComponent],
@@ -141,6 +149,16 @@ describe('TopoStatusComponent', () => {
       id: 17,
       titulo: AVISOS.itens[0].titulo,
     });
+  });
+
+  it('"Testar Telegram" diz para quantos foi', async () => {
+    await avisosChegarem();
+    clicar('.sino');
+    clicar('.telegram .link');
+
+    expect(el.querySelector('.telegram')?.textContent).toContain(
+      'Teste enviado para 2 de 2 pessoas',
+    );
   });
 
   it('marcar todos como lidos', async () => {

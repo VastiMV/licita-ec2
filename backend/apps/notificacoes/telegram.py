@@ -71,6 +71,29 @@ class RoboRecusou(Exception):
     """Erro do Telegram **sem** a chave do robô na mensagem."""
 
 
+def mandar_teste(quem: str) -> int:
+    """Uma mensagem de teste para cada chat (botão do sino)."""
+
+    if not ligado():
+        return 0
+    enviados = 0
+    for chat in chats():
+        try:
+            resposta = httpx.post(
+                f"{API}/bot{env.telegram_token}/sendMessage",
+                json={
+                    "chat_id": chat,
+                    "text": f"✅ <b>Teste do Licita</b>\nPedido por {html.escape(quem)}. Os avisos do sino chegam aqui.",
+                    "parse_mode": "HTML",
+                },
+                timeout=10,
+            )
+            enviados += int(resposta.status_code == 200)
+        except httpx.HTTPError:
+            logger.warning("Telegram: falha no teste para o chat %s", chat)
+    return enviados
+
+
 def quem_falou_com_o_robo() -> list[dict]:
     """Os chats que mandaram mensagem ao robô (para achar o número do chat)."""
 

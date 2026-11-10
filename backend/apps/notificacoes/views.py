@@ -44,3 +44,17 @@ class LidasView(APIView):
             [Leitura(notificacao=n, usuario=request.user) for n in alvo], ignore_conflicts=True
         )
         return Response({"ok": True})
+
+
+class TesteTelegramView(APIView):
+    """`POST /api/notificacoes/teste-telegram/` — manda uma mensagem de teste."""
+
+    def post(self, request):
+        from .telegram import chats, ligado, mandar_teste
+
+        if not request.user.is_active:
+            return Response(status=403)
+        if not ligado():
+            return Response({"ligado": False, "enviados": 0, "chats": 0})
+        quem = getattr(request.user, "nome", "") or request.user.email
+        return Response({"ligado": True, "enviados": mandar_teste(quem), "chats": len(chats())})
