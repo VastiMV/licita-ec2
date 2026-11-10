@@ -84,11 +84,12 @@ class SaidasComFatosDaTorreTests(Base):
         self.assertEqual(linha["motivo_label"], "Sem proposta cadastrada")
         self.assertIn("sem proposta", self.processo(salva)["desfecho"]["porque"])
 
-    def test_compras_gov_com_cotacao_e_prazo_vencido_espera_a_sentinela(self):
+    def test_compras_gov_com_cotacao_e_prazo_vencido_sem_participacao_e_descartada(self):
+        # Decisão de 10/11/2026 (Guarulhos 461): não espera mais a Sentinela.
         salva = self.salva("1", -3, plataforma_id="compras_gov")
         self.cotar(salva)
 
-        self.assertEqual(self.descartadas(), {})
+        self.assertEqual(self.descartadas()["1"]["motivo"], "prazo_cotacao")
 
     def test_outro_portal_com_cotacao_e_prazo_vencido_continua_descartada(self):
         salva = self.salva("1", -3, plataforma_id="")
