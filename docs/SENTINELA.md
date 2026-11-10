@@ -10,7 +10,7 @@ o que abre direto, o que pede captcha): [`COMPRAS_GOV.md`](COMPRAS_GOV.md).
 
 ## O que já existe (beta 0.1)
 
-Construída em 08/11/2026. Código da extensão em [`sentinela/`](../sentinela/)
+Construída em 08/11/2026. Código da extensão em [`sentinela/`](https://github.com/VastiMV/licita-ec2/tree/main/sentinela)
 (com o passo a passo de instalação); backend em `backend/apps/sentinela/`.
 
 | Parte | Como funciona |

@@ -6,7 +6,7 @@ Domínio de negócio em [`DOMINIO.md`](DOMINIO.md).
 `deploy/ec2/docker-compose.yml` sobe `caddy` (HTTPS), `frontend`, `backend`,
 `worker` e `beat` (Celery), `postgres` e `rabbitmq`, mais os passos
 `migrate` e `permissoes`. Detalhes na seção "Produção — EC2 com docker
-compose" e em [`deploy/ec2/README.md`](../deploy/ec2/README.md).
+compose" e em [`deploy/ec2/README.md`](https://github.com/VastiMV/licita-ec2/blob/main/deploy/ec2/README.md).
 
 ```
 internet ──► caddy (HTTPS) ──┬──► frontend (Angular, nginx)
@@ -323,13 +323,13 @@ Segredos do GitHub: `EC2_HOST` (o IP) e `EC2_SSH_KEY` (a chave `.pem`). As
 senhas do sistema ficam só no servidor, em `/opt/licita/.env` (produção) e
 `/opt/licita-teste/.env` (teste), geradas na instalação — **guarde uma
 cópia fora do servidor**. Passo a passo completo, inclusive recriar a
-máquina do zero: [`deploy/ec2/README.md`](../deploy/ec2/README.md).
+máquina do zero: [`deploy/ec2/README.md`](https://github.com/VastiMV/licita-ec2/blob/main/deploy/ec2/README.md).
 
 ## Kubernetes — o que já existe
 
 Namespace `inside-solutions-licita` e o Deployment/Service do frontend, via
 `kubectl apply -f k8s/` (sem GitOps ainda). Ver
-[`k8s/README.md`](../k8s/README.md) para o passo a passo, inclusive como
+[`k8s/README.md`](https://github.com/VastiMV/licita-ec2/blob/main/k8s/README.md) para o passo a passo, inclusive como
 criar o `Secret` de pull do GHCR — nunca commitado, sempre criado
 imperativamente no cluster.
 

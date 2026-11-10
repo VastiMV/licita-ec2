@@ -1,0 +1,3 @@
+# Só para compilar o site da documentação (mkdocs.yml). Não é do backend.
+mkdocs==1.6.1
+mkdocs-material==9.5.49
