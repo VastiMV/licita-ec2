@@ -97,6 +97,7 @@ const ETAPAS_DO_ESTAGIO: Record<EstagioTorre, readonly (readonly [EtapaTorre, st
     ['cadastro_proposta', 'Cadastro de proposta'],
   ],
   disputar: [
+    ['aguardando_sessao', 'Aguardando sessão'],
     ['disputa', 'Disputa'],
     ['aguardando_julgamento', 'Aguardando julgamento'],
     ['julgado_habilitado', 'Aceita e habilitada'],

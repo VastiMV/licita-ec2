@@ -32,12 +32,13 @@ describe('EstagioPage', () => {
       s.textContent?.trim(),
     );
     expect(colunas).toEqual([
+      'Aguardando sessão',
       'Disputa',
       'Aguardando julgamento',
       'Aceita e habilitada',
       'Habilitada (aguardando adjudicação)',
     ]);
-    const coluna = el.querySelectorAll('.coluna')[1];
+    const coluna = el.querySelectorAll('.coluna')[2];
     expect(coluna.querySelectorAll('app-torre-cartao').length).toBe(1);
   });
 

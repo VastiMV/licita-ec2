@@ -70,6 +70,7 @@ describe('SidebarComponent', () => {
       'Oportunidade',
       'Cotação',
       'Cadastro de proposta',
+      'Aguardando sessão',
       'Disputa',
       'Aguardando julgamento',
       'Aceita e habilitada',
@@ -122,7 +123,7 @@ describe('SidebarComponent', () => {
     fixture = TestBed.createComponent(SidebarComponent);
     fixture.detectChanges();
 
-    expect(itens().length).toBe(22);
+    expect(itens().length).toBe(23);
   });
 
   it('Configurações só aparece para administrador', () => {
@@ -139,12 +140,13 @@ describe('SidebarComponent', () => {
   it('cada etapa aponta para a sua lista; Oportunidade e Cotação para as que já existiam', () => {
     const rotas = itens().map((i) => i.path());
 
-    expect(rotas.slice(0, 18)).toEqual([
+    expect(rotas.slice(0, 19)).toEqual([
       '/oportunidades/buscar',
       '/torre',
       '/oportunidades/salvas',
       '/ciclo/cotador',
       '/torre/etapa/cadastro_proposta',
+      '/torre/etapa/aguardando_sessao',
       '/torre/etapa/disputa',
       '/torre/etapa/aguardando_julgamento',
       '/torre/etapa/julgado_habilitado',

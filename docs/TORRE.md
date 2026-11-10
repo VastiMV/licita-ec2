@@ -20,7 +20,8 @@ São **4 estágios** e **13 etapas**, nesta ordem (a ordem importa: a etapa
 |---|---|---|---|
 | Preparar | Oportunidade (`oportunidade`) | salva no Licita, no prazo, sem cotação | Licita (busca) |
 | Preparar | Cotação (`cotacao`) | tem cotação salva no Cotador, no prazo | Licita (Cotador) |
-| Preparar | Cadastro de proposta (`cadastro_proposta`) | a proposta (os preços) foi cadastrada no Compras.gov e a sessão ainda não abriu | Sentinela |
+| Preparar | Cadastro de proposta (`cadastro_proposta`) | aceita/cadastrada no Compras.gov, **ainda sem preço lançado** no item | Sentinela |
+| Disputar | Aguardando sessão (`aguardando_sessao`) | **preço lançado** no Compras.gov e a sessão ainda não abriu (10/11/2026). Etiqueta com a data da sessão; sem cotação no Licita, avança assim mesmo com o aviso "sem cotação no Licita" | Sentinela |
 | Disputar | Disputa (`disputa`) | sessão aberta, item em disputa (lances) | Sentinela |
 | Disputar | Aguardando julgamento (`aguardando_julgamento`) | disputa encerrada, proposta ainda sem situação | Sentinela |
 | Disputar | Aceita e habilitada (`julgado_habilitado`) | proposta **aceita** e depois **fornecedor habilitado**; com recurso aberto fica aqui com etiqueta | Sentinela |
@@ -65,7 +66,8 @@ trás e para no primeiro que encontra:
 9. Proposta aceita (3) → Aceita e habilitada.
 10. Fase do item em disputa (lances) → Disputa.
 11. Fase depois da disputa, ou já tem classificação → Aguardando julgamento.
-12. Senão → Cadastro de proposta.
+12. Preço lançado (`valor_proposta_inicial`) → Aguardando sessão.
+13. Senão → Cadastro de proposta.
 
 Um item em **2º lugar ou pior** fica marcado como `perdendo` (em cinza no
 cartão: "2 itens perdendo (podem ser chamados)"). Ele **não** é perdido: o

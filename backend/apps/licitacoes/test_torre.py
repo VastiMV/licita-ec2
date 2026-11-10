@@ -89,6 +89,7 @@ class TorreTests(APITestCase):
                 "oportunidade",
                 "cotacao",
                 "cadastro_proposta",
+                "aguardando_sessao",
                 "disputa",
                 "aguardando_julgamento",
                 "julgado_habilitado",
@@ -173,6 +174,43 @@ class TorreTests(APITestCase):
         salva = self.salva()
         self.cotar(salva)
         ParticipacaoCompra.objects.create(oportunidade=salva, fase_compra="1", proposta_cadastrada=True)
+
+        self.assertEqual(self.etapa(salva), "cadastro_proposta")
+
+    def test_preco_lancado_antes_da_sessao_e_aguardando_sessao(self):
+        """Decisão de 10/11/2026: preço lançado no Compras.gov e sessão
+        fechada sai de Preparar, mas não é Disputa (lance acontecendo)."""
+
+        salva = self.salva()
+        self.cotar(salva)
+        abre = timezone.make_aware(dt.datetime.combine(self.hoje + dt.timedelta(days=3), dt.time(9, 0)))
+        ParticipacaoCompra.objects.create(
+            oportunidade=salva, fase_compra="1", proposta_cadastrada=True, sessao_abre_em=abre
+        )
+        self.item(salva, numero="1", fase_item="AS", valor_proposta_inicial=Decimal("56000"))
+
+        cartao = self.cartao(self.torre(), salva)
+
+        self.assertEqual(cartao["etapa"], "aguardando_sessao")
+        self.assertEqual(cartao["estagio"], "disputar")
+        textos = [e["texto"] for e in cartao["etiquetas"]]
+        self.assertIn(f"sessão {abre:%d/%m} 09:00", textos)
+        self.assertNotIn("sem cotação no Licita", textos)
+
+    def test_preco_lancado_sem_cotacao_no_licita_tambem_avanca_com_aviso(self):
+        salva = self.salva()
+        ParticipacaoCompra.objects.create(oportunidade=salva, fase_compra="1", proposta_cadastrada=True)
+        self.item(salva, numero="1", fase_item="AS", valor_proposta_inicial=Decimal("100"))
+
+        cartao = self.cartao(self.torre(), salva)
+
+        self.assertEqual(cartao["etapa"], "aguardando_sessao")
+        self.assertIn("sem cotação no Licita", [e["texto"] for e in cartao["etiquetas"]])
+
+    def test_item_sem_preco_lancado_fica_em_cadastro_de_proposta(self):
+        salva = self.salva()
+        ParticipacaoCompra.objects.create(oportunidade=salva, fase_compra="1", proposta_cadastrada=True)
+        self.item(salva, numero="1", fase_item="AS")
 
         self.assertEqual(self.etapa(salva), "cadastro_proposta")
 
@@ -402,7 +440,7 @@ class TorreTests(APITestCase):
 
         self.assertEqual(
             etapas["disputar"],
-            ["disputa", "aguardando_julgamento", "julgado_habilitado", "aguardando_adjudicacao"],
+            ["aguardando_sessao", "disputa", "aguardando_julgamento", "julgado_habilitado", "aguardando_adjudicacao"],
         )
         self.assertEqual(etapas["contratar"], ["homologado", "contrato", "empenho"])
 

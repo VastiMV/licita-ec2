@@ -12,6 +12,7 @@ export type EtapaTorre =
   | 'oportunidade'
   | 'cotacao'
   | 'cadastro_proposta'
+  | 'aguardando_sessao'
   | 'disputa'
   | 'aguardando_julgamento'
   | 'julgado_habilitado'
