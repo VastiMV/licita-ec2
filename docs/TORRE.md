@@ -84,11 +84,12 @@ Se **todos** os itens da empresa se perderam, a licitação sai para
 Antes da Sentinela ler alguma coisa, a etapa vem do que o Licita sabe:
 
 - sem cotação → Oportunidade; com cotação → Cotação;
-- **prazo vencido com cotação, no Compras.gov.br** → fica em Cadastro de
-  proposta com a etiqueta **"confirmar com a Sentinela"**. Não dá para saber
-  se a proposta foi cadastrada até a Sentinela ler. Só vale para o
-  Compras.gov.br (a única plataforma que a Sentinela lê,
-  `PLATAFORMA_COM_SENTINELA`);
+- **prazo vencido com cotação, no Compras.gov.br, sem nenhuma participação
+  lida pela Sentinela** → Descartadas ("Prazo venceu com cotação") já no dia
+  seguinte ao prazo (decisão de 10/11/2026, Guarulhos 461/2026). Antes ficava
+  em Cadastro de proposta "confirmar com a Sentinela" e, sem proposta, a
+  confirmação nunca chegava. Descartadas é calculado: se a Sentinela achar a
+  participação depois, a compra volta sozinha;
 - prazo vencido com cotação em **outro portal** → Descartadas, a não ser que
   tenha proposta gerada no fluxo antigo (aí fica em Cadastro de proposta com
   "confirmar participação").
@@ -338,7 +339,8 @@ consulta, e o menu dizia 3 descartadas enquanto a lista mostrava 4.
 - **Cotou e não participou:** prazo vencido, com cotação, compra do
   Compras.gov **fora dos favoritos** (a Sentinela conferiu) → Descartadas
   ("Prazo venceu com cotação"), sem ficar em "confirmar com a Sentinela" para
-  sempre (Geriatria 34/2026). Ainda nos favoritos (ou sem conferir): espera.
+  sempre (Geriatria 34/2026). Desde a Guarulhos 461 (mesmo dia), nos
+  favoritos também: sem participação lida, vai para Descartadas.
 - **Relatórios › Mês a mês** (`relatorio_mensal.py`): participou (mês do
   prazo), ganhou/perdeu (mês do resultado), faturamento, lucro (só com
   cotação: preço − custo da cotação). "Perdeu por pouco" = até 5%.

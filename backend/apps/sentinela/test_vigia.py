@@ -316,7 +316,10 @@ class CotouENaoParticipouTests(_Base):
 
         self.assertEqual(classificar(HOJE)[self.s.pk][:2], ("descartadas", "prazo_cotacao"))
 
-    def test_nos_favoritos_ou_sem_conferir_espera_a_sentinela(self):
-        self.assertIn("confirmar com a Sentinela", textos(self.s))
+    def test_nos_favoritos_tambem_vai_para_descartadas(self):
+        """Decisão de 10/11/2026 (Guarulhos 461): sem participação lida, o dia
+        seguinte ao prazo já é Descartadas — favorito não prova proposta."""
+
         OportunidadeSalva.objects.filter(pk=self.s.pk).update(favorita_no_compras=True)
-        self.assertIn("confirmar com a Sentinela", textos(self.s))
+
+        self.assertEqual(classificar(HOJE)[self.s.pk][:2], ("descartadas", "prazo_cotacao"))

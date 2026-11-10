@@ -525,14 +525,12 @@ def avaliar(salva: OportunidadeSalva, hoje: dt.date) -> tuple[dict | None, Saida
     elif prazo_vencido:
         if not cotacao:
             return None, Saida("descartadas", "Prazo venceu sem cotação", "prazo_oportunidade", prazo)
-        if salva.plataforma_id == PLATAFORMA_COM_SENTINELA and salva.favorita_no_compras is not False:
-            # Até a Sentinela ler o Compras.gov.br não dá para saber se a
-            # proposta foi cadastrada: espera aqui em vez de ir para Descartadas.
-            # Fora dos favoritos (a Sentinela conferiu) não há o que esperar:
-            # cotou e não participou (Geriatria 34/2026, 10/11/2026).
-            etapa = "cadastro_proposta"
-            etiquetas.append(Etiqueta("aviso", "confirmar com a Sentinela"))
-        elif _proposta_de(salva):
+        # Compras.gov.br sem nenhuma participação lida, prazo vencido: cotou e
+        # não participou (decisão de 10/11/2026, Guarulhos 461/2026). Antes
+        # ficava em Cadastro de proposta "confirmar com a Sentinela" e, sem
+        # proposta, a confirmação nunca chegava. Descartadas é calculado: se a
+        # Sentinela achar participação depois, a compra volta sozinha.
+        if salva.plataforma_id != PLATAFORMA_COM_SENTINELA and _proposta_de(salva):
             # Proposta gerada no fluxo antigo, em portal que a Sentinela não
             # lê: é sinal de que participou. Fica até alguém confirmar.
             etapa = "cadastro_proposta"
