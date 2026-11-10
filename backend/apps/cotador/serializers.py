@@ -223,6 +223,15 @@ class CotacaoSerializer(serializers.ModelSerializer):
         ]
         extra_kwargs = {"titulo": {"required": False, "allow_blank": True}}
 
+    # O título vem do objeto do edital, que pode passar de 255 caracteres
+    # (Dispensa 27/2026, 343): cortar em vez de recusar a cotação inteira.
+    titulo = serializers.CharField(required=False, allow_blank=True)
+
+    def validate_titulo(self, titulo: str) -> str:
+        limite = Cotacao._meta.get_field("titulo").max_length
+        titulo = titulo.strip()
+        return titulo if len(titulo) <= limite else titulo[: limite - 1].rstrip() + "…"
+
     def validate(self, dados: dict) -> dict:
         """O piso não pode passar o alvo: com mínimo acima do máximo, o
         preço de reserva ficaria acima do preço proposto e a tela mostraria

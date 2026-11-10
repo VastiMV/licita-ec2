@@ -114,6 +114,17 @@ class CotacaoDeUmaSalvaTests(APITestCase):
         self.assertNotIn("oportunidade_criada", resposta.data)
         self.assertEqual(OportunidadeSalva.objects.count(), 1)
 
+    def test_titulo_longo_e_cortado_em_vez_de_recusado(self):
+        """O título vem do objeto do edital; o das ararinhas (Dispensa
+        27/2026, 10/11/2026) tem 343 caracteres e a cotação não salvava."""
+
+        resposta = self.salvar(titulo="Aquisição de ração " * 30)
+
+        self.assertEqual(resposta.status_code, 201, resposta.data)
+        titulo = Cotacao.objects.get().titulo
+        self.assertEqual(len(titulo), 255)
+        self.assertTrue(titulo.endswith("…"))
+
     def test_salvar_de_novo_sobrescreve_a_mesma_cotacao(self):
         primeira = self.salvar()
         segunda = self.salvar(itens=[item_cotado(descricao="Papel A4 — outra marca")])
