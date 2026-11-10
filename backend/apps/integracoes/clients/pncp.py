@@ -330,6 +330,14 @@ def _normalizar_detalhe_compra(d: dict[str, Any]) -> dict[str, Any]:
         "data_encerramento_proposta": _so_data(d.get("dataEncerramentoProposta")),
         "situacao_id": d.get("situacaoCompraId"),
         "situacao_nome": d.get("situacaoCompraNome"),
+        # Para completar a salva que a Sentinela trouxe sem esses dados
+        # (10/11/2026, `apps.licitacoes.completar`). O nome é o da unidade
+        # (UASG), o mesmo que a busca mostra; a razão social é a reserva.
+        "orgao_nome": unidade.get("nomeUnidade") or orgao.get("razaoSocial"),
+        "objeto": d.get("objetoCompra"),
+        "valor_total_estimado": d.get("valorTotalEstimado"),
+        "modalidade": d.get("modalidadeNome"),
+        "data_publicacao": _so_data(d.get("dataPublicacaoPncp")),
     }
 
 

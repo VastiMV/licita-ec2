@@ -46,3 +46,22 @@ def conferencia_diaria() -> dict:
     logger.info("Conferência diária: %s", resumo)
     return resumo
 
+
+
+@shared_task(name="licitacoes.completar_salva")
+def completar_salva(salva_id: int) -> list[str]:
+    """Pedida pela Sentinela quando a salva chegou sem órgão ou sem itens
+    (10/11/2026, ver `completar.py`). Em segundo plano: a captura não espera o
+    PNCP. Se o PNCP falhar, a próxima ronda pede de novo."""
+
+    from .completar import completar_pelo_pncp
+    from .models import OportunidadeSalva
+
+    salva = OportunidadeSalva.objects.ativas().filter(pk=salva_id).first()
+    if not salva:
+        return []
+    try:
+        return completar_pelo_pncp(salva)
+    except Exception:  # noqa: BLE001
+        logger.exception("Completar pelo PNCP: falha na salva %s", salva_id)
+        return []

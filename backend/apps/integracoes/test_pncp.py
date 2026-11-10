@@ -186,6 +186,35 @@ class PncpClientTests(SimpleTestCase):
         self.assertIsNone(detalhe["codigo_ibge"])
         self.assertIsNone(detalhe["plataforma_nome"])
         self.assertIsNone(detalhe["link_plataforma"])
+        self.assertIsNone(detalhe["orgao_nome"])
+        self.assertIsNone(detalhe["valor_total_estimado"])
+
+    def test_detalhar_compra_traz_o_que_completa_uma_salva(self):
+        """Compra trazida pela Sentinela sem o nome do órgão (Dispensa 27/2026,
+        UASG 443034, 10/11/2026): o detalhe do PNCP é de onde ele sai."""
+
+        resposta = {
+            "orgaoEntidade": {"cnpj": "08829974000194", "razaoSocial": "INSTITUTO CHICO MENDES - ICMBIO"},
+            "unidadeOrgao": {"nomeUnidade": "ICMBIO - NGI CURACA", "ufSigla": "BA", "municipioNome": "Curaçá"},
+            "objetoCompra": "Aquisição de ração",
+            "valorTotalEstimado": 64800.0,
+            "modalidadeNome": "Dispensa",
+            "dataPublicacaoPncp": "2026-11-03T10:00:00",
+        }
+        with _pncp_falso(lambda r: httpx.Response(200, json=resposta)) as client:
+            detalhe = client.detalhar_compra(cnpj="08829974000194", ano=2026, sequencial=83)
+
+        # O nome da unidade (UASG), como na busca; a razão social é a reserva.
+        self.assertEqual(detalhe["orgao_nome"], "ICMBIO - NGI CURACA")
+        self.assertEqual(detalhe["objeto"], "Aquisição de ração")
+        self.assertEqual(detalhe["valor_total_estimado"], 64800.0)
+        self.assertEqual(detalhe["modalidade"], "Dispensa")
+        self.assertEqual(detalhe["data_publicacao"], "2026-11-03")
+
+        resposta["unidadeOrgao"].pop("nomeUnidade")
+        with _pncp_falso(lambda r: httpx.Response(200, json=resposta)) as client:
+            detalhe = client.detalhar_compra(cnpj="08829974000194", ano=2026, sequencial=83)
+        self.assertEqual(detalhe["orgao_nome"], "INSTITUTO CHICO MENDES - ICMBIO")
 
     def test_listar_arquivos_monta_o_caminho_e_normaliza(self):
         capturado = {}

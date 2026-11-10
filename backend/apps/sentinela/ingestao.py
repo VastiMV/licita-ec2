@@ -33,6 +33,7 @@ empresa: com item, há proposta; vazia na primeira página, não há.
 from __future__ import annotations
 
 import datetime as dt
+import logging
 import re
 from decimal import Decimal, InvalidOperation
 from urllib.parse import parse_qs, urlsplit
@@ -54,6 +55,8 @@ from apps.licitacoes.models import (
     PropostaDoItem,
 )
 from apps.licitacoes.torre import MODALIDADE_COMPRAS_GOV, proposta_vencedora
+
+logger = logging.getLogger(__name__)
 
 BRASILIA = ZoneInfo("America/Sao_Paulo")
 
@@ -598,6 +601,7 @@ def _salva_da_compra(compra: dict, codigo: str | None = None) -> tuple[Oportunid
             # próximas capturas (itens, propostas) a ela.
             salva.link_plataforma = montar_link_compras_gov({"id_compra": codigo}) or salva.link_plataforma
             salva.save(update_fields=["link_plataforma"])
+        _pedir_completar(salva)
         return salva, False
     if not (chave and codigo):
         return None, False
@@ -625,7 +629,29 @@ def _salva_da_compra(compra: dict, codigo: str | None = None) -> tuple[Oportunid
         autor=None,
         descricao="Trazida pela Sentinela: a empresa está participando desta compra no Compras.gov.br.",
     )
+    _pedir_completar(salva)
     return salva, True
+
+
+def _pedir_completar(salva: OportunidadeSalva) -> None:
+    """Sem órgão ou sem itens (o Compras.gov não manda os itens; às vezes nem
+    o nome do órgão): pede ao PNCP, em segundo plano, o que a busca teria
+    gravado. Sem isso o Cotador abre vazio (10/11/2026, ver
+    `apps.licitacoes.completar`). Repete a cada captura até completar."""
+
+    from apps.licitacoes.completar import falta_dados
+
+    if not falta_dados(salva):
+        return
+    from apps.licitacoes.tasks import completar_salva
+
+    def enfileirar():
+        try:
+            completar_salva.delay(salva.pk)
+        except Exception:  # noqa: BLE001 — fila fora do ar não derruba a captura
+            logger.warning("Não deu para pedir o PNCP da salva %s agora", salva.pk)
+
+    transaction.on_commit(enfileirar)
 
 
 def _gravar_participacao(salva: OportunidadeSalva, compra: dict, registro: dict) -> None:

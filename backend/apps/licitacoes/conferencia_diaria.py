@@ -103,6 +103,11 @@ def conferir(hoje: dt.date | None = None, pncp=None, compras=None) -> dict[str, 
             resumo["falhas"] += 1
             logger.exception("Conferência diária: falha na salva %s", salva.pk)
 
+    from .completar import completar_as_que_faltam
+
+    # Salvas sem órgão ou sem itens (trazidas pela Sentinela, 10/11/2026):
+    # a Sentinela já pede na captura; aqui pega as que ficaram para trás.
+    resumo["completadas"] = completar_as_que_faltam(pncp)["completadas"]
     resumo["vigias_encerradas"] = _encerrar_vigias(hoje, compras)
     from .mercado import renovar_todos
 
