@@ -20,6 +20,7 @@ from .views import (
     OportunidadesView,
     ProcessoView,
     RelatorioMensalView,
+    RelatorioMercadoView,
     RelatorioView,
     TorreView,
 )
@@ -31,6 +32,7 @@ urlpatterns = [
     path("cotacoes/", EmCotacaoView.as_view(), name="licitacoes-cotacoes"),
     path("encerradas/", EncerradasView.as_view(), name="licitacoes-encerradas"),
     path("relatorios/mensal/", RelatorioMensalView.as_view(), name="licitacoes-relatorio-mensal"),
+    path("relatorios/mercado/", RelatorioMercadoView.as_view(), name="licitacoes-relatorio-mercado"),
     path("descartadas/", DescartadasView.as_view(), name="licitacoes-descartadas"),
     path(
         "compras/<str:cnpj>/<int:ano>/<int:sequencial>/detalhe/",

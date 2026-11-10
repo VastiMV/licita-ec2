@@ -46,6 +46,8 @@ export const ENDPOINTS = {
     relatorio: (id: number) => `licitacoes/salvas/${id}/relatorio/`,
     /** O relatório do mês (participou, ganhou, perdeu, faturamento, lucro). */
     relatorioMensal: 'licitacoes/relatorios/mensal/',
+    /** O mercado de cada item em que ele participou. */
+    relatorioMercado: 'licitacoes/relatorios/mercado/',
   },
   /** Fabricante › Marca › Modelo e a tabela de preços (`apps/produtos`). */
   produtos: {

@@ -56,6 +56,7 @@ from .services import (
     detalhar_compra_cacheada,
 )
 from .relatorio import relatorio_da_compra
+from .mercado import relatorio_de_mercado
 from .relatorio_mensal import relatorio_mensal
 from .torre import montar_torre
 
@@ -485,6 +486,14 @@ class RelatorioMensalView(APIView):
         except ValueError:
             meses = 12
         return Response(relatorio_mensal(meses))
+
+
+class RelatorioMercadoView(APIView):
+    """`GET /api/licitacoes/relatorios/mercado/` — o mercado de cada item em
+    que ele participou (ver `mercado.py`)."""
+
+    def get(self, request: Request) -> Response:
+        return Response(relatorio_de_mercado())
 
 
 class RelatorioView(APIView):

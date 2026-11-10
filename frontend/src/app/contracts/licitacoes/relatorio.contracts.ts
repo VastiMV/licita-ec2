@@ -101,3 +101,23 @@ export interface RelatorioMensalResponse {
   readonly por_pouco: readonly PerdeuPorPouco[];
   readonly pouco_percentual: string;
 }
+
+/** O mercado de cada item — `apps/licitacoes/mercado.py`. Chaves dos
+ * períodos: "3", "6", "12", "24" (meses). */
+export interface PeriodoDeMercado {
+  readonly compras: number;
+  readonly media: number | null;
+  readonly marcas: readonly { readonly marca: string; readonly vezes: number }[];
+  readonly poucos_dados: boolean;
+}
+
+export interface MercadoDoItem {
+  readonly descricao: string;
+  readonly nome_pdm: string;
+  readonly codigo_catmat: number | null;
+  readonly exato: Readonly<Record<string, PeriodoDeMercado>>;
+  readonly grupo: Readonly<Record<string, PeriodoDeMercado>>;
+  readonly media_dele: number | null;
+  readonly ofertas_dele: number;
+  readonly atualizado_em: string | null;
+}

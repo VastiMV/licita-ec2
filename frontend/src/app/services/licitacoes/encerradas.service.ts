@@ -11,6 +11,7 @@ import {
   ProcessoResponse,
 } from '../../contracts/licitacoes/encerrada.contracts';
 import {
+  MercadoDoItem,
   RelatorioMensalResponse,
   RelatorioResponse,
 } from '../../contracts/licitacoes/relatorio.contracts';
@@ -43,5 +44,10 @@ export class EncerradasService {
   /** O relatório do mês (`apps/licitacoes/relatorio_mensal.py`). */
   relatorioMensal(meses = 12): Observable<RelatorioMensalResponse> {
     return this.api.get<RelatorioMensalResponse>(ENDPOINTS.licitacoes.relatorioMensal, { meses });
+  }
+
+  /** O mercado de cada item em que ele participou (`mercado.py`). */
+  relatorioMercado(): Observable<readonly MercadoDoItem[]> {
+    return this.api.get<readonly MercadoDoItem[]>(ENDPOINTS.licitacoes.relatorioMercado);
   }
 }

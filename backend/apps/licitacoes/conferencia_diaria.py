@@ -6,6 +6,8 @@ depende do computador do Carlinhos nem da Sentinela:
    situação ("Compra suspensa"; revogada/anulada em vermelho).
 2. **Itens das compras que ele só acompanha** ("xeretar"): a lista de itens
    vem do PNCP; a Sentinela lê as propostas de cada um, 1x por dia.
+4. **O mercado de cada item** em que ele participou (`mercado.py`), 1x por
+   semana por item.
 3. **Fim da vigia** de quem perdeu: quando a ata de registro de preços do
    item aparece assinada com **outra** empresa (Dados Abertos do
    Compras.gov.br, por UASG). Contrato comum (sem ata) não aparece nessa
@@ -102,6 +104,12 @@ def conferir(hoje: dt.date | None = None, pncp=None, compras=None) -> dict[str, 
             logger.exception("Conferência diária: falha na salva %s", salva.pk)
 
     resumo["vigias_encerradas"] = _encerrar_vigias(hoje, compras)
+    from .mercado import renovar_todos
+
+    try:
+        resumo["mercado"] = renovar_todos(compras, hoje)
+    except Exception:  # noqa: BLE001
+        logger.exception("Conferência diária: falha ao renovar o mercado dos itens")
     return resumo
 
 

@@ -253,6 +253,24 @@ class ComprasGovClient:
             fim,
         )
 
+    def itens_do_pdm(self, codigo_pdm: int) -> list[dict[str, Any]]:
+        """Os itens do catálogo (CATMAT) de um PDM, com a descrição completa —
+        é como se acha o código exato do item do edital (09/11/2026)."""
+
+        return self._paginar(
+            "/modulo-material/4_consultarItemMaterial", {"codigoPdm": codigo_pdm, "statusItem": "true"}
+        )
+
+    def precos_praticados(self, tipo: str, codigo: int, inicio: str, fim: str) -> list[dict[str, Any]]:
+        """Pesquisa de Preços do governo: as compras de um item do catálogo
+        (`tipo="codigoItemCatalogo"`) ou de um PDM (`tipo="codigoPdm"`) em todo
+        o Brasil, com preço unitário, data e **marca**."""
+
+        return self._paginar(
+            "/modulo-pesquisa-preco/1_consultarMaterial",
+            {"tipo": tipo, "codigo": codigo, "dataCompraInicio": inicio, "dataCompraFim": fim},
+        )
+
     def itens_de_ata_da_unidade(self, codigo_unidade: str, inicio: str, fim: str) -> list[dict[str, Any]]:
         """Itens de atas de registro de preços de uma unidade (UASG) com
         vigência iniciada entre `inicio` e `fim`: item, fornecedor e data de
