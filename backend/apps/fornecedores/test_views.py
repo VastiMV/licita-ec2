@@ -94,12 +94,42 @@ class CadastroTests(APITestCase):
         resposta = self.client.post("/api/fornecedores/", payload(nome="   "), format="json")
         self.assertEqual(resposta.status_code, 400)
 
-    def test_email_e_obrigatorio(self):
-        dados = payload()
-        dados.pop("email")
-        self.assertEqual(
-            self.client.post("/api/fornecedores/", dados, format="json").status_code, 400
+    def test_so_a_razao_social_e_obrigatoria(self):
+        """Pedido da operação (10/11/2026, Jira GEN-19): no Cotador o
+        Carlinhos cadastra o fornecedor que acabou de cotar por telefone, sem
+        CNPJ nem e-mail. A chave do cadastro é o id, não o documento."""
+
+        resposta = self.client.post(
+            "/api/fornecedores/", {"nome": "Casa das Rações do Zé"}, format="json"
         )
+
+        self.assertEqual(resposta.status_code, 201, resposta.data)
+        fornecedor = Fornecedor.objects.get()
+        self.assertEqual((fornecedor.cnpj, fornecedor.email), ("", ""))
+        self.assertEqual(resposta.data["cnpj_formatado"], "")
+
+    def test_varios_sem_documento_nao_colidem(self):
+        for nome in ("Fornecedor A", "Fornecedor B"):
+            resposta = self.client.post(
+                "/api/fornecedores/", payload(nome=nome, cnpj="", email=""), format="json"
+            )
+            self.assertEqual(resposta.status_code, 201, resposta.data)
+        self.assertEqual(Fornecedor.objects.filter(cnpj="").count(), 2)
+
+    def test_documento_digitado_continua_conferido_e_sem_repetir(self):
+        self.client.post("/api/fornecedores/", payload(), format="json")
+        repetido = self.client.post("/api/fornecedores/", payload(nome="Outra"), format="json")
+        invalido = self.client.post(
+            "/api/fornecedores/", payload(cnpj="11.222.333/0001-82"), format="json"
+        )
+        self.assertEqual((repetido.status_code, invalido.status_code), (400, 400))
+
+    def test_email_digitado_errado_e_recusado(self):
+        resposta = self.client.post(
+            "/api/fornecedores/", payload(email="sem-arroba"), format="json"
+        )
+        self.assertEqual(resposta.status_code, 400)
+        self.assertIn("email", resposta.data)
 
 
 class ListaTests(APITestCase):

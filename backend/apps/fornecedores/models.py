@@ -107,11 +107,15 @@ class Fornecedor(models.Model):
     nome = models.CharField("razão social", max_length=255)
     fantasia = models.CharField("nome fantasia", max_length=255, blank=True)
     tipo = models.CharField("tipo", max_length=8, choices=Tipo.choices, default=Tipo.PJ)
+    # Opcional desde 10/11/2026 (GEN-19): no Cotador o fornecedor é
+    # cadastrado na hora, muitas vezes sem documento. A chave é o id; o
+    # documento, quando existe, continua único (ver `Meta.constraints`).
     cnpj = models.CharField(
         "CNPJ / CPF",
         max_length=14,
-        unique=True,
-        help_text="Só dígitos — a máscara é da tela (ver documentos.py).",
+        blank=True,
+        default="",
+        help_text="Só dígitos — a máscara é da tela (ver documentos.py). Vazio = sem documento.",
     )
     inscricao_estadual = models.CharField("inscrição estadual", max_length=40, blank=True)
     categoria = models.CharField(
@@ -127,7 +131,7 @@ class Fornecedor(models.Model):
     cidade = models.CharField("cidade", max_length=120, blank=True)
 
     responsavel = models.CharField("responsável", max_length=150, blank=True)
-    email = models.EmailField("e-mail")
+    email = models.EmailField("e-mail", blank=True)
     telefone = models.CharField("telefone", max_length=20, blank=True)
     celular = models.CharField("celular / WhatsApp", max_length=20, blank=True)
 
@@ -171,9 +175,16 @@ class Fornecedor(models.Model):
         verbose_name = "fornecedor"
         verbose_name_plural = "fornecedores"
         ordering = ["nome"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["cnpj"],
+                condition=~models.Q(cnpj=""),
+                name="fornecedor_documento_unico_quando_informado",
+            )
+        ]
 
     def __str__(self) -> str:
-        return f"{self.nome} ({self.cnpj_formatado})"
+        return f"{self.nome} ({self.cnpj_formatado})" if self.cnpj else self.nome
 
     @property
     def cnpj_formatado(self) -> str:

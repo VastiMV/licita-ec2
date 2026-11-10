@@ -111,6 +111,17 @@ describe('FornecedorModalComponent', () => {
       expect(fixture.nativeElement.textContent).toContain('Campo obrigatório');
     });
 
+    it('salva só com a razão social — sem CNPJ e sem e-mail (GEN-19)', () => {
+      const { fixture, service } = montar(null);
+      digitar(fixture, 'nome', 'Casa das Rações do Zé');
+
+      salvar(fixture);
+
+      expect(service.criar).toHaveBeenCalledWith(
+        expect.objectContaining({ nome: 'Casa das Rações do Zé', cnpj: '', email: '' }),
+      );
+    });
+
     it('recusa documento com dígito verificador errado antes de ir ao servidor', () => {
       const { fixture, service } = montar(null);
       digitar(fixture, 'nome', 'Empresa X');

@@ -24,7 +24,7 @@
         />
         <app-select label="Tipo" [options]="tipos" formControlName="tipo" placeholder="Selecione" />
         <app-input-text
-          label="CNPJ / CPF *"
+          label="CNPJ / CPF"
           formControlName="cnpj"
           placeholder="00.000.000/0000-00"
           [error]="erroDe('cnpj')"
@@ -81,7 +81,7 @@
           placeholder="Nome do contato"
         />
         <app-input-text
-          label="E-mail *"
+          label="E-mail"
           type="email"
           formControlName="email"
           placeholder="compras@empresa.com.br"
