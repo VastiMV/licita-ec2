@@ -31,6 +31,7 @@ services:
       DOMINIO: ${DOMINIO}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./.well-known/security.txt:/srv/.well-known/security.txt:ro
       - caddy_data:/data
       - caddy_config:/config
     depends_on:

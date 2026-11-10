@@ -3,6 +3,10 @@
 
 {$DOMINIO} {
 	encode gzip
+	handle /.well-known/security.txt {
+		root * /srv
+		file_server
+	}
 	handle /api/* {
 		reverse_proxy backend:8000
 	}

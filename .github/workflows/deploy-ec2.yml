@@ -60,6 +60,9 @@ jobs:
         env:
           EC2_HOST: ${{ secrets.EC2_HOST }}
         run: |
+          ssh -i ~/.ssh/ec2.pem "ubuntu@$EC2_HOST" 'mkdir -p /opt/licita/.well-known'
+          scp -i ~/.ssh/ec2.pem deploy/ec2/.well-known/security.txt \
+            "ubuntu@$EC2_HOST:/opt/licita/.well-known/security.txt"
           scp -i ~/.ssh/ec2.pem \
             deploy/ec2/docker-compose.yml deploy/ec2/Caddyfile deploy/ec2/atualizar.sh \
             "ubuntu@$EC2_HOST:/opt/licita/"
