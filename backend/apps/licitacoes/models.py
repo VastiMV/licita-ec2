@@ -755,3 +755,26 @@ class Entrega(models.Model):
 
     def __str__(self) -> str:
         return f"Entrega de {self.data:%d/%m/%Y}"
+
+
+class MercadoDoItem(models.Model):
+    """O mercado de um item (exato do catálogo) em que ele participou:
+    preço médio e marcas em 3/6/12/24 meses, pela Pesquisa de Preços do
+    governo. Guardado e renovado 1x por semana (ver `mercado.py`)."""
+
+    chave = models.CharField("descrição normalizada", max_length=500, unique=True)
+    descricao = models.TextField("descrição do item", blank=True)
+    codigo_pdm = models.IntegerField("PDM", null=True, blank=True)
+    nome_pdm = models.CharField("tipo (PDM)", max_length=255, blank=True)
+    codigo_catmat = models.IntegerField("item do catálogo (CATMAT)", null=True, blank=True)
+    semelhanca = models.FloatField("semelhança da descrição", default=0)
+    dados = models.JSONField("números", default=dict, blank=True)
+    atualizado_em = models.DateTimeField("atualizado em", null=True, blank=True)
+
+    class Meta:
+        verbose_name = "mercado do item"
+        verbose_name_plural = "mercado dos itens"
+
+    def __str__(self) -> str:
+        return self.nome_pdm or self.descricao[:60]
+

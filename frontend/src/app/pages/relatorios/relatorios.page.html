@@ -74,6 +74,65 @@
       }
     }
   </section>
+
+  <section>
+    <h2>Mercado dos seus itens <span class="muted">· todo o Brasil</span></h2>
+    <p class="nota muted">
+      Quanto os órgãos pagaram pelo <strong>mesmo item</strong> (o item exato do catálogo do
+      governo) e quais marcas mais venceram. Fonte: Pesquisa de Preços do governo, atualizada 1x por
+      semana.
+    </p>
+    @if (mercado(); as itens) {
+      @for (item of itens; track item.descricao) {
+        <article class="mercado">
+          <h3 [attr.title]="item.descricao">{{ titulo(item) }}</h3>
+          @if (item.codigo_catmat) {
+            <div class="barras" role="img" [attr.aria-label]="'Preço médio por período'">
+              @for (p of periodos; track p) {
+                <div class="barra">
+                  <span class="valor">{{ real(item.exato[p]?.media) }}</span>
+                  <span class="coluna" [style.height.%]="altura(item, p)"></span>
+                  <span class="rotulo">{{ p }} meses</span>
+                  <span class="compras muted">{{ item.exato[p]?.compras ?? 0 }} compras</span>
+                </div>
+              }
+            </div>
+            @if (item.exato['24']?.poucos_dados) {
+              <p class="poucos">⚠️ Poucos dados: menos de 3 compras deste item em 24 meses.</p>
+            }
+            <p>
+              <strong>Você ofereceu em média: {{ real(item.media_dele) }}</strong>
+              <span class="muted">
+                ({{ item.ofertas_dele }} vez{{ item.ofertas_dele === 1 ? '' : 'es' }})</span
+              >
+            </p>
+            @if (item.exato['24']?.marcas?.length) {
+              <p>
+                Marcas que mais venceram:
+                @for (m of item.exato['24'].marcas; track m.marca; let ultima = $last) {
+                  <strong>{{ m.marca }}</strong> ({{ m.vezes }}){{ ultima ? '' : ', ' }}
+                }
+              </p>
+            }
+          } @else {
+            <p class="muted">Não achei este item exato no catálogo do governo.</p>
+          }
+          @if (item.grupo['12']?.compras) {
+            <p class="referencia muted">
+              Referência — {{ item.nome_pdm | titlecase }} (todos os modelos), 12 meses:
+              {{ item.grupo['12'].compras }} compras, média {{ real(item.grupo['12'].media) }}
+            </p>
+          }
+        </article>
+      } @empty {
+        <p class="muted">
+          Ainda sem dados: o mercado dos itens é calculado de manhã, nos dias úteis.
+        </p>
+      }
+    } @else {
+      <p class="muted">Carregando…</p>
+    }
+  </section>
 } @else {
   <p class="muted">Carregando…</p>
 }

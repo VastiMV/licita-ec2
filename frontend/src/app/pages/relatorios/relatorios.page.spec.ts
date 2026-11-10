@@ -47,6 +47,31 @@ describe('RelatoriosPage', () => {
                 ],
                 pouco_percentual: '5',
               }),
+            relatorioMercado: () =>
+              of([
+                {
+                  descricao: 'Cadeira De Rodas Manual Para Locomoção, capacidade: de 171 a 200',
+                  nome_pdm: 'CADEIRA DE RODAS MANUAL PARA LOCOMOÇÃO',
+                  codigo_catmat: 637928,
+                  exato: {
+                    '3': { compras: 0, media: null, marcas: [], poucos_dados: true },
+                    '6': { compras: 4, media: 1278.09, marcas: [], poucos_dados: false },
+                    '12': { compras: 4, media: 1278.09, marcas: [], poucos_dados: false },
+                    '24': {
+                      compras: 4,
+                      media: 1278.09,
+                      marcas: [{ marca: 'DELLAMED', vezes: 3 }],
+                      poucos_dados: false,
+                    },
+                  },
+                  grupo: {
+                    '12': { compras: 179, media: 1496.51, marcas: [], poucos_dados: false },
+                  },
+                  media_dele: 1200,
+                  ofertas_dele: 1,
+                  atualizado_em: null,
+                },
+              ]),
           },
         },
       ],
@@ -73,6 +98,17 @@ describe('RelatoriosPage', () => {
     expect(el.querySelector('.lista-pouco')).toBeNull();
     (el.querySelector('.por-pouco') as HTMLButtonElement).click();
     TestBed.inject(EncerradasService);
+  });
+
+  it('o mercado de cada item: barras, a oferta dele, marcas e a referência do tipo', () => {
+    const el = montar();
+
+    const bloco = el.querySelector('.mercado')?.textContent ?? '';
+    expect(el.querySelectorAll('.barra').length).toBe(4);
+    expect(bloco).toContain('R$\u00a01.278,09');
+    expect(bloco).toContain('Você ofereceu em média: R$\u00a01.200,00');
+    expect(bloco).toContain('DELLAMED');
+    expect(bloco).toContain('179 compras');
   });
 
   it('nome do mês', () => {
