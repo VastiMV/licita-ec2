@@ -145,6 +145,8 @@ const MENU: readonly Entrada[] = [
     label: 'Disputar',
     path: '/torre/estagio/disputar',
     itens: [
+      // Preço lançado no Compras.gov, sessão fechada (10/11/2026).
+      { path: '/torre/etapa/aguardando_sessao', label: 'Aguardando sessão', icon: 'calendar' },
       { path: '/torre/etapa/disputa', label: 'Disputa', icon: 'disputa' },
       {
         path: '/torre/etapa/aguardando_julgamento',

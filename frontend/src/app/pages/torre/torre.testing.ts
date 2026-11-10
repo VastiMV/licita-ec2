@@ -122,6 +122,7 @@ export function torre(): TorreResponse {
         rotulo: 'Disputar',
         total: 2,
         etapas: [
+          { chave: 'aguardando_sessao', rotulo: 'Aguardando sessão', total: 0 },
           { chave: 'disputa', rotulo: 'Disputa', total: 0 },
           { chave: 'aguardando_julgamento', rotulo: 'Aguardando julgamento', total: 1 },
           { chave: 'julgado_habilitado', rotulo: 'Aceita e habilitada', total: 0 },

@@ -45,6 +45,10 @@ ESTAGIOS: list[tuple[str, str, list[tuple[str, str]]]] = [
         "disputar",
         "Disputar",
         [
+            # Proposta com preço lançado no Compras.gov, sessão ainda fechada
+            # (10/11/2026): não há mais o que fazer em Preparar, mas também não
+            # é Disputa — Disputa é sessão aberta, lance acontecendo agora.
+            ("aguardando_sessao", "Aguardando sessão"),
             ("disputa", "Disputa"),
             ("aguardando_julgamento", "Aguardando julgamento"),
             ("julgado_habilitado", "Aceita e habilitada"),
@@ -176,6 +180,11 @@ def etapa_do_item(item, documentos, entregas, hoje: dt.date) -> EtapaDoItem:
         return EtapaDoItem("disputa", perdendo=perdendo)
     if item.fase_item in FASES_ITEM_DEPOIS_DA_DISPUTA or item.classificacao:
         return EtapaDoItem("aguardando_julgamento", perdendo=perdendo)
+    if item.valor_proposta_inicial:
+        # Preço lançado no Compras.gov e a sessão não abriu: a proposta está
+        # feita, com ou sem cotação no Licita (decisão de 10/11/2026: o
+        # Compras.gov é o que vale para a disputa).
+        return EtapaDoItem("aguardando_sessao")
     return EtapaDoItem("cadastro_proposta")
 
 
@@ -537,6 +546,13 @@ def avaliar(salva: OportunidadeSalva, hoje: dt.date) -> tuple[dict | None, Saida
         # Ele tirou dos favoritos no Compras.gov (09/11/2026): o Licita avisa,
         # quem decide descartar é ele (lixeira).
         etiquetas.append(Etiqueta("aviso", "fora dos favoritos no Compras.gov"))
+
+    if etapa == "aguardando_sessao":
+        if participacao and participacao.sessao_abre_em:
+            abre = timezone.localtime(participacao.sessao_abre_em)
+            etiquetas.insert(0, Etiqueta("info", f"sessão {abre:%d/%m %H:%M}"))
+        if cotacao is None:
+            etiquetas.append(Etiqueta("aviso", "sem cotação no Licita"))
 
     if etapa == "cadastro_proposta" and prazo and not prazo_vencido and (prazo - hoje).days <= 1:
         etiquetas.insert(0, Etiqueta("alerta", "proposta até hoje" if prazo == hoje else "proposta até amanhã"))
