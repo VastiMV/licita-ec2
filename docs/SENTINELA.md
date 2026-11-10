@@ -1,4 +1,4 @@
-# Sentinela — plano e o que já existe (beta 0.1, 08/11/2026)
+# Sentinela — plano e o que já existe (0.2.4, 10/11/2026)
 
 A Sentinela é uma **extensão do Chrome** no computador do Carlinhos. Ela é a
 ponte entre o Compras.gov.br (a sessão **dele**, já logada) e o Licita. Sem
@@ -88,6 +88,18 @@ a ronda inclui a **vigia diária** dos itens perdidos (na primeira ronda do
 dia — se o computador ligar às 10h, é às 10h; o servidor anota o dia de cada
 item, nenhum dia é pulado) e as compras que ele só acompanha. Regras em
 [`TORRE.md`](TORRE.md), "Regras de 09/11/2026".
+
+**0.2.4 (10/11/2026):** a ronda lê a **caixa de mensagens** do fornecedor
+(`comprasnet-mensagem/v1/mensagens?size=20&page=0`). A lista já traz o texto:
+nada é aberto, nada fica marcado como lido. Cada mensagem nova (até 3 dias)
+vira aviso no sino e no Telegram; convocação (830) e recurso (850) em
+vermelho.
+
+**Ordem da ronda (a cada 10 min, seg–sex 8h–19h, até 60 consultas):** caixa de
+mensagens → favoritos das compras de Preparar → proposta/recurso/diligência
+dos itens vivos → vigia diária dos perdidos → propostas de todos (até 15) →
+itens das compras acompanhadas. A lista vem do Licita (`ronda/`); o que a
+extensão pode consultar está fixo em `pagina.js` (`PERMITIDO`).
 
 **Ainda não feito:** ler a caixa de mensagens sozinha a cada 3 min; avisar
 quando o lance digitado ficar abaixo do piso (precisa ver a tela real de

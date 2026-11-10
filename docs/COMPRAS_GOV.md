@@ -64,11 +64,11 @@ da sessão de julgamento (`numeroSessaoJulgHab`, quase sempre `1`).
 | Tipos de mensagem para o filtro do chat | `/comprasnet-fase-externa/v1/sistema/compras/{compra}/mensagens/tipos-msg-para-filtro` | 🔐 | 🧩 **sim** | — |
 | **Chat da compra** | `/comprasnet-mensagem/v2/chat/{compra}?page&size&legadoAsp` | 🔐 | 🧩 **sim, a cada consulta** | — (não usar) |
 | **Chat do item** | `/comprasnet-mensagem/v2/chat/{compra}/itens/{item}?page&size&identificadorParticipante&incluirMensagensCompra` | 🔐 | 🧩 **sim, a cada consulta** | — (não usar) |
-| **Caixa de mensagens do fornecedor** (todas as compras: convocação 830, pregoeiro 840, recurso 850, impugnação 810) | `/comprasnet-mensagem/v1/mensagens?page&size&dataHoraMenorQue&tagsSelecionadas` | 🔐 | não | planejado: 🔁 consulta sozinha |
-| Contador de não lidas | `/comprasnet-mensagem/v1/mensagens/quantidade-nao-lidas` | 🔐 | não | planejado |
+| **Caixa de mensagens do fornecedor** (todas as compras: convocação 830, pregoeiro 840, recurso 850, impugnação 810). A lista **já traz o texto** | `/comprasnet-mensagem/v1/mensagens?page&size&dataHoraMenorQue&tagsSelecionadas` | 🔐 | não | 👁 copia · 🔁 **consulta sozinha (0.2.4)** → sino e Telegram |
+| Contador de não lidas | `/comprasnet-mensagem/v1/mensagens/quantidade-nao-lidas` | 🔐 | não | — |
 | Abrir uma mensagem (**marca como lida**) | `/comprasnet-mensagem/v1/mensagens/{id}` | 🔐 | não | — (nunca: marcaria como lida) |
 | Notificações do sino do Compras.gov | `/comprasnet-mensagem/v1/destinatarios/notificacoes` | 🔐 | não | — |
-| Quais compras estão favoritadas | `/comprasnet-oportunidade/v1/compras/favoritas/dentre-opcoes?compras=…` | 🔐 | não | — |
+| Quais compras estão favoritadas (resposta: a lista das que estão) | `/comprasnet-oportunidade/v1/compras/favoritas/dentre-opcoes?compras=…` | 🔐 | não | 🔁 consulta sozinha (0.2.1): aviso "fora dos favoritos" |
 | Quais itens estão favoritados | `/comprasnet-oportunidade/v1/compras/{compra}/itens/favoritos?itens=…` | 🔐 | não | — |
 
 ## Escritas
@@ -91,6 +91,15 @@ em "Minhas participações".
 | **Acompanhamento da compra (do fornecedor)** — "Minha proposta", filtros de itens, chat, fase recursal | `/comprasnet-web/seguro/fornecedor/acompanhamento-compra?compra={compra}` | 🔐 — **é o "Abrir" da Torre** |
 | Acompanhamento **público** da compra (qualquer pessoa) | `/comprasnet-web/public/compras/acompanhamento-compra?compra={compra}` | 🌐 — sem proposta, sem filtros da empresa; usado só na **busca** do Licita |
 
+## Dados Abertos usados pelo servidor (sem sessão, 09–10/11/2026)
+
+| Para quê | Endereço (`https://dadosabertos.compras.gov.br`) |
+|---|---|
+| Atas da UASG (fim da vigia: ata assinada com outra empresa) | `/modulo-arp/2_consultarARPItem?codigoUnidadeGerenciadora=…` |
+| Catálogo: tipos (PDM) e itens exatos (CATMAT) | `/modulo-material/3_consultarPdmMaterial`, `/modulo-material/4_consultarItemMaterial?codigoPdm=…` |
+| **Pesquisa de Preços** (preço, data e **marca** de cada compra no Brasil) | `/modulo-pesquisa-preco/1_consultarMaterial?tipo=codigoItemCatalogo|codigoPdm&codigo=…&dataCompraInicio&dataCompraFim` |
+| Itens de uma compra (o PNCP dá a lista para as acompanhadas) | `/modulo-contratacoes/2.1_consultarItensContratacoes_PNCP_14133_Id?tipo=idCompra&codigo=…` (vem **sem** o código CATMAT) |
+
 ## Fora do Compras.gov (fontes sem sessão)
 
 | Fonte | Endereço | Acesso | Uso no Licita |
@@ -112,7 +121,7 @@ Todas em `https://insidelicitacoes.com.br/api/sentinela/` (sem `www`: o
 | `GET camada/{compra}/` | números da camada de disputa (teto, ideal, piso, custo, lucro) | 0.1 |
 | `GET estado/` | para o botão do topo do Licita (usuário logado, não a chave) | 0.1 |
 | `GET ronda/` | o que consultar sozinha agora: as propostas dos itens da empresa (`apps/sentinela/ronda.py`) | 0.1.4 |
-| `GET tarefas/`, `POST tarefas/{id}/` | tarefas pedidas pelo Licita (tirar favorito) | 0.2 (em espera) |
+| `GET tarefas/`, `POST tarefas/{id}/` | tarefas pedidas pelo Licita (tirar favorito pela lixeira) | 0.2.1 |
 
 ## Regras que não se negociam
 

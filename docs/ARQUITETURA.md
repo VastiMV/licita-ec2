@@ -44,7 +44,9 @@ manifests já usam esse nome; o valor `licita` que aparecia aqui antes nunca foi
 |---|---|
 | `accounts` | usuários, autenticação (JWT), perfil |
 | `catalogo` | model `Pdm`, sincronização do catálogo de materiais |
-| `licitacoes` | busca de oportunidades (live, cruza PNCP + catálogo), os models `OportunidadeSalva`/`EventoOportunidadeSalva` (lista salva + histórico) e a **Torre de Controle**: `torre.py` (etapas), `encerradas.py` (saídas), os models `ParticipacaoCompra`/`ItemParticipado`/`DocumentoFinanceiro`/`Entrega` e as sincronias diárias `sincronia_pncp.py`/`sincronia_transparencia.py` — ver [`TORRE.md`](TORRE.md) |
+| `licitacoes` | busca de oportunidades (live, cruza PNCP + catálogo), os models `OportunidadeSalva`/`EventoOportunidadeSalva` (lista salva + histórico) e a **Torre de Controle**: `torre.py` (etapas), `encerradas.py` (saídas), os models `ParticipacaoCompra`/`ItemParticipado`/`DocumentoFinanceiro`/`Entrega` e as sincronias diárias `sincronia_pncp.py`/`sincronia_transparencia.py`/`conferencia_diaria.py`; os relatórios (`relatorio.py` da licitação, `relatorio_mensal.py`, `mercado.py`) e `PropostaDoItem`/`ItemAcompanhado`/`MercadoDoItem` — ver [`TORRE.md`](TORRE.md) |
+| `sentinela` | API da extensão do Chrome: `captura/` (o que a página do Compras.gov recebeu → `ingestao.py`), `ronda/` (o que ela consulta sozinha → `ronda.py`), `tarefas/` (tirar favorito pela lixeira), `camada/`, `pulso/` — ver [`SENTINELA.md`](SENTINELA.md) |
+| `notificacoes` | o **sino** (`Notificacao`, uma por fato; `Leitura` por pessoa) e o envio ao **Telegram** (`telegram.py`, Celery) |
 | `tenants` | model `Tenant` (uma linha só hoje) e `tenant_atual()`, o único ponto que resolve de quem é a requisição — ver `DOMINIO.md` |
 | `empresas` | model `Empresa` — os CNPJs com que a equipe disputa (não confundir com `fornecedores`, que é de quem ela compra) |
 | `documentos` | dossiê de habilitação da empresa: catálogo da Lei 14.133, a vaga de cada documento, as versões com validade e o histórico — ver `DOMINIO.md` |
@@ -147,6 +149,8 @@ task Celery, com RabbitMQ como broker:
 | `sincronizar_catalogo_pdm` | Celery Beat | diária (ou sob demanda via endpoint admin) |
 | `licitacoes.sincronizar_pncp` | Celery Beat | segunda a sexta, 8h (Brasília) — vitórias e atas da empresa; ver `TORRE.md` |
 | `licitacoes.sincronizar_transparencia` | Celery Beat | segunda a sexta, 8h10 — empenho, liquidação, pagamento federais |
+| `licitacoes.conferencia_diaria` | Celery Beat | segunda a sexta, 7h45 — data/situação no PNCP, itens acompanhados, fim da vigia (atas), mercado dos itens |
+| `notificacoes.enviar_telegram` | a cada aviso novo do sino | manda ao Telegram (sem chave no `.env`: não faz nada) |
 | chamadas à API do PNCP/compras.gov.br feitas por busca interativa do usuário | request síncrono da `licitacoes` view | -- ficam síncronas mesmo, são a resposta da busca; só o que não bloqueia a resposta ao usuário vira task |
 
 Agendamento via `django-celery-beat` (schedule editável no banco/admin, não
@@ -322,8 +326,10 @@ imperativamente no cluster.
 [`DOMINIO.md`](DOMINIO.md) para o estado detalhado e os achados contra a
 API real). Falta:
 
-1. **Torre de Controle:** Sentinela, Telegram, Radar, telas de lançamento
-   manual — lista e ordem em [`TORRE.md`](TORRE.md), seção 11.
+1. **Torre de Controle:** Radar, telas de lançamento manual, fim da vigia por
+   contrato no PNCP — lista viva em
+   [`Tarefas/proximo-build.md`](Tarefas/proximo-build.md). (Sentinela, sino e
+   Telegram estão no ar desde 08–10/11/2026.)
 2. Fechar a causa raiz da desconexão do PNCP (mitigada com retry, não
    resolvida — ver `DOMINIO.md`) e a lentidão da busca textual por termo
    genérico (~2min observados).

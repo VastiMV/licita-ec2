@@ -331,3 +331,19 @@ consulta, e o menu dizia 3 descartadas enquanto a lista mostrava 4.
   (`chave`); cada pessoa marca as suas como lidas.
 - **Conferência diária** (Celery Beat, seg–sex 7h45): `conferencia_diaria.py`.
 
+## Regras e relatórios de 10/11/2026
+
+- **Cotou e não participou:** prazo vencido, com cotação, compra do
+  Compras.gov **fora dos favoritos** (a Sentinela conferiu) → Descartadas
+  ("Prazo venceu com cotação"), sem ficar em "confirmar com a Sentinela" para
+  sempre (Geriatria 34/2026). Ainda nos favoritos (ou sem conferir): espera.
+- **Relatórios › Mês a mês** (`relatorio_mensal.py`): participou (mês do
+  prazo), ganhou/perdeu (mês do resultado), faturamento, lucro (só com
+  cotação: preço − custo da cotação). "Perdeu por pouco" = até 5%.
+- **Mercado de cada item** (`mercado.py`): descrição do edital → PDM → item
+  exato do catálogo (CATMAT, semelhança ≥ 0,98) → Pesquisa de Preços, 24
+  meses. Média sem valores absurdos; marcas que mais venceram; quanto ele
+  ofereceu. Renovado 1x por semana na conferência diária.
+- **Caixa de mensagens e Telegram:** cada mensagem nova do Compras.gov e cada
+  aviso do sino vão ao Telegram dos chats em `TELEGRAM_CHAT_IDS`.
+

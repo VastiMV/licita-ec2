@@ -98,36 +98,52 @@ que abre.
 | Preparar › Oportunidade | Salvas | a lista da equipe — só o que ainda está no prazo |
 | Preparar › Cotação | Cotador | formação de preço por item, com comparação de fornecedores; exporta .xlsx |
 | Preparar, Disputar, Contratar, Receber › (cada etapa) | lista da etapa | as licitações naquela etapa agora, com o número ao lado no menu |
-| Encerradas | lista | quem **participou** e saiu (perdeu, revogada, anulada, fracassada, deserta) |
+| Encerradas | lista | quem **participou** e saiu (perdeu, revogada, anulada, fracassada, deserta) e as que ele só **acompanha** para ver o resultado ("xeretar") — cada uma com **relatório** (quem ganhou, marca, valor, diferença) |
 | Encerradas › Descartadas | lista | quem saiu **antes** de participar (tirada da lista, prazo vencido, sem proposta cadastrada) |
 | Propostas (PDF) | lista | a proposta comercial ajustada, pedida depois de ganhar (Word + arquivos) |
+| Relatórios › Mês a mês | relatório | por mês: participou, ganhou, perdeu, faturamento e lucro (com cotação); "perdeu por pouco" (até 5%); **o mercado de cada item** (preço médio do item exato do catálogo em 3/6/12/24 meses, marcas que mais vencem, quanto ele ofereceu) |
 | Cadastros | Empresas, Fornecedores, Produtos | os CNPJs com que a equipe disputa (e o dossiê de habilitação); de quem compra; Fabricante › Marca › Modelo |
 | Configurações | Armazenamento, Usuários | só administrador |
 
 **No topo da tela:** a empresa e o CNPJ, o **Radar** (em breve), o estado da
 **Sentinela** (verde lendo, âmbar precisa de você, vermelho parada) e o
-**sino** de avisos.
+**sino** 🔔: convocação, pedido de desconto, recurso, mensagens do Compras.gov,
+data alterada, compra suspensa, fora dos favoritos, resultados. **Os mesmos
+avisos vão para o Telegram** de quem estiver cadastrado (botão "Testar
+Telegram" no painel do sino; configuração em `deploy/ec2/README.md`).
 
-**Sentinela (beta, 08/11/2026):** extensão do Chrome no computador do
+**Sentinela (0.2.4, 10/11/2026):** extensão do Chrome no computador do
 Carlinhos ([`sentinela/`](sentinela/), guia em
 [`sentinela/README.md`](sentinela/README.md)). Traz para a Torre as compras e
-os itens em que ele participa no Compras.gov, e mostra a **camada de
-disputa** (teto, ideal, piso, custo, lucro) ao lado da tela. Plano e limites:
+os itens em que ele participa no Compras.gov, mostra a **camada de disputa**
+(teto, ideal, piso, custo, lucro) ao lado da tela e, a cada 10 minutos, faz a
+**ronda** sozinha (só telas sem captcha): caixa de mensagens, favoritos,
+proposta/recurso/diligência dos itens, propostas de todos os participantes
+(👍/🟠/👎) e a **vigia diária** dos itens perdidos até a ata do concorrente. Plano e limites:
 [`docs/SENTINELA.md`](docs/SENTINELA.md). Todos os endereços do Compras.gov (login,
 captcha, o que abre direto): [`docs/COMPRAS_GOV.md`](docs/COMPRAS_GOV.md).
 
-**Sozinho, de segunda a sexta** (Celery Beat): às 8h o **PNCP** traz o que a empresa
-ganhou e as atas; às 8h10 o **Portal da Transparência** traz empenho,
-liquidação e pagamento dos órgãos federais.
+**Sozinho, de segunda a sexta** (Celery Beat): às **7h45** a **conferência
+diária** (data e situação das licitações em Preparar no PNCP, itens das
+compras acompanhadas, fim da vigia por ata assinada, mercado de cada item);
+às 8h o **PNCP** traz o que a empresa ganhou e as atas; às 8h10 o **Portal da
+Transparência** traz empenho, liquidação e pagamento dos órgãos federais.
+
+**Conferência pelo assistente, só leitura:** botão **Consultar EC2** no
+GitHub Actions (`diagnostico`: itens-suspeitos, compra, torre, sentinela,
+telegram) e a chave de leitura `LEITURA_CHAVE` (só GET) — ver
+`deploy/ec2/README.md`.
 
 As regras de cada uma estão em [`docs/TORRE.md`](docs/TORRE.md) e
 [`docs/DOMINIO.md`](docs/DOMINIO.md).
 
-**Ainda não existe** (em ordem de prioridade): a Sentinela ler **sozinha**
-a caixa de mensagens e as propostas (hoje ela lê quando o Carlinhos abre a
-tela), os **avisos no Telegram**, o
-**Radar**, as telas para **lançar à mão** contrato, ordem de fornecimento e
-entrega (a API já existe), e a leitura de **contratos** no PNCP.
+**Ainda não existe** (em ordem de prioridade): fim da vigia por **contrato**
+publicado no PNCP (hoje: ata de registro de preços ou 180 dias), tirar o
+**Ciclo de Licitação** antigo do código, o painel da camada mostrar só o item
+aberto e o aviso de lance abaixo do piso (precisam de um .har da tela de
+lances), o **Radar** e as telas para **lançar à mão** contrato, ordem de
+fornecimento e entrega (a API já existe). Lista viva:
+[`docs/Tarefas/proximo-build.md`](docs/Tarefas/proximo-build.md).
 
 ## Estrutura do repositório
 
