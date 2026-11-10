@@ -14,6 +14,7 @@ export const ENDPOINTS = {
   notificacoes: {
     lista: 'notificacoes/',
     lidas: 'notificacoes/lidas/',
+    testeTelegram: 'notificacoes/teste-telegram/',
   },
   sentinela: {
     estado: 'sentinela/estado/',

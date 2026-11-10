@@ -296,3 +296,27 @@ class CaixaDeMensagensTests(_Base):
 
     def test_a_ronda_le_a_caixa_primeiro(self):
         self.assertTrue(consultas()[0].startswith("/comprasnet-mensagem/v1/mensagens?"))
+
+
+
+class CotouENaoParticipouTests(_Base):
+    """Geriatria 34/2026 (10/11/2026): prazo vencido, com cotação, fora dos
+    favoritos no Compras.gov — não fica esperando a Sentinela para sempre."""
+
+    def setUp(self):
+        super().setUp()
+        from apps.cotador.models import Cotacao
+        from apps.integracoes.plataformas import plataforma_padrao
+
+        self.s = salva("09018705000342026", -1, plataforma_id=plataforma_padrao().id)
+        Cotacao.objects.create(oportunidade=self.s)
+
+    def test_fora_dos_favoritos_vai_para_descartadas(self):
+        OportunidadeSalva.objects.filter(pk=self.s.pk).update(favorita_no_compras=False)
+
+        self.assertEqual(classificar(HOJE)[self.s.pk][:2], ("descartadas", "prazo_cotacao"))
+
+    def test_nos_favoritos_ou_sem_conferir_espera_a_sentinela(self):
+        self.assertIn("confirmar com a Sentinela", textos(self.s))
+        OportunidadeSalva.objects.filter(pk=self.s.pk).update(favorita_no_compras=True)
+        self.assertIn("confirmar com a Sentinela", textos(self.s))

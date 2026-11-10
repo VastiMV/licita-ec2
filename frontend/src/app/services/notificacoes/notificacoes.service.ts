@@ -17,4 +17,12 @@ export class NotificacoesService {
   marcarLidas(ids?: readonly number[]): Observable<unknown> {
     return this.api.post<unknown>(ENDPOINTS.notificacoes.lidas, ids ? { ids } : {});
   }
+
+  /** Manda uma mensagem de teste para o Telegram de cada pessoa cadastrada. */
+  testarTelegram(): Observable<{ ligado: boolean; enviados: number; chats: number }> {
+    return this.api.post<{ ligado: boolean; enviados: number; chats: number }>(
+      ENDPOINTS.notificacoes.testeTelegram,
+      {},
+    );
+  }
 }

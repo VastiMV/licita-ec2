@@ -297,3 +297,24 @@
   font-size: 11px;
   color: var(--color-muted);
 }
+
+.telegram {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: var(--space-2);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--color-border);
+
+  .link {
+    appearance: none;
+    border: 0;
+    background: none;
+    color: var(--color-blue);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    min-height: 32px;
+  }
+}

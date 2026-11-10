@@ -67,6 +67,22 @@ export class TopoStatusComponent {
       .subscribe({ next: (r) => this.avisos.set(r), error: () => undefined });
   }
 
+  /** Resultado do botão "Testar Telegram". */
+  protected readonly testeTelegram = signal<string>('');
+
+  protected testarTelegram(): void {
+    this.testeTelegram.set('Mandando…');
+    this.servicoAvisos.testarTelegram().subscribe({
+      next: (r) =>
+        this.testeTelegram.set(
+          !r.ligado
+            ? 'O Telegram ainda não está ligado no servidor.'
+            : `Teste enviado para ${r.enviados} de ${r.chats} pessoa${r.chats === 1 ? '' : 's'}.`,
+        ),
+      error: () => this.testeTelegram.set('Não consegui mandar o teste agora.'),
+    });
+  }
+
   protected marcarTodas(): void {
     this.servicoAvisos
       .marcarLidas()

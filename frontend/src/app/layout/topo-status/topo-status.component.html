@@ -104,6 +104,12 @@
             dos favoritos e resultados aparecem aqui.
           </p>
         }
+        <div class="telegram">
+          <button type="button" class="link" (click)="testarTelegram()">Testar Telegram</button>
+          @if (testeTelegram()) {
+            <span class="muted">{{ testeTelegram() }}</span>
+          }
+        </div>
       </div>
     }
   </div>
