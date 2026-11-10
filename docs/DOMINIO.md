@@ -717,3 +717,18 @@ acima parecer estranha, a razão costuma estar aqui.
 | 08/11/2026 | Cada usuário sobe a **própria foto** (menu da conta → Trocar foto); reduzida a 256×256 no navegador e guardada no cadastro (`User.foto`) |
 | 08/11/2026 | Listas de editais: **clicar em qualquer lugar da linha abre** (Salvas → card; Cotação → Cotador; Propostas → proposta; Encerradas/Descartadas → Ver processo; etapas da Torre → como o cartão). Salvas ganhou a coluna **Objeto**, cortada sem aumentar a linha |
 | 08/11/2026 | Menu: seção **Relatórios** (em breve), entre as saídas e os Cadastros |
+| 09/11/2026 | **Regra única** de onde está cada licitação (`torre.avaliar`): Torre, Encerradas, Descartadas e os números do menu saem dela (o menu dizia 3 descartadas e a lista 4) |
+| 09/11/2026 | 👍 1º de verdade · 🟠 **só o próximo de verdade** (quem caiu na frente não conta) · 👎 o resto; **"1º já habilitado"** = item perdido; todos assim → Encerradas |
+| 09/11/2026 | Compra **suspensa** ou **sem prazo definido** fica em Preparar com aviso, vigiando a data nova; nunca sai sozinha por prazo |
+| 09/11/2026 | **Data alterada pelo órgão** atualiza o Licita (Sentinela + PNCP diário), com linha no histórico e aviso |
+| 09/11/2026 | Em "Minhas participações", prazo vencido, sem cotação → **Encerradas · "Acompanhando o resultado"**, com relatório ("xeretar"); se aparecer proposta dele, volta para a Torre |
+| 09/11/2026 | **Vigia até a ata do concorrente**: todo item em que ele deu preço segue vigiado 1x por dia (convocação, recurso), esteja onde estiver; termina com a ata assinada com outra empresa ou 180 dias depois da homologação. Convocação/recurso traz de volta em vermelho |
+| 09/11/2026 | **Sino** (`apps/notificacoes`) e **aviso "fora dos favoritos no Compras.gov"** (nada sai sozinho; ele decide pela lixeira) |
+| 09/11/2026 | Etapas renomeadas: **Aceita e habilitada** e **Habilitada (aguardando adjudicação)** (as chaves não mudaram) |
+| 09/11/2026 | **Relatório da licitação**: vencedor, marca, modelo, valor e diferença, item a item; valores absurdos (> 5× ou < 1/5 da mediana) fora das contas |
+| 10/11/2026 | **Relatórios › Mês a mês**: participou, ganhou, perdeu, faturamento, lucro (só com cotação); "perdeu por pouco" = até 5%, numa linha só |
+| 10/11/2026 | **Mercado de cada item**: o "mesmo item" é o **item exato do catálogo (CATMAT)**, achado pela descrição do edital (120 kg ≠ 150 kg); o tipo (PDM) só como referência; menos de 3 compras = "poucos dados" |
+| 10/11/2026 | **Caixa de mensagens** do Compras.gov no sino: a lista já traz o texto, nada é aberto nem marcado como lido |
+| 10/11/2026 | **Telegram**: os avisos do sino no celular de Vasti e Carlinhos (robô do @BotFather, chave só no `.env`) |
+| 10/11/2026 | Prazo vencido **com cotação** e **fora dos favoritos** → Descartadas ("Prazo venceu com cotação"), sem esperar a Sentinela (Geriatria 34/2026) |
+
