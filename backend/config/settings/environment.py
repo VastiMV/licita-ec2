@@ -95,6 +95,12 @@ class Environment:
     # depois de cada publicação. Gerada no servidor (`openssl rand -hex 24`).
     # Vazia = desligada.
     leitura_chave: str = field(default_factory=lambda: os.environ.get("LEITURA_CHAVE", ""))
+    # Telegram (10/11/2026): o robô criado no @BotFather manda os avisos do
+    # sino para o celular. A chave do robô só no `.env`; os chats (números)
+    # separados por vírgula — `diagnostico telegram` mostra quais falaram
+    # com o robô. Vazios = desligado.
+    telegram_token: str = field(default_factory=lambda: os.environ.get("TELEGRAM_BOT_TOKEN", ""))
+    telegram_chats: str = field(default_factory=lambda: os.environ.get("TELEGRAM_CHAT_IDS", ""))
     portal_transparencia_base_url: str = field(
         default_factory=lambda: os.environ.get(
             "PORTAL_TRANSPARENCIA_BASE_URL", "https://api.portaldatransparencia.gov.br/api-de-dados"

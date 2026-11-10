@@ -15,6 +15,7 @@ on:
           - compra
           - torre
           - sentinela
+          - telegram
       argumento:
         description: "Para 'compra': o código de 17 dígitos ou o id da salva"
         type: string
