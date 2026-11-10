@@ -74,7 +74,12 @@ export class TorreAcoesService {
 
   /** `true` quando a tela deve recarregar. */
   abrir(cartao: CartaoTorre): Observable<boolean> {
-    if (cartao.etapa === 'oportunidade' && cartao.salva) {
+    // Cadastro de proposta **sem cotação** (10/11/2026): o hábito é aceitar
+    // no Compras.gov primeiro e cotar no Licita depois — a Sentinela já põe
+    // a compra aqui. Sem este caminho a Torre só abria o Compras.gov e não
+    // havia como chegar ao Cotador.
+    const semCotacao = cartao.etapa === 'cadastro_proposta' && cartao.cotacao_id === null;
+    if ((cartao.etapa === 'oportunidade' || semCotacao) && cartao.salva) {
       const salva = cartao.salva;
       return this.modal
         .abrir<OportunidadeModalResultado, OportunidadeSalvaResponse>(

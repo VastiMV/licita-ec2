@@ -39,6 +39,19 @@ describe('TorreAcoesService', () => {
     expect(modal.abrir).toHaveBeenNthCalledWith(2, CotadorModalComponent, expect.anything());
   });
 
+  it('cadastro de proposta sem cotação também abre o visualizador (dá para cotar)', () => {
+    // Dispensa 27/2026 (10/11/2026): a Sentinela pôs em Cadastro de proposta
+    // porque ele já aceitou no Compras.gov; o clique abria o Compras.gov e não
+    // havia como chegar ao Cotador pela Torre.
+    const { acoes, modal } = servico('cotar');
+    const semCotacao = { ...COTADA, etapa: 'cadastro_proposta' as const, cotacao_id: null };
+
+    acoes.abrir(semCotacao).subscribe();
+
+    expect(modal.abrir).toHaveBeenNthCalledWith(1, OportunidadeModalComponent, semCotacao.salva);
+    expect(modal.abrir).toHaveBeenNthCalledWith(2, CotadorModalComponent, expect.anything());
+  });
+
   it('depois de Preparar, abre a compra no Compras.gov sem recarregar', () => {
     const { acoes, modal } = servico();
     const abrirJanela = vi.spyOn(window, 'open').mockReturnValue(null);
