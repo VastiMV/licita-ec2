@@ -95,6 +95,20 @@ nada é aberto, nada fica marcado como lido. Cada mensagem nova (até 3 dias)
 vira aviso no sino e no Telegram; convocação (830) e recurso (850) em
 vermelho.
 
+**10/11/2026 — compra trazida pela Sentinela fica completa:** a compra
+que a Sentinela cria no Licita (a empresa já participa no Compras.gov) vinha
+só com o que o Compras.gov manda: **sem itens** (o Cotador abria vazio, sem
+deixar registrar preço) e às vezes **sem o nome do órgão** (Dispensa
+27/2026, UASG 443034: a Torre mostrava o objeto no lugar). Agora, quando a
+compra está sem órgão ou sem itens, a captura pede ao PNCP em segundo plano
+(`licitacoes.completar_salva`) e preenche **só o que está vazio**: órgão,
+cidade, UF, objeto, valor e os itens no formato da busca
+(`apps/licitacoes/completar.py`). A conferência das 7h45 pega as que
+ficaram para trás. E o **Salvar da busca** com a compra já na lista completa
+os campos vazios com os dados da busca e registra quem salvou
+(`salvas._completar_com_a_busca`) — antes devolvia a existente sem mudar
+nada.
+
 **Ordem da ronda (a cada 10 min, seg–sex 8h–19h, até 60 consultas):** caixa de
 mensagens → favoritos das compras de Preparar → proposta/recurso/diligência
 dos itens vivos → vigia diária dos perdidos → propostas de todos (até 15) →
