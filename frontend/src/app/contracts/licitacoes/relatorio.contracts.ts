@@ -71,3 +71,33 @@ export interface RelatorioCabecalho {
   readonly id: number;
   readonly titulo: string;
 }
+
+/** O relatório do mês — `apps/licitacoes/relatorio_mensal.py`. */
+export interface LinhaDoMes {
+  /** "2026-10". */
+  readonly mes: string;
+  readonly participou: number;
+  readonly ganhou: number;
+  readonly perdeu: number;
+  readonly faturamento: string;
+  /** Nulo: nenhuma cotação no Licita para os itens ganhos do mês. */
+  readonly lucro: string | null;
+}
+
+export interface PerdeuPorPouco {
+  readonly mes: string;
+  readonly oportunidade_id: number;
+  readonly compra: string;
+  readonly orgao_nome: string;
+  readonly item: string;
+  readonly descricao: string;
+  readonly diferenca: string;
+  readonly diferenca_percentual: string;
+  readonly marca_vencedora: string;
+}
+
+export interface RelatorioMensalResponse {
+  readonly meses: readonly LinhaDoMes[];
+  readonly por_pouco: readonly PerdeuPorPouco[];
+  readonly pouco_percentual: string;
+}

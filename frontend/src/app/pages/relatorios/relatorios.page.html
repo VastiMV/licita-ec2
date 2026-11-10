@@ -1,0 +1,79 @@
+<h1>Relatórios</h1>
+
+@if (erro()) {
+  <p class="falha">Não foi possível carregar o relatório agora.</p>
+} @else if (dados(); as d) {
+  <section>
+    <h2>Mês a mês <span class="muted">· últimos 12 meses</span></h2>
+    <div class="rolagem">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Mês</th>
+            <th scope="col" class="num">Participou</th>
+            <th scope="col" class="num">Ganhou</th>
+            <th scope="col" class="num">Perdeu</th>
+            <th scope="col" class="num">Faturamento</th>
+            <th scope="col" class="num">Lucro</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (m of d.meses; track m.mes) {
+            <tr [class.vazio]="!m.participou && !m.ganhou && !m.perdeu">
+              <td>{{ nomeDoMes(m.mes) }}</td>
+              <td class="num">{{ m.participou }}</td>
+              <td class="num ganho">{{ m.ganhou }}</td>
+              <td class="num perda">{{ m.perdeu }}</td>
+              <td class="num">{{ moeda(m.faturamento) }}</td>
+              <td class="num">{{ m.lucro === null ? '—' : moeda(m.lucro) }}</td>
+            </tr>
+          }
+        </tbody>
+        <tfoot>
+          <tr>
+            <th scope="row">Total</th>
+            <td class="num">{{ totais().participou }}</td>
+            <td class="num ganho">{{ totais().ganhou }}</td>
+            <td class="num perda">{{ totais().perdeu }}</td>
+            <td class="num">{{ moeda(totais().faturamento) }}</td>
+            <td class="num">{{ totais().lucro === null ? '—' : moeda(totais().lucro) }}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    <p class="nota muted">
+      Lucro só aparece quando a cotação foi feita no Licita. Ganhou e perdeu contam pelo mês do
+      resultado; participou, pelo mês do prazo da proposta.
+    </p>
+
+    <button
+      type="button"
+      class="por-pouco"
+      [attr.aria-expanded]="abertoPorPouco()"
+      (click)="abertoPorPouco.set(!abertoPorPouco())"
+    >
+      <span aria-hidden="true">{{ abertoPorPouco() ? '▾' : '▸' }}</span>
+      Perdeu por pouco (até {{ percentual(d.pouco_percentual) }}):
+      <strong>{{ d.por_pouco.length }} {{ d.por_pouco.length === 1 ? 'item' : 'itens' }}</strong>
+    </button>
+    @if (abertoPorPouco()) {
+      @if (d.por_pouco.length) {
+        <ul class="lista-pouco">
+          @for (p of d.por_pouco; track p.oportunidade_id + '-' + p.item) {
+            <li>
+              <strong>{{ p.compra }} · item {{ p.item }}</strong>
+              — faltou {{ moeda(p.diferenca) }} ({{ percentual(p.diferenca_percentual) }})
+              @if (p.marca_vencedora) {
+                · ganhou {{ p.marca_vencedora }}
+              }
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="muted">Nenhum item perdido por tão pouco nos últimos 12 meses.</p>
+      }
+    }
+  </section>
+} @else {
+  <p class="muted">Carregando…</p>
+}

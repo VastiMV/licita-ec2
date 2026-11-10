@@ -1,0 +1,82 @@
+@use 'mixins' as *;
+
+h2 {
+  font-size: 18px;
+  margin: 24px 0 8px;
+}
+
+.rolagem {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  max-width: 900px;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+
+  th,
+  td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--color-border);
+    text-align: left;
+  }
+
+  .num {
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  tr.vazio td {
+    color: var(--color-muted);
+  }
+
+  tfoot th,
+  tfoot td {
+    font-weight: 700;
+    border-top: 2px solid var(--color-fg);
+  }
+}
+
+.ganho {
+  color: var(--color-success);
+  font-weight: 600;
+}
+
+.perda {
+  color: var(--color-danger);
+}
+
+.nota {
+  font-size: var(--font-size-sm);
+  margin: 8px 0 16px;
+}
+
+.por-pouco {
+  appearance: none;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-fg);
+  font: inherit;
+  cursor: pointer;
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+.lista-pouco {
+  margin: 8px 0 0;
+  padding-left: 20px;
+  line-height: 1.8;
+}
+
+.muted {
+  color: var(--color-muted);
+}
+
+.falha {
+  color: var(--color-danger);
+}
