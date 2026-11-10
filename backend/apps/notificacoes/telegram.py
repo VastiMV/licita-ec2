@@ -67,11 +67,20 @@ def enviar_telegram(notificacao_id: int) -> int:
     return enviados
 
 
+class RoboRecusou(Exception):
+    """Erro do Telegram **sem** a chave do robô na mensagem."""
+
+
 def quem_falou_com_o_robo() -> list[dict]:
     """Os chats que mandaram mensagem ao robô (para achar o número do chat)."""
 
-    resposta = httpx.get(f"{API}/bot{env.telegram_token}/getUpdates", timeout=10)
-    resposta.raise_for_status()
+    try:
+        resposta = httpx.get(f"{API}/bot{env.telegram_token}/getUpdates", timeout=10)
+    except httpx.HTTPError as exc:
+        raise RoboRecusou("não consegui falar com o Telegram") from None
+    if resposta.status_code != 200:
+        # Nunca o endereço: ele leva a chave do robô.
+        raise RoboRecusou(f"o Telegram respondeu {resposta.status_code} (chave errada ou trocada?)")
     vistos = {}
     for u in resposta.json().get("result", []):
         chat = (u.get("message") or u.get("my_chat_member") or {}).get("chat") or {}

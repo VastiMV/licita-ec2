@@ -144,14 +144,18 @@ class Command(BaseCommand):
         )
 
     def telegram(self, _):
-        from apps.notificacoes.telegram import chats, quem_falou_com_o_robo
+        from apps.notificacoes.telegram import RoboRecusou, chats, quem_falou_com_o_robo
         from config.settings.environment import env
 
         if not env.telegram_token:
             self.linha("Telegram: sem TELEGRAM_BOT_TOKEN no .env (desligado).")
             return
         self.linha(f"Telegram: robô configurado · chats que recebem: {chats() or 'nenhum ainda'}")
-        conversas = quem_falou_com_o_robo()
+        try:
+            conversas = quem_falou_com_o_robo()
+        except RoboRecusou as exc:
+            self.linha(f"Telegram: {exc}.")
+            return
         self.linha(f"Quem mandou mensagem para o robô: {len(conversas)}")
         for c in conversas:
             self.linha(f"  chat {c['chat']} · {c['nome']} {('@' + c['usuario']) if c['usuario'] else ''}")

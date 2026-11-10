@@ -45,3 +45,14 @@ class TelegramTests(TestCase):
             telegram.httpx, "post", side_effect=telegram.httpx.ConnectError("sem rede")
         ):
             self.assertEqual(telegram.enviar_telegram(n.pk), 0)
+
+
+class ChaveNuncaApareceTests(TestCase):
+    def test_erro_do_telegram_nao_mostra_a_chave(self):
+        resposta = mock.Mock(status_code=404)
+        with mock.patch.object(telegram, "env", LIGADO), mock.patch.object(telegram.httpx, "get", return_value=resposta):
+            with self.assertRaises(telegram.RoboRecusou) as erro:
+                telegram.quem_falou_com_o_robo()
+
+        self.assertNotIn("123:abc", str(erro.exception))
+        self.assertIn("404", str(erro.exception))
