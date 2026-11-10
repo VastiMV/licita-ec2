@@ -13,7 +13,7 @@ arquivo está cada regra.
 
 ## 1. Estágios e etapas
 
-São **4 estágios** e **13 etapas**, nesta ordem (a ordem importa: a etapa
+São **4 estágios** e **14 etapas**, nesta ordem (a ordem importa: a etapa
 "mais adiante" ganha).
 
 | Estágio | Etapa (`chave`) | Quando a licitação está nela | De onde vem o fato |
@@ -54,7 +54,9 @@ trás e para no primeiro que encontra:
 
 1. Item **perdido** → não conta (sai da conta do cartão):
    homologado para outro fornecedor, proposta desclassificada (situação
-   1, 2 ou 9) ou fornecedor inabilitado (5).
+   1, 2 ou 9), fornecedor inabilitado (5) ou **1º já habilitado** (outra
+   empresa à frente já foi aceita/habilitada; 09/11/2026). Exceção:
+   convocação, pedido de desconto ou recurso em aberto traz o item de volta.
 2. Tem **pagamento** → Recebido.
 3. Tem **liquidação** → Liquidado.
 4. Tem **entrega** → Entrega.
@@ -104,15 +106,14 @@ Regra da operação (07/11/2026): **cotar não é participar.**
 | Encerradas | compra revogada, anulada, fracassada ou deserta (situação da compra no Compras.gov) | Revogada / Anulada / Fracassada / Deserta |
 | **Descartadas** (não participou) | tirada da lista antes do prazo | Tirada da lista |
 | Descartadas | prazo venceu sem cotação | Prazo venceu sem cotação |
-| Descartadas | prazo venceu com cotação, fora do Compras.gov.br | Prazo venceu com cotação |
+| Descartadas | prazo venceu com cotação, fora do Compras.gov.br — ou no Compras.gov.br **sem nenhuma participação** lida pela Sentinela (desde 10/11/2026) | Prazo venceu com cotação |
 | Descartadas | apareceu nas participações do Compras.gov **sem proposta cadastrada** (a lista "meus itens" vem vazia) | Sem proposta cadastrada |
 
 - **Uma licitação está em um lugar só:** no quadro, em Encerradas ou em
   Descartadas. `test_saidas.py` garante isso.
-- A regra de saída mora em `torre.avaliar` (para o quadro) e em
-  `encerradas.py` (como consulta no banco, para as listas filtrarem e
-  ordenarem). As duas têm que concordar: se mudar uma, mude a outra e rode
-  `test_saidas.py`.
+- A regra de saída mora **num lugar só**: `torre.avaliar` (desde
+  09/11/2026). As listas de Encerradas e Descartadas e os números do menu
+  saem dela (`encerradas.classificar`). Ao mudar, rode `test_saidas.py`.
 - Nada é apagado. "Tirar da lista" é remoção lógica.
 
 ## 4. Registro de preços (ata)
@@ -126,8 +127,8 @@ quantidade já empenhada da ata em `DocumentoFinanceiro.dados`.
 ## 5. Etiquetas e urgência
 
 O cartão pode ter etiquetas, em 3 níveis: **alerta** (vermelho, ex.:
-"proposta até amanhã", convocação), **aviso** (amarelo, ex.: recurso aberto,
-"confirmar com a Sentinela") e **info**. A borda do cartão acende com a cor
+"proposta até amanhã", convocação), **aviso** (amarelo, ex.: "fora dos favoritos no
+Compras.gov", "sem cotação no Licita") e **info** (ex.: "sessão 13/11 09:00"). A borda do cartão acende com a cor
 da mais grave. **A cor nunca é a única pista:** o texto da etiqueta diz o
 porquê.
 
@@ -180,7 +181,7 @@ do que existia (nenhuma migração apagou nada).
 | Model | O que guarda | Quem preenche |
 |---|---|---|
 | `OportunidadeSalva` | a licitação (já existia); ganhou `numero_processo` | busca do Licita, ou a sincronia do PNCP (cria a salva de uma vitória que não estava no Licita) |
-| `ParticipacaoCompra` (1 por salva) | o que o Compras.gov diz da compra: fase, situação (PD/SU/RE/AN/FR/DE), se tem proposta cadastrada, diligência/convocação em andamento, quando a sessão abre, fonte | Sentinela (ainda não existe) |
+| `ParticipacaoCompra` (1 por salva) | o que o Compras.gov diz da compra: fase, situação (PD/SU/RE/AN/FR/DE), se tem proposta cadastrada, diligência/convocação em andamento, quando a sessão abre, fonte | Sentinela |
 | `ItemParticipado` (N por salva) | cada item da empresa: número, descrição, quantidade, marca/modelo, classificação, situação da proposta, fase do item, valores (inicial, lance, negociado, homologado), recurso, `vencedor_e_a_empresa` | Sentinela · PNCP (vitórias) |
 | `DocumentoFinanceiro` (N por salva, opcional por item) | contrato, ata, empenho, ordem de fornecimento, liquidação, pagamento: número, data, valor, fonte, dados brutos. Pode ficar **sem licitação** até alguém ligar | PNCP (ata) · Portal da Transparência · à mão |
 | `Entrega` (N por salva) | data, nota fiscal, observação | à mão |
@@ -260,8 +261,8 @@ Frontend em `frontend/src/app/pages/torre/`.
   estágios sempre abertos, e o **número de licitações em cada etapa**
   (`contagem-do-menu.service.ts` relê `GET torre/` a cada troca de tela).
 - **Topo** (`layout/topo-status/`): empresa e CNPJ, **Radar** ("em breve"),
-  **Sentinela** ("não instalada") e **sino**. Mostram o estado verdadeiro:
-  nada de "verde, há 2 min" enquanto a Sentinela não existe.
+  **Sentinela** (verde lendo, âmbar precisa de você, vermelho parada) e
+  **sino**. Mostram o estado verdadeiro.
 - **Visual:** segue o protótipo "Licita v1.0"
   (https://claude.ai/artifact/ET6ZEAExDHZRCfk5rNPyac, artboards "v2"). Cores
   em `frontend/src/styles/_tokens.scss` (`--color-menu-*`, `--color-coluna*`,
@@ -279,17 +280,17 @@ Frontend em `frontend/src/app/pages/torre/`.
 | Telas | `*.spec.ts` ao lado de cada arquivo em `pages/torre/` e `layout/` |
 
 Para mudar uma regra: escreva o teste com o caso real primeiro, veja falhar,
-mude `torre.py` (e `encerradas.py`, se for saída), rode tudo.
+mude `torre.py` (a saída também mora lá), rode tudo.
 
 ## 11. O que ainda não existe
 
 Em ordem de prioridade (combinado com a operação):
 
-1. **Sentinela v1.0** — sem ela, tudo do estágio Disputar só anda pelo PNCP
-   (depois da homologação). Plano e limites em
-   [`SENTINELA.md`](SENTINELA.md).
-2. **Avisos no Telegram** — convocação, diligência, pedido de desconto,
-   recurso, empenho, pagamento, cobrança.
+A Sentinela (0.2.4) e os avisos no Telegram **já existem** (ver
+[`SENTINELA.md`](SENTINELA.md)). Falta:
+
+1. **Fim da vigia por contrato publicado no PNCP** (hoje: ata ou 180 dias).
+2. **Telegram para empenho, pagamento e cobrança** (hoje: os avisos do sino).
 3. **Radar** — sugestões de licitação parecidas com as que a empresa ganhou.
 4. **Telas de lançamento manual** — a API existe (contrato, OF, entrega,
    ligar documento "sem licitação"); falta o formulário na tela.

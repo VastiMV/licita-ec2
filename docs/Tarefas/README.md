@@ -16,7 +16,7 @@ cada arquivo. Aqui é só o "como", quebrado em pedaço entregável.
 | [`remover-legado`](feat-remover-legado.md) | O que sai do produto: Filtros, a tela de Alertas de hoje, o cotador antigo e o "Cotar" direto da busca | — |
 | [`usuario`](feat-usuario.md) | Configurações → Usuários: quem acessa, e o super usuário como o único que vê Configurações | — |
 | [`produtos`](feat-produtos.md) | Cadastros › Produtos: Fabricante › Marca › Modelo, afinidade com fornecedor e tabela de preços no Cotador | — |
-| [`torre-de-controle`](feat-torre-de-controle.md) | O ciclo inteiro da licitação, da oportunidade ao pagamento: 4 estágios, 13 etapas, PNCP, Portal da Transparência, Telegram e Sentinela | `proposta`, `produtos` |
+| [`torre-de-controle`](feat-torre-de-controle.md) | O ciclo inteiro da licitação, da oportunidade ao pagamento: 4 estágios, 14 etapas, PNCP, Portal da Transparência, Telegram e Sentinela | `proposta`, `produtos` |
 
 ## As duas famílias de documento
 

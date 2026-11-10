@@ -6,6 +6,9 @@ tela).
 
 Em ordem de prioridade, até `MAXIMO` consultas por ronda (ritmo de gente):
 
+0. **Caixa de mensagens** do fornecedor (09–10/11/2026): a lista já traz o
+   texto; nada é aberto nem marcado como lido. Vai primeiro: é o que mais
+   pede atenção.
 1. **Favoritos** (09/11/2026): numa consulta só, quais compras de Preparar
    ainda estão nos favoritos do Compras.gov. A que saiu de lá ganha o aviso
    "fora dos favoritos no Compras.gov" (Lavras, 60/2027).

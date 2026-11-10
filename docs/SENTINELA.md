@@ -115,9 +115,10 @@ dos itens vivos → vigia diária dos perdidos → propostas de todos (até 15) 
 itens das compras acompanhadas. A lista vem do Licita (`ronda/`); o que a
 extensão pode consultar está fixo em `pagina.js` (`PERMITIDO`).
 
-**Ainda não feito:** ler a caixa de mensagens sozinha a cada 3 min; avisar
-quando o lance digitado ficar abaixo do piso (precisa ver a tela real de
-disputa); Telegram; o sino com as mensagens.
+**Ainda não feito:** avisar quando o lance digitado ficar abaixo do piso
+(precisa ver a tela real de disputa); o painel da camada mostrar só o item
+aberto. (Telegram e o sino com as mensagens já existem desde a 0.2.4; a caixa
+de mensagens é lida na ronda, a cada 10 min.)
 
 ## Versão 0.2 (08/11/2026): ronda, tarefas e a sessão da aba
 
@@ -132,7 +133,7 @@ as listas (participações e itens) e o chat.
 | **Sessão** | `pagina.js` guarda o `authorization` que a própria página usa, **só na memória da aba**. Nunca é gravado, nunca sai do computador |
 | **Consultas próprias** | só uma lista fechada (`PERMITIDO` em `pagina.js`): proposta do item (`?filtro=2`), fase recursal, diligências e `DELETE …/favorita`. Nada com captcha |
 | **Tarefas** | a cada 1 min pergunta `GET tarefas/` (hoje: tirar favorito pedido pela lixeira) e responde `POST tarefas/<id>/` |
-| **Ronda** | a cada 10 min (dias úteis, 8h–18h) pega `GET ronda/` e consulta, uma por vez com pausa, proposta/recurso/diligências de cada item com proposta; manda as respostas para `captura/`. Botão "Fazer a ronda agora" nas opções |
+| **Ronda** | a cada 10 min (dias úteis, 8h–19h) pega `GET ronda/` e consulta, uma por vez com pausa, proposta/recurso/diligências de cada item com proposta; manda as respostas para `captura/`. Botão "Fazer a ronda agora" nas opções |
 | **Sessão caiu** | 401 ou sessão ainda não vista → estado "precisa de você" no topo do Licita ("abra ou atualize a aba do Compras.gov") |
 
 Testes de ponta a ponta: `sentinela/testes/teste-extensao.js` e
@@ -178,7 +179,7 @@ Achados dos HARs gravados em 07/11/2026 na sessão do Carlinhos:
 
 | O quê | Onde | Captcha? | Frequência |
 |---|---|---|---|
-| **Caixa de mensagens do fornecedor** — todas as licitações juntas: convocação (830), pregoeiro (840), recurso (850), impugnação (810) | `comprasnet-mensagem/v1/mensagens` | **não** | a cada ~3 min, 8h–18h |
+| **Caixa de mensagens do fornecedor** — todas as licitações juntas: convocação (830), pregoeiro (840), recurso (850), impugnação (810) | `comprasnet-mensagem/v1/mensagens` | **não** | na ronda, a cada 10 min, 8h–19h |
 | Contador de não lidas (leve) | `comprasnet-mensagem/v1/mensagens/quantidade-nao-lidas` | não | junto |
 | Participações (fase, situação, prazos, diligência) | `comprasnet-fase-externa/v1/compras/participacoes` | **sim** | só quando o Carlinhos abre a tela |
 | Meus itens de uma compra, com a proposta da empresa | `compras/{código}/itens/em-selecao-fornecedores?filtro=2` | **sim** | só quando o Carlinhos abre a tela |
@@ -193,8 +194,8 @@ Achados dos HARs gravados em 07/11/2026 na sessão do Carlinhos:
 
 ## O que ela entrega ao Licita
 
-A Sentinela manda o que leu para a API do Licita (rota a criar, autenticada
-com um token **da Sentinela**, nunca a senha de ninguém). O backend grava em
+A Sentinela manda o que leu para a API do Licita (`POST /api/sentinela/captura/`,
+autenticada com a chave **da Sentinela**, nunca a senha de ninguém). O backend grava em
 `ParticipacaoCompra` e `ItemParticipado` (models já existem — ver
 [`TORRE.md`](TORRE.md), seção 6) com `fonte="sentinela"`, e a Torre recalcula
 as etapas sozinha.
@@ -208,8 +209,8 @@ Regras de aviso (combinadas com o Carlinhos):
 
 ## O vigia (o estado no topo do Licita)
 
-O botão "Sentinela" no topo (`layout/topo-status/`) hoje mostra "não
-instalada". Com a extensão funcionando:
+O botão "Sentinela" no topo (`layout/topo-status/`) mostra o estado que o
+servidor calcula (`GET /api/sentinela/estado/`):
 
 | Cor | Quando |
 |---|---|
