@@ -8,7 +8,9 @@ pelo botão "Consultar EC2" do GitHub Actions, `.github/workflows/consultar-ec2.
 - `compra <código de 17 dígitos ou id>` — a compra, os itens, a etapa e o
   sinal de cada item, e as propostas lidas;
 - `torre` — quantas licitações em cada etapa e quantas saíram;
-- `sentinela` — o que a Sentinela fez nas últimas 24 horas.
+- `sentinela` — o que a Sentinela fez nas últimas 24 horas;
+- `telegram` — se o robô está ligado e quem mandou mensagem para ele (o
+  número do chat que vai em `TELEGRAM_CHAT_IDS`).
 
 Nada aqui grava no banco.
 """
@@ -25,7 +27,7 @@ from django.utils import timezone
 from apps.licitacoes.models import ItemParticipado, OportunidadeSalva
 from apps.licitacoes.torre import avaliar, etapa_do_item, montar_torre, posicao_efetiva, rotulo_da_compra, sinal_do_item
 
-CONSULTAS = ("itens-suspeitos", "compra", "torre", "sentinela")
+CONSULTAS = ("itens-suspeitos", "compra", "torre", "sentinela", "telegram")
 
 
 def itens_suspeitos():
@@ -140,3 +142,17 @@ class Command(BaseCommand):
             f"Itens com propostas lidas: {ItemParticipado.objects.filter(propostas_lidas_em__isnull=False).count()}"
             f" de {ItemParticipado.objects.filter(classificacao__isnull=False).count()} com posição"
         )
+
+    def telegram(self, _):
+        from apps.notificacoes.telegram import chats, quem_falou_com_o_robo
+        from config.settings.environment import env
+
+        if not env.telegram_token:
+            self.linha("Telegram: sem TELEGRAM_BOT_TOKEN no .env (desligado).")
+            return
+        self.linha(f"Telegram: robô configurado · chats que recebem: {chats() or 'nenhum ainda'}")
+        conversas = quem_falou_com_o_robo()
+        self.linha(f"Quem mandou mensagem para o robô: {len(conversas)}")
+        for c in conversas:
+            self.linha(f"  chat {c['chat']} · {c['nome']} {('@' + c['usuario']) if c['usuario'] else ''}")
+

@@ -225,6 +225,35 @@ abre (cofre do ambiente dele; o proxy injeta o cabeçalho), nunca em chat.
 **Desligar:** apague a linha `LEITURA_CHAVE` do `.env` e rode o segundo
 comando.
 
+## Telegram (avisos do sino no celular)
+
+Desde 10/11/2026 cada aviso novo do sino (convocação, recurso, pedido de
+desconto, mensagem do pregoeiro, data alterada, resultado…) também vai para
+o Telegram. Uma vez só:
+
+1. No Telegram, fale com **@BotFather** → `/newbot` → dê um nome (ex.:
+   "Licita Inside") e um usuário terminado em `bot`. Ele responde com a
+   **chave do robô** (`123456:ABC…`). **Não cole em chat nenhum.**
+2. No terminal do EC2, grave a chave (o comando pergunta; nada aparece na tela):
+
+```bash
+read -s -p "Chave do robô: " T; echo "TELEGRAM_BOT_TOKEN=$T" | sudo tee -a /opt/licita/.env > /dev/null; unset T; echo
+```
+
+3. Cada pessoa que vai receber abre o robô no Telegram e manda `/start`.
+4. GitHub → Actions → **Consultar EC2** → `telegram`: mostra o número do chat
+   de quem mandou `/start`. Grave os números (separados por vírgula):
+
+```bash
+echo "TELEGRAM_CHAT_IDS=111111111,222222222" | sudo tee -a /opt/licita/.env > /dev/null
+```
+
+```bash
+cd /opt/licita && sudo docker compose up -d --force-recreate backend worker beat
+```
+
+Desligar: apague as duas linhas `TELEGRAM_` do `.env` e rode o último comando.
+
 ## Tempo de login
 
 O login vale **12 horas desde a entrada**, mesmo com uso (depois disso o
