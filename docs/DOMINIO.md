@@ -34,25 +34,12 @@ Alimentado por uma task periódica (`sincronizar_catalogo_pdm`, Celery Beat),
 não por escrita de usuário — e por um `management command` equivalente
 (`sincronizar_catalogo`) para rodar fora do agendamento.
 
-### `Licitacao`
-Cache local de uma licitação/contratação já vista, identificada por
-`uasg + modalidade + numero`.
+### Busca não guarda licitação
 
-| Campo | Tipo |
-|---|---|
-| `id` | string (PK) — `f"{uasg}-{modalidade}-{numero}"` |
-| `uasg`, `uasg_nome` | string |
-| `modalidade`, `numero_aviso` | string |
-| `objeto` | text |
-| `situacao`, `uf` | string |
-| `data_publicacao`, `data_abertura_proposta` | string (a API devolve como texto) |
-| `link_edital` | string — número de controle PNCP |
-| `raw_json` | text — payload bruto da API, para reprocessamento sem nova chamada |
-| `primeira_vez_em`, `atualizada_em` | datetime |
-
-A busca de **oportunidades item a item** (tela principal do protótipo) não
-persiste — é consulta ao vivo em `ComprasGovClient`/`PncpClient`, cruzada com
-`Pdm` quando há palavra-chave. Ver "Busca de oportunidades" abaixo.
+A busca de oportunidades é **consulta ao vivo** no PNCP e no Compras.gov.br
+(`PncpClient`/`ComprasGovClient`), cruzada com `Pdm` quando há
+palavra-chave. Nada é guardado até alguém **salvar** — aí vira
+`OportunidadeSalva` (abaixo). Ver "Busca de oportunidades".
 
 ### `Tenant` e `Empresa`
 
@@ -257,7 +244,7 @@ a lista do que aconteceu, no estilo de um extrato de ligação.
 
 ### Torre de Controle — etapas e saída do quadro
 
-**Tudo sobre isso está em [`TORRE.md`](TORRE.md)**: os 4 estágios e as 13
+**Tudo sobre isso está em [`TORRE.md`](TORRE.md)**: os 4 estágios e as 14
 etapas, a regra de cada uma (por item), de onde vem cada fato, Encerradas ×
 Descartadas, registro de preços, sincronias e API.
 
@@ -364,38 +351,12 @@ branch `claude/precos-fornecedor`) e ainda não trazido para este.
 ### `Proposta`
 
 Implementado em `apps/propostas`. O botão "Gerar proposta" do Cotador cria
-o registro e move a licitação para a etapa Proposta. Uma por oportunidade;
+o registro. **Não muda a etapa** da Torre: o PDF é a proposta ajustada,
+pedida depois de ganhar (regra de 07/11/2026, ver [`TORRE.md`](TORRE.md)). Uma por oportunidade;
 o valor é gravado ao gerar (mexer na cotação depois não muda o proposto). A
 tela é o lugar de tudo o que sobe na plataforma: a proposta comercial em
 Word (a partir do modelo do cliente), os documentos de habilitação da
 empresa e os arquivos da licitação.
-
-### `Filtro`
-
-> **Ainda não implementado** — desenho previsto.
-Critério salvo por um usuário para monitorar novas licitações.
-
-| Campo | Tipo | Observação |
-|---|---|---|
-| `nome` | string | |
-| `palavras_chave` | string | separadas por vírgula no protótipo — DRF: `ArrayField` ou M2M com tabela de termos |
-| `uf`, `modalidade`, `uasg` | string, opcionais | |
-| `ativo` | bool | |
-| `email_notificacao` | string | **no protótipo é texto livre; na stack nova vira FK para o usuário autenticado**, com e-mail alternativo opcional |
-| `criado_em` | datetime | |
-| `owner` | FK `User` | **novo** — o protótipo não tinha autenticação; multiusuário exige dono |
-
-### `Alerta`
-
-> **Ainda não implementado** — desenho previsto.
-Registro de que um `Filtro` casou com uma `Licitacao` nova.
-
-| Campo | Tipo |
-|---|---|
-| `filtro` | FK `Filtro` |
-| `licitacao` | FK `Licitacao` |
-| `criado_em` | datetime |
-| `email_enviado` | bool |
 
 ## Regras de negócio confirmadas contra as APIs reais
 
@@ -496,8 +457,7 @@ de verdade no catálogo.
 | Tesouro Transparente (`tesourotransparente.gov.br/ckan/...`) | notas CAPAG (município/estado) — `apps/capag` |
 | Dados Abertos do Compras.gov (resultados e atas por `niFornecedor`) | o que a empresa ganhou e as atas de registro de preços — sincronia diária às 8h (`sincronia_pncp.py`), ver [`TORRE.md`](TORRE.md) |
 | Portal da Transparência (`api.portaldatransparencia.gov.br`, `despesas/documentos-por-favorecido`) | empenho, liquidação e pagamento federais — sincronia diária às 8h10 (`sincronia_transparencia.py`). Precisa da chave `PORTAL_TRANSPARENCIA_CHAVE` (header `chave-api-dados`) |
-| Compras.gov.br na sessão do fornecedor | **planejado:** lido pela Sentinela (extensão), ver [`SENTINELA.md`](SENTINELA.md) |
-| E-mail (provedor a definir) | notificação de `Alerta` |
+| Compras.gov.br na sessão do fornecedor | lido pela **Sentinela** (extensão do Chrome, 0.2.4), ver [`SENTINELA.md`](SENTINELA.md) |
 
 O sync do catálogo (~41 páginas de 500 registros) roda **sequencial, com um
 intervalo entre páginas** (`catalogo_sync_intervalo_segundos` em
@@ -677,8 +637,7 @@ achados novos:
 
 ## O que muda do protótipo para a stack de produção
 
-- **Autenticação multiusuário** — `Filtro` passa a ter dono; API protegida
-  (DRF + JWT ou sessão).
+- **Autenticação multiusuário** — API protegida (DRF + JWT).
 - **Agendamento sai do processo da app** (`APScheduler` embutido) **e vira
   Celery Beat**, para sobreviver a réplicas efêmeras do pod da API.
 - **SQLite → PostgreSQL**, com `raw_json` como `JSONField` nativo em vez de
@@ -731,4 +690,11 @@ acima parecer estranha, a razão costuma estar aqui.
 | 10/11/2026 | **Caixa de mensagens** do Compras.gov no sino: a lista já traz o texto, nada é aberto nem marcado como lido |
 | 10/11/2026 | **Telegram**: os avisos do sino no celular de Vasti e Carlinhos (robô do @BotFather, chave só no `.env`) |
 | 10/11/2026 | Prazo vencido **com cotação** e **fora dos favoritos** → Descartadas ("Prazo venceu com cotação"), sem esperar a Sentinela (Geriatria 34/2026) |
+| 10/11/2026 | Compra trazida pela Sentinela sem órgão ou sem itens é **completada pelo PNCP** (só o que está vazio); Salvar da busca com a compra já na lista completa os campos vazios e registra quem salvou (Dispensa 27/2026, ararinhas) |
+| 10/11/2026 | Cartão em Cadastro de proposta **sem cotação** abre o visualizador ("Iniciar cotação") em vez do Compras.gov |
+| 10/11/2026 | **Fornecedor sem CNPJ e sem e-mail**: só a razão social é obrigatória; CNPJ, quando digitado, é conferido e único (GEN-19). *Pedido de voltar a ser obrigatório: GEN-54* |
+| 10/11/2026 | Título da cotação longo (objeto com mais de 255 caracteres) é **cortado**, não recusa a cotação |
+| 10/11/2026 | Etapa nova **Aguardando sessão** (Disputar): preço lançado no Compras.gov e sessão fechada; com a data da sessão; sem cotação no Licita avança com aviso. 14 etapas |
+| 10/11/2026 | Prazo vencido com cotação no Compras.gov **sem nenhuma participação** → Descartadas no dia seguinte, mesmo nos favoritos (Guarulhos 461/2026). Fim do "confirmar com a Sentinela" |
+| 10/11/2026 | `AGENTS.md`: decisões só com confirmação; documentação no mesmo PR para toda mudança; código GEN no ramo e no PR |
 

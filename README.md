@@ -32,10 +32,10 @@ outro. O trabalho do dia a dia é feito **aqui**.
 | Ambiente | Endereço | Roda |
 |---|---|---|
 | **Produção** | `https://insidelicitacoes.com.br` (no ar; o `www.` redireciona para ele) | a branch `main` |
-| **Teste** | `https://teste.16-59-20-70.sslip.io` | a branch que estiver em teste (liga e desliga sob demanda) |
+| **Teste** | `https://teste.<IP com hífens>.sslip.io` (o IP está no segredo `EC2_HOST`) | a branch que estiver em teste (liga e desliga sob demanda) |
 
-Os dois rodam na mesma máquina (EC2 `licita`, região us-east-2, IP fixo
-`16.59.20.70`), com bancos **separados**. Detalhes, senhas (onde ficam) e
+Os dois rodam na mesma máquina (EC2 `licita`, região us-east-2, IP fixo —
+não fica no repositório: segredo `EC2_HOST`), com bancos **separados**. Detalhes, senhas (onde ficam) e
 como recriar a máquina: [`deploy/ec2/README.md`](deploy/ec2/README.md).
 
 ## Como trabalhar (o fluxo de toda mudança)
@@ -43,8 +43,9 @@ como recriar a máquina: [`deploy/ec2/README.md`](deploy/ec2/README.md).
 **A `main` é o que está no ar. Ninguém mexe direto nela.** Toda mudança:
 
 1. **Branch nova** a partir da `main` — **um assunto por branch** (ex.: o
-   logo e a regra de Descartadas foram branches separadas). Nome:
-   `claude/<assunto>` ou `<seu-nome>/<assunto>`.
+   logo e a regra de Descartadas foram branches separadas). Nome com o
+   **código do cartão** do Jira: `GEN-48-descricao`; o título do PR começa
+   com `GEN-48:`. Regras para agentes de IA: [`AGENTS.md`](AGENTS.md).
 2. **Código + testes** (teste vem antes do código — ver "Estratégia de
    testes" em `docs/ARQUITETURA.md`). Rodar as duas suítes localmente:
    `backend/README.md` e `frontend/README.md`.
@@ -159,4 +160,5 @@ docs/            TORRE.md, SENTINELA.md, COMPRAS_GOV.md, DOMINIO.md, ARQUITETURA
   deploy-ec2.yml       botão "Deploy EC2" — produção
   teste-ligar.yml      botão "Teste: ligar" — ambiente de teste
   teste-desligar.yml   botão "Teste: desligar"
+  consultar-ec2.yml    botão "Consultar EC2" — conferência só leitura
 ```

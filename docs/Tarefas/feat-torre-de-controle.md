@@ -3,7 +3,29 @@
 > **Como funciona hoje:** [`docs/TORRE.md`](../TORRE.md). Este arquivo é o
 > plano: o que foi feito e o que falta.
 
-## Onde paramos (08/11/2026, fim do dia)
+## Onde paramos (10/11/2026, noite)
+
+**No ar** (PRs #43 a #47):
+- Compra trazida pela Sentinela é **completada pelo PNCP** (órgão, itens);
+  cartão em Cadastro de proposta sem cotação abre "Iniciar cotação".
+- Fornecedor sem CNPJ e sem e-mail (GEN-19; pedido de voltar atrás: GEN-54).
+- Cotação com título longo deixa de dar erro.
+- Etapa **Aguardando sessão** (14 etapas).
+- Prazo vencido com cotação e sem participação → Descartadas (Guarulhos 461).
+- `AGENTS.md`/`CLAUDE.md`: regras para agentes de IA (PR #48).
+
+**Em aberto (Jira GEN):** GEN-48 (Encerradas: menu 10 × tela 1), GEN-56
+(estudar "Acompanhando"), GEN-55 (filtro UASG em Encerradas), GEN-57
+(descrição da Sentinela), GEN-58 (CI de testes), GEN-54 (CNPJ obrigatório),
+GEN-45 (quedas de login), GEN-46 (vigia até o contrato), GEN-47 (tirar o
+Ciclo antigo). Guarulhos 387/2026 ainda sem itens (só completa quando a
+Sentinela ler a participação).
+
+**Documentation as Code:** Fase 1 (regras) feita; Fase 2 (auditoria) em
+correção (GEN-59); Fases 3 a 5 (MkDocs em `insidelicitacoes.com.br/documentacao`
+atrás do login, completar a documentação, validação no GitHub) a fazer.
+
+## Onde paramos (08/11/2026, fim do dia — histórico)
 
 **No ar** (`https://insidelicitacoes.com.br`):
 - Torre de Controle com o visual do protótipo v2; Homologado em Contratar.

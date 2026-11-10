@@ -1,9 +1,26 @@
 # Arquitetura
 
-Stack construída sobre um cluster Kubernetes. Domínio de negócio em
-[`DOMINIO.md`](DOMINIO.md).
+Domínio de negócio em [`DOMINIO.md`](DOMINIO.md).
 
-## Visão geral
+**Produção (este repositório): 1 EC2 na AWS com `docker compose`** —
+`deploy/ec2/docker-compose.yml` sobe `caddy` (HTTPS), `frontend`, `backend`,
+`worker` e `beat` (Celery), `postgres` e `rabbitmq`, mais os passos
+`migrate` e `permissoes`. Detalhes na seção "Produção — EC2 com docker
+compose" e em [`deploy/ec2/README.md`](../deploy/ec2/README.md).
+
+```
+internet ──► caddy (HTTPS) ──┬──► frontend (Angular, nginx)
+                             └──► backend (Django + DRF, Daphne)
+                                     │
+                     ┌───────────────┼──────────────┐
+                     ▼               ▼              ▼
+                 postgres        rabbitmq ◄── worker + beat (Celery)
+```
+
+O desenho abaixo e a seção "Pods" descrevem a **alternativa Kubernetes**
+(`k8s/`), usada pelo repositório original.
+
+## Visão geral (alternativa Kubernetes)
 
 ```
                          ┌───────────────┐
@@ -108,14 +125,11 @@ que combina com o requisito de pods efêmeros/escaláveis. Mecanismo:
 - `/api/auth/refresh/` fica sujeito a CSRF (é o único endpoint de auth que
   depende de cookie); os demais usam só o header `Authorization` e não
   precisam de CSRF token.
-- `Filtro` (ver [`DOMINIO.md`](DOMINIO.md)) ganha `owner = FK User`; todo
-  `ViewSet` de `filtros`/`alertas` usa `permission_classes = [IsAuthenticated]`
-  e filtra o queryset por `request.user`.
 - Sessão de admin do Django continua disponível em `/admin/` (cookie de
   sessão padrão), só para operação interna — não é o mecanismo usado pelos
   clients.
 
-## Pods
+## Pods (alternativa Kubernetes)
 
 Um pod por responsabilidade, todos **stateless e efêmeros** (nada em disco
 local que não seja regenerável), para escala horizontal sem coordenação:
@@ -131,9 +145,8 @@ local que não seja regenerável), para escala horizontal sem coordenação:
 (`catalogo.sincronizar_catalogo_pdm`, única existente), não "celery-worker"
 genérico. Ver comentário em
 `k8s/backend/sincronizador-catalogo-pdm-deployment.yaml` para o que fazer
-quando `verificar_filtros_ativos`/`enviar_email_alerta` (tabela abaixo)
-ganharem workers — decidir então entre renomear de volta pra genérico ou
-rotear por fila dedicada.
+quando outras tasks ganharem workers — decidir então entre renomear de
+volta pra genérico ou rotear por fila dedicada.
 
 `postgres` e `rabbitmq` não são `Deployment`: `postgres` é `StatefulSet` (ver
 abaixo); `rabbitmq` roda como `StatefulSet` de 1 réplica nesta fase (fila
@@ -151,6 +164,8 @@ task Celery, com RabbitMQ como broker:
 | `licitacoes.sincronizar_transparencia` | Celery Beat | segunda a sexta, 8h10 — empenho, liquidação, pagamento federais |
 | `licitacoes.conferencia_diaria` | Celery Beat | segunda a sexta, 7h45 — data/situação no PNCP, itens acompanhados, fim da vigia (atas), mercado dos itens |
 | `notificacoes.enviar_telegram` | a cada aviso novo do sino | manda ao Telegram (sem chave no `.env`: não faz nada) |
+| `licitacoes.completar_salva` | captura da Sentinela, quando a salva está sem órgão ou sem itens (10/11/2026) | preenche pelo PNCP só o que está vazio (`completar.py`); a conferência das 7h45 pega as que ficaram para trás |
+| `capag.sincronizar_capag` | Celery Beat | a cada 30 dias — notas CAPAG do Tesouro |
 | chamadas à API do PNCP/compras.gov.br feitas por busca interativa do usuário | request síncrono da `licitacoes` view | -- ficam síncronas mesmo, são a resposta da busca; só o que não bloqueia a resposta ao usuário vira task |
 
 Agendamento via `django-celery-beat` (schedule editável no banco/admin, não
@@ -254,12 +269,12 @@ alternativo por preferência pessoal:
 
 | Camada | Ferramenta | Escopo mínimo |
 |---|---|---|
-| Backend (models, serializers, regras) | `django.test.TestCase` (test runner padrão do Django, via `manage.py test`) | toda regra de `docs/DOMINIO.md` (matching de filtro, fallback catálogo↔PNCP, geração de `Alerta`) tem teste antes de existir código |
-| Backend (endpoints DRF) | `rest_framework.test.APITestCase` (extensão do `TestCase` padrão, já pensada para DRF) | autenticação (login, refresh, 401 sem token, logout invalida refresh), permissão (dono só vê seu próprio `Filtro`), contrato de cada endpoint |
+| Backend (models, serializers, regras) | `django.test.TestCase` (test runner padrão do Django, via `manage.py test`) | toda regra de `docs/DOMINIO.md` e `docs/TORRE.md` (fallback catálogo↔PNCP, etapas e saídas da Torre) tem teste antes de existir código |
+| Backend (endpoints DRF) | `rest_framework.test.APITestCase` (extensão do `TestCase` padrão, já pensada para DRF) | autenticação (login, refresh, 401 sem token, logout invalida refresh), permissão, contrato de cada endpoint |
 | Clients de integração (`integracoes/`) | `TestCase` + `unittest.mock`/`requests-mock` | **sem rede real nos testes** — mesma disciplina do protótipo (`tests/conftest.py` já desligava a busca do PNCP por padrão); contrato mockado a partir do `api-spec.json` e dos comportamentos documentados em `DOMINIO.md` (paginação 10–500, `/api/search/` etc.) |
 | Tasks Celery | `TestCase` com `CELERY_TASK_ALWAYS_EAGER=True` | `sincronizar_catalogo_pdm`, `sincronizar_pncp`, `sincronizar_transparencia` rodam síncronas no teste, sem broker nem rede real (clients falsos com o formato real das APIs) |
 | Frontend (Angular) | Vitest via `ng test` (`*.spec.ts` ao lado de cada arquivo) | `AuthService`/interceptor (refresh automático, fila de requests em 401, logout limpa estado), guards de rota, telas da Torre, menu e topo |
-| Frontend (fluxo ponta a ponta) | a definir (Playwright é o candidato natural — não tem padrão nativo do Angular CLI para e2e desde a remoção do Protractor) | login → criar filtro → alerta aparece — pelo menos o caminho feliz, antes de considerar uma feature "pronta" |
+| Frontend (fluxo ponta a ponta) | a definir (Playwright é o candidato natural — não tem padrão nativo do Angular CLI para e2e desde a remoção do Protractor) | login → buscar → salvar → cotar — pelo menos o caminho feliz, antes de considerar uma feature "pronta" |
 
 ### CI
 
@@ -271,7 +286,6 @@ harness de código for gerado.
 
 - Provisão exata da `StorageClass` (qual cluster/cloud hospeda — impacta
   `provisioner` e parâmetros de zona).
-- Provedor de e-mail transacional para `enviar_email_alerta`.
 - (Resolvido) Domínio: `insidelicitacoes.com.br` no ar, apontando para o
   EC2. O `www.` redireciona para ele.
 - **Backup do Postgres fora da máquina:** todo deploy faz `pg_dump` antes
