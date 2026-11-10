@@ -41,6 +41,8 @@ sudo chown "$(id -u)":"$(id -g)" "$PASTA"
 for arquivo in docker-compose.yml Caddyfile atualizar.sh; do
   curl -fsSL "$RAW/$arquivo" -o "$PASTA/$arquivo"
 done
+mkdir -p "$PASTA/.well-known"
+curl -fsSL "$RAW/.well-known/security.txt" -o "$PASTA/.well-known/security.txt"
 chmod +x "$PASTA/atualizar.sh"
 
 echo "==> 4/4 Senhas (.env)"
