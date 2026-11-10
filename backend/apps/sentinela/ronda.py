@@ -207,7 +207,11 @@ def _propostas_de_todos(agora: dt.datetime) -> list[str]:
     return caminhos
 
 
+MENSAGENS = "/comprasnet-mensagem/v1/mensagens?size=20&page=0"
+
+
 def consultas(agora: dt.datetime | None = None) -> list[str]:
     agora = agora or timezone.now()
-    todas = _favoritas() + _da_empresa() + _vigia_diaria(agora) + _propostas_de_todos(agora) + _acompanhados(agora)
+    # A caixa de mensagens primeiro: é o que mais pede atenção (09/11/2026).
+    todas = [MENSAGENS] + _favoritas() + _da_empresa() + _vigia_diaria(agora) + _propostas_de_todos(agora) + _acompanhados(agora)
     return list(dict.fromkeys(todas))[:MAXIMO]  # sem repetir, na ordem

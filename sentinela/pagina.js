@@ -23,12 +23,18 @@
     /\/comprasnet-fase-externa\/v1\/compras\/\d{17}\/itens\/[^/]+\/participacoes\/\d{14}\/diligencias\/?$/,
     /\/comprasnet-fase-externa\/v1\/compras\/\d{17}\/em-selecao-fornecedores\/itens\/[^/]+\/propostas\/?$/,
     /\/comprasnet-oportunidade\/v1\/compras\/favoritas\/dentre-opcoes\/?$/,
+    /\/comprasnet-mensagem\/v1\/mensagens\/?$/,
   ];
 
   const RETOKEN = /\/comprasnet-usuario\/v2\/sessao\/fornecedor\/retoken\/?$/;
 
   // O que a Sentinela pode consultar sozinha (nenhum pede captcha).
   const PERMITIDO = [
+    {
+      // A caixa de mensagens (só a lista: já traz o texto; nada é marcado como lido).
+      metodo: "GET",
+      padrao: /^\/comprasnet-mensagem\/v1\/mensagens\?size=\d{1,2}&page=0$/,
+    },
     {
       metodo: "GET",
       padrao:

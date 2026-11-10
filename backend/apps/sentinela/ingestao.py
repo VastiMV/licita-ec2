@@ -89,6 +89,7 @@ ROTAS = [
         "propostas_do_item",
     ),
     (re.compile(r"/comprasnet-oportunidade/v1/compras/favoritas/dentre-opcoes/?$"), "favoritas"),
+    (re.compile(r"/comprasnet-mensagem/v1/mensagens/?$"), "mensagens"),
 ]
 
 SITUACOES_DA_COMPRA = {c.value for c in ParticipacaoCompra.Situacao}
@@ -442,6 +443,59 @@ def _ler_favoritas(dados, params, **_) -> dict:
     return {"conferidas": len(perguntadas), "fora": len(perguntadas - favoritas), "mudaram": mudou}
 
 
+# Categorias da caixa de mensagens (HARs de 07/11/2026).
+NIVEL_DA_CATEGORIA = {"830": "alerta", "850": "alerta", "810": "aviso", "840": "info"}
+MENSAGEM_RECENTE = dt.timedelta(days=3)
+
+
+def _ler_mensagens(dados, params, **_) -> dict:
+    """A caixa de mensagens do fornecedor — todas as compras juntas
+    (convocação 830, pregoeiro 840, recurso 850, impugnação 810). A **lista**
+    já traz o texto: nada é aberto, nada fica marcado como lido no
+    Compras.gov. Cada mensagem vira um aviso no sino (uma vez só); as antigas
+    (mais de 3 dias) não, para a primeira leitura não inundar o sino."""
+
+    from apps.licitacoes.torre import rotulo_da_compra
+    from apps.notificacoes.servico import avisar
+
+    if not isinstance(dados, list):
+        raise CapturaInvalida("mensagens: era esperada uma lista")
+    agora = timezone.now()
+    novas = 0
+    for m in dados:
+        if not isinstance(m, dict) or m.get("excluida") or not m.get("id"):
+            continue
+        publicada = _data_hora(str(m.get("dataHoraPublicacao") or "").replace(" ", "T"))
+        if publicada and agora - publicada > MENSAGEM_RECENTE:
+            continue
+        codigo = None
+        try:
+            codigo = (
+                f"{int(m['numeroUasg']):06d}{int(m['codigoModalidade']):02d}"
+                f"{int(m['numeroCompra']):05d}{int(m['anoCompra']):04d}"
+            )
+        except (KeyError, TypeError, ValueError):
+            pass
+        salva = _salva_pelo_codigo(codigo) if codigo else None
+        compra = (
+            rotulo_da_compra(salva)
+            if salva
+            else f"{m.get('descricaoModalidade') or 'Compra'} {m.get('numeroCompraFormatado') or ''}".strip()
+        )
+        uasg = f" · UASG {m.get('numeroUasg')}" if m.get("numeroUasg") and not salva else ""
+        novas += int(
+            avisar(
+                "mensagem",
+                f"{m.get('titulo') or 'Mensagem'} · {compra}{uasg}",
+                texto=str(m.get("texto") or "")[:1000],
+                oportunidade=salva,
+                nivel=NIVEL_DA_CATEGORIA.get(str(m.get("categoria") or ""), "info"),
+                chave=f"mensagem:{m['id']}",
+            )
+        )
+    return {"mensagens": len(dados), "novas": novas}
+
+
 LEITORES = {
     "participacoes": _ler_participacoes,
     "participacao": _ler_participacao,
@@ -452,6 +506,7 @@ LEITORES = {
     "diligencias": _ler_diligencias,
     "propostas_do_item": _ler_propostas_do_item,
     "favoritas": _ler_favoritas,
+    "mensagens": _ler_mensagens,
 }
 
 

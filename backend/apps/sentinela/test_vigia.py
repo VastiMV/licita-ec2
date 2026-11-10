@@ -265,3 +265,34 @@ class SinoApiTests(APITestCase):
 
         self.assertTrue(avisar("data", "x", chave="k"))
         self.assertFalse(avisar("data", "x", chave="k"))
+
+
+class CaixaDeMensagensTests(_Base):
+    """A caixa de mensagens do fornecedor (HAR de 07/11/2026, 7 mensagens)."""
+
+    def receber_caixa(self, agora):
+        captura = exemplo("mensagens")
+        with mock.patch("apps.sentinela.ingestao.timezone.now", return_value=agora):
+            return receber(captura["url"], captura["dados"])
+
+    def test_cada_mensagem_vira_um_aviso_uma_vez_so(self):
+        farroupilha = salva("15812705000612026", 0)
+        agora = timezone.make_aware(dt.datetime(2026, 11, 7, 9, 0))
+
+        resumo = self.receber_caixa(agora)
+        de_novo = self.receber_caixa(agora)
+
+        self.assertEqual((resumo["mensagens"], de_novo["novas"]), (7, 0))
+        self.assertEqual(resumo["novas"], Notificacao.objects.filter(tipo="mensagem").count())
+        aviso = Notificacao.objects.filter(tipo="mensagem", oportunidade=farroupilha).first()
+        self.assertIsNotNone(aviso)
+        self.assertIn("Retornaremos", Notificacao.objects.filter(tipo="mensagem").order_by("-id").first().texto + "".join(
+            Notificacao.objects.filter(tipo="mensagem").values_list("texto", flat=True)))
+
+    def test_mensagens_antigas_nao_inundam_o_sino(self):
+        resumo = self.receber_caixa(timezone.make_aware(dt.datetime(2026, 11, 20, 9, 0)))
+
+        self.assertEqual(resumo["novas"], 0)
+
+    def test_a_ronda_le_a_caixa_primeiro(self):
+        self.assertTrue(consultas()[0].startswith("/comprasnet-mensagem/v1/mensagens?"))

@@ -41,6 +41,11 @@ o Licita abre aba nova como antes (`licita.js` marca a página do Licita com
 - A cotação do painel não confere mais a cada minuto: é lida ao abrir a
   compra e no F5 (o ↻ continua).
 
+**0.2.4 (10/11/2026):** a ronda lê a **caixa de mensagens** do fornecedor
+(todas as compras juntas: pregoeiro, convocação, recurso, impugnação). A
+lista já traz o texto: nada é aberto, nada fica marcado como lido. Cada
+mensagem nova vira um aviso no sino do Licita.
+
 **0.2.3 (09/11/2026):** a primeira ronda acontece 1 minuto depois que o
 Chrome abre (antes esperava 10). A ronda passa a incluir a **vigia diária**
 (itens perdidos, Encerradas e Descartadas: a proposta dele e o recurso, 1x por
