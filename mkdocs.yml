@@ -1,0 +1,76 @@
+# Site da documentação (Documentation as Code, GEN-63, 10/11/2026).
+# Publicado em insidelicitacoes.com.br/documentacao, atrás do login do Licita.
+# Compilar: pip install -r docs/requirements.txt && mkdocs build --strict
+site_name: Licita — Documentação
+site_description: Documentação técnica e regras de negócio do Licita (Inside Solutions)
+site_url: https://insidelicitacoes.com.br/documentacao/
+repo_url: https://github.com/VastiMV/licita-ec2
+edit_uri: edit/main/docs/
+docs_dir: docs
+site_dir: site
+
+theme:
+  name: material
+  language: pt-BR
+  features:
+    - navigation.sections
+    - navigation.top
+    - search.highlight
+    - content.code.copy
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Modo escuro
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Modo claro
+
+# Fica no repositório, fora do site (decisão de 10/11/2026).
+exclude_docs: |
+  *.docx
+  Mockups/
+  Inspirações/
+  design/
+  requirements.txt
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+plugins:
+  - search:
+      lang: pt
+
+nav:
+  - Início: index.md
+  - Torre de Controle: TORRE.md
+  - Domínio e regras: DOMINIO.md
+  - Sentinela: SENTINELA.md
+  - Compras.gov (endereços): COMPRAS_GOV.md
+  - Arquitetura: ARQUITETURA.md
+  - Tarefas:
+      - Índice: Tarefas/README.md
+      - Próximo build: Tarefas/proximo-build.md
+      - Torre de Controle: Tarefas/feat-torre-de-controle.md
+      - Armazenamento: Tarefas/feat-armazenamento.md
+      - Cadastro de empresa: Tarefas/feat-cadastro-empresa.md
+      - Documentos do processo: Tarefas/feat-documentos-processo.md
+      - Proposta: Tarefas/feat-proposta.md
+      - Produtos: Tarefas/feat-produtos.md
+      - Usuário: Tarefas/feat-usuario.md
+      - Remover legado: Tarefas/feat-remover-legado.md
+  - Reunião 30/08/2026: REUNIAO_30_08_2026.md

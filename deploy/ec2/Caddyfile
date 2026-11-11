@@ -10,6 +10,14 @@
 	handle /api/* {
 		reverse_proxy backend:8000
 	}
+	# Documentação (GEN-63): só com o passe do Licita. O backend responde 204
+	# (entra) ou 302 para /abrir-documentacao (pede o passe; sem login, login).
+	handle /documentacao* {
+		forward_auth backend:8000 {
+			uri /api/auth/documentacao/verificar/
+		}
+		reverse_proxy docs:80
+	}
 	handle {
 		reverse_proxy frontend:80
 	}

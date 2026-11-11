@@ -42,6 +42,13 @@ services:
     image: ghcr.io/vastimv/licita-ec2-frontend:latest
     restart: unless-stopped
 
+  # O site da documentação (/documentacao), atrás do login: o Caddy confere
+  # o passe no backend antes de mandar para cá (GEN-63, 10/11/2026). A imagem
+  # vem do workflow "Documentação: gerar imagem".
+  docs:
+    image: ghcr.io/vastimv/licita-ec2-docs:latest
+    restart: unless-stopped
+
   # Roda e termina antes do backend subir — o initContainer do k8s.
   migrate:
     image: ghcr.io/vastimv/licita-ec2-backend:latest

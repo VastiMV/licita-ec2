@@ -9,7 +9,8 @@ from __future__ import annotations
 import time
 
 from django.conf import settings
-from django.http import HttpResponse
+from django.core import signing
+from django.http import HttpResponse, HttpResponseRedirect
 from django.middleware.csrf import get_token
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -22,6 +23,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from config.settings.environment import env
 
+from .models import User
 from .serializers import LoginSerializer
 
 REFRESH_COOKIE_NAME = "refresh"
@@ -141,4 +143,75 @@ class LogoutView(APIView):
 
         response = Response(status=status.HTTP_204_NO_CONTENT)
         _clear_refresh_cookie(response)
+        response.delete_cookie(DOCS_COOKIE_NAME, path=DOCS_COOKIE_PATH)
         return response
+
+
+# ---------- o passe da documentação (GEN-63, 10/11/2026) ----------
+#
+# O site da documentação (/documentacao) é estático, servido por outra
+# imagem, atrás do mesmo login do Licita. O navegador não manda o token do
+# Licita (fica na memória da página) nem o cookie do refresh (só vale em
+# /api/auth/) para /documentacao — por isso o Licita, já logado, pede um
+# passe: cookie assinado, httpOnly, só para /documentacao, que vence junto
+# com o login (12 h desde a entrada). O Caddy confere o passe a cada página
+# (`forward_auth` em `verificar/`).
+
+DOCS_COOKIE_NAME = "licita_docs"
+DOCS_COOKIE_PATH = "/documentacao"
+_DOCS_SALT = "licita.documentacao"
+# Sem passe: a tela do Licita que pede o passe (e, sem login, cai no login).
+DOCS_PEDIR_PASSE = "/abrir-documentacao"
+
+
+def _fim_do_login(raw_refresh: str | None) -> int:
+    agora = int(time.time())
+    maximo = agora + env.sessao_maxima_horas * 3600
+    if not raw_refresh:
+        return maximo
+    try:
+        login_em = RefreshToken(raw_refresh).payload.get("login_em")
+    except TokenError:
+        return maximo
+    return min(maximo, int(login_em) + env.sessao_maxima_horas * 3600) if login_em else maximo
+
+
+class PasseDocumentacaoView(APIView):
+    """`POST /api/auth/documentacao/` — o Licita logado pede o passe."""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request: Request, *args, **kwargs) -> Response:
+        ate = _fim_do_login(request.COOKIES.get(REFRESH_COOKIE_NAME))
+        passe = signing.dumps({"u": request.user.pk, "ate": ate}, salt=_DOCS_SALT)
+        response = Response(status=status.HTTP_204_NO_CONTENT)
+        response.set_cookie(
+            DOCS_COOKIE_NAME,
+            passe,
+            max_age=max(0, ate - int(time.time())),
+            path=DOCS_COOKIE_PATH,
+            httponly=True,
+            secure=not settings.DEBUG,
+            samesite="Lax",
+        )
+        return response
+
+
+class VerificarDocumentacaoView(APIView):
+    """`GET /api/auth/documentacao/verificar/` — o Caddy pergunta a cada
+    página de /documentacao. 204 = pode entrar; 302 = vai pedir o passe."""
+
+    permission_classes = [AllowAny]
+    authentication_classes: list = []
+
+    def get(self, request: Request, *args, **kwargs) -> HttpResponse:
+        try:
+            dados = signing.loads(request.COOKIES.get(DOCS_COOKIE_NAME, ""), salt=_DOCS_SALT)
+        except signing.BadSignature:
+            return HttpResponseRedirect(DOCS_PEDIR_PASSE)
+        valido = (
+            isinstance(dados, dict)
+            and int(dados.get("ate", 0)) > time.time()
+            and User.objects.filter(pk=dados.get("u"), is_active=True).exists()
+        )
+        return HttpResponse(status=204) if valido else HttpResponseRedirect(DOCS_PEDIR_PASSE)

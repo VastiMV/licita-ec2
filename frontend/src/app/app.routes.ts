@@ -79,6 +79,14 @@ export const routes: Routes = [
       // Propostas (PDF), Encerradas e Descartadas.
       // Relatórios (09/11/2026): o mês a mês e o "perdeu por pouco".
       {
+        // Pede o passe e vai para o site estático /documentacao (GEN-63).
+        path: 'abrir-documentacao',
+        loadComponent: () =>
+          import('./pages/documentacao/abrir-documentacao.page').then(
+            (m) => m.AbrirDocumentacaoPage,
+          ),
+      },
+      {
         path: 'relatorios',
         loadComponent: () =>
           import('./pages/relatorios/relatorios.page').then((m) => m.RelatoriosPage),

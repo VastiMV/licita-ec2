@@ -161,4 +161,8 @@ docs/            TORRE.md, SENTINELA.md, COMPRAS_GOV.md, DOMINIO.md, ARQUITETURA
   teste-ligar.yml      botão "Teste: ligar" — ambiente de teste
   teste-desligar.yml   botão "Teste: desligar"
   consultar-ec2.yml    botão "Consultar EC2" — conferência só leitura
+  docs-imagem.yml      botão "Documentação: gerar imagem" — o site da documentação
 ```
+
+**Documentação navegável:** `https://insidelicitacoes.com.br/documentacao`
+(menu **Documentação**, mesmo login). Fonte: `docs/` + `mkdocs.yml`.

@@ -1,7 +1,7 @@
 # feat/cadastro-empresa — os CNPJs do licitante e os documentos deles
 
 Proposta: https://claude.ai/code/artifact/46ff524f-1317-4811-9a1c-23bf4c20ccdb
-Mockup: [`docs/Mockups/cadastro_empresa/`](../Mockups/cadastro_empresa/)
+Mockup: [`docs/Mockups/cadastro_empresa/`](https://github.com/VastiMV/licita-ec2/tree/main/docs/Mockups/cadastro_empresa)
 
 `Empresa` é cadastro novo e **não** é o `Fornecedor` com documentos: são os
 CNPJs com que a equipe *disputa* (matriz, filial, a segunda empresa que cobre

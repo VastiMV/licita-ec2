@@ -207,4 +207,7 @@ const MENU: readonly Entrada[] = [
       { path: '/produtos', label: 'Produtos', icon: 'produtos' },
     ],
   },
+  { tipo: 'linha' },
+  // O site da documentação, atrás do mesmo login (GEN-63, 10/11/2026).
+  { tipo: 'item', path: '/abrir-documentacao', label: 'Documentação', icon: 'documentos' },
 ];
