@@ -77,7 +77,13 @@
           </a>
         }
         @if (cab.link_plataforma) {
-          <a class="link" [href]="cab.link_plataforma" target="_blank" rel="noopener">
+          <a
+            class="link"
+            [href]="cab.link_plataforma"
+            target="_blank"
+            rel="noopener"
+            (click)="abrirPlataforma($event)"
+          >
             <ng-container *ngTemplateOutlet="icone; context: { $implicit: 'link', tam: 13 }" />{{
               cab.plataforma_nome || 'Plataforma'
             }}

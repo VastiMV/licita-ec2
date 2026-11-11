@@ -781,6 +781,31 @@
   color: var(--ec-navy);
 }
 
+// "Ver todos os N itens" (GEN-30): só na busca, com mais de 3 itens.
+.ver-todos {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  padding: 10px 16px;
+  border: 1px dashed var(--ec-borda-4);
+  border-radius: 6px;
+  background: var(--ec-superficie-2);
+  font: inherit;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--ec-navy);
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--ec-navy);
+    outline-offset: 2px;
+  }
+}
+
 // -- Documentos (desktop) --
 
 .tabela-cabecalho-documentos {

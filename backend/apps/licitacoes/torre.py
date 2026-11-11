@@ -575,9 +575,13 @@ def avaliar(salva: OportunidadeSalva, hoje: dt.date) -> tuple[dict | None, Saida
         "valor_total_estimado": salva.valor_total_estimado,
         "link_plataforma": link_do_fornecedor(salva.link_plataforma),
         "cotacao_id": cotacao.pk if cotacao else None,
-        # Em Preparar o cartão abre os modais que já existem (visualizador da
-        # oportunidade e Cotador), que precisam do registro inteiro.
-        "salva": OportunidadeSalvaSerializer(salva).data if ESTAGIO_DA_ETAPA[etapa] == "preparar" else None,
+        # Para o cabeçalho do modal Processo ("Valor cotado").
+        "valor_cotado": float(cotacao.valor_cotado) if cotacao else None,
+        # O registro inteiro, para os modais que já existem: em Preparar, o
+        # visualizador da oportunidade e o Cotador; dali em diante, o modal
+        # Processo (GEN-53/64, 11/11/2026: o cartão abria o Compras.gov, que
+        # sem a aba logada dava página inválida).
+        "salva": OportunidadeSalvaSerializer(salva).data,
         "itens": cartoes_itens,
         "valor_ganho": sum(ganhos, Decimal(0)) if ganhos else None,
         # "ganhando 1 de 8": dos itens com posição conhecida.

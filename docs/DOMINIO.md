@@ -461,6 +461,11 @@ resultado sem explicar por quê.
    link para abrir a compra **na plataforma** (garantido em todo resultado —
    ver a decisão de produto de 28/08/2026 abaixo: só entra oportunidade da
    plataforma escolhida, com link de disputa) e o edital no PNCP.
+   **No card, os itens vêm recolhidos** (11/11/2026, GEN-30): aparecem os
+   **3 primeiros** e o botão "Ver todos os N itens" ("Mostrar menos" volta).
+   O total do rodapé soma todos. Por quê: licitação com muitos itens
+   obrigava a rolar a tela até o próximo card. Só na busca — o modal da
+   oportunidade salva mostra todos (`recolherItens` no `edital-card`).
 
 ### Busca textual — camadas
 
@@ -517,7 +522,7 @@ de verdade no catálogo.
 | Tesouro Transparente (`tesourotransparente.gov.br/ckan/...`) | notas CAPAG (município/estado) — `apps/capag` |
 | Dados Abertos do Compras.gov (resultados e atas por `niFornecedor`) | o que a empresa ganhou e as atas de registro de preços — sincronia diária às 8h (`sincronia_pncp.py`), ver [`TORRE.md`](TORRE.md) |
 | Portal da Transparência (`api.portaldatransparencia.gov.br`, `despesas/documentos-por-favorecido`) | empenho, liquidação e pagamento federais — sincronia diária às 8h10 (`sincronia_transparencia.py`). Precisa da chave `PORTAL_TRANSPARENCIA_CHAVE` (header `chave-api-dados`) |
-| Compras.gov.br na sessão do fornecedor | lido pela **Sentinela** (extensão do Chrome, 0.2.4), ver [`SENTINELA.md`](SENTINELA.md) |
+| Compras.gov.br na sessão do fornecedor | lido pela **Sentinela** (extensão do Chrome, 0.2.5), ver [`SENTINELA.md`](SENTINELA.md) |
 
 O sync do catálogo (~41 páginas de 500 registros) roda **sequencial, com um
 intervalo entre páginas** (`catalogo_sync_intervalo_segundos` em

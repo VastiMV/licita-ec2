@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { EMPTY, Observable, catchError, concatMap, map, of } from 'rxjs';
 
+import { ProcessoCabecalho } from '../../contracts/licitacoes/encerrada.contracts';
 import { RelatorioCabecalho } from '../../contracts/licitacoes/relatorio.contracts';
 import { CartaoTorre } from '../../contracts/licitacoes/torre.contracts';
 import { OportunidadeSalvaResponse } from '../../contracts/licitacoes/oportunidade-salva.contracts';
@@ -16,7 +17,14 @@ import {
   OportunidadeModalComponent,
   OportunidadeModalResultado,
 } from '../oportunidades/salvas/oportunidade-modal/oportunidade-modal.component';
+import {
+  ProcessoModalComponent,
+  ProcessoModalResultado,
+} from '../ciclo/encerradas/processo-modal/processo-modal.component';
+import { abrirNoCompras } from './abrir-no-compras';
 import { RelatorioModalComponent } from './relatorio-modal/relatorio-modal.component';
+
+export { abrirNoCompras };
 
 /**
  * O que acontece ao clicar num cartão da Torre — num lugar só, para o
@@ -24,7 +32,10 @@ import { RelatorioModalComponent } from './relatorio-modal/relatorio-modal.compo
  *
  * Em Preparar, os modais que já existem: Oportunidade abre o visualizador da
  * salva (que tem "Iniciar cotação"); com cotação, abre o Cotador. Dali em
- * diante a licitação vive no Compras.gov.br: o cartão abre a compra lá.
+ * diante (Disputar, Contratar, Receber) abre o modal **Processo** do Licita
+ * — onde está, onde parou, linha do tempo — com o link para o Compras.gov lá
+ * dentro (GEN-53/64, 11/11/2026: o cartão abria o Compras.gov direto, e sem a
+ * aba logada a página era inválida).
  *
  * Devolve um Observable que termina quando o modal fecha — é a deixa para a
  * tela recarregar a Torre. Abrir o Compras.gov.br não pede recarga.
@@ -88,7 +99,10 @@ export class TorreAcoesService {
         )
         .pipe(concatMap((resultado) => (resultado === 'cotar' ? this.cotar(cartao) : of(true))));
     }
-    if (cartao.cotacao_id !== null && cartao.salva) return this.cotar(cartao);
+    if (cartao.estagio === 'preparar' && cartao.cotacao_id !== null && cartao.salva) {
+      return this.cotar(cartao);
+    }
+    if (cartao.estagio !== 'preparar' && cartao.salva) return this.processo(cartao);
     if (cartao.link_plataforma) {
       abrirNoCompras(cartao.link_plataforma);
       return of(false);
@@ -101,6 +115,20 @@ export class TorreAcoesService {
     return this.modal.abrir<void, RelatorioCabecalho>(RelatorioModalComponent, cabecalho);
   }
 
+  /** O modal Processo; "Ver cotação" lá dentro segue para o Cotador. */
+  private processo(cartao: CartaoTorre): Observable<boolean> {
+    const cabecalho: ProcessoCabecalho = {
+      ...cartao.salva!,
+      // O link do cartão já é o da página do fornecedor (logada), não o público.
+      link_plataforma: cartao.link_plataforma,
+      cotacao_id: cartao.cotacao_id,
+      valor_cotado: cartao.valor_cotado,
+    };
+    return this.modal
+      .abrir<ProcessoModalResultado, ProcessoCabecalho>(ProcessoModalComponent, cabecalho)
+      .pipe(concatMap((resultado) => (resultado === 'cotacao' ? this.cotar(cartao) : of(false))));
+  }
+
   private cotar(cartao: CartaoTorre): Observable<boolean> {
     const dados: CotadorModalData = {
       titulo: normalizarTitulo(cartao.objeto),
@@ -111,18 +139,4 @@ export class TorreAcoesService {
       .abrir<unknown, CotadorModalData>(CotadorModalComponent, dados)
       .pipe(concatMap(() => of(true)));
   }
-}
-
-/**
- * Abre a compra no Compras.gov. A sessão de lá vale **por aba**: uma aba nova
- * cai no login. Com a Sentinela no Chrome (ela marca a página com
- * `data-sentinela`), quem abre é ela, numa cópia da aba já logada — a aba
- * original não é tocada. Sem Sentinela, aba nova como antes.
- */
-export function abrirNoCompras(url: string): void {
-  if (document.documentElement.dataset['sentinela']) {
-    window.postMessage({ licita: true, tipo: 'abrir_no_compras', url }, location.origin);
-    return;
-  }
-  window.open(url, '_blank', 'noopener');
 }

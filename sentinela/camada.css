@@ -41,7 +41,46 @@
   overflow: auto;
   padding: 8px 12px 12px;
 }
-.sentinela-recolhido .sentinela-corpo {
+/* Arrastar pela faixa do topo (0.2.5, GEN-61). */
+.sentinela-topo {
+  cursor: move;
+  user-select: none;
+  touch-action: none;
+}
+.sentinela-arrastando {
+  opacity: 0.92;
+}
+/* Minimizado: só a etiqueta "Cotador", mesma cor do topo. */
+.sentinela-etiqueta {
+  display: none;
+  padding: 6px 14px;
+  border: 0;
+  background: #16233f;
+  color: #ffffff;
+  font:
+    700 14px/1.4 system-ui,
+    -apple-system,
+    "Segoe UI",
+    sans-serif;
+  cursor: pointer;
+  user-select: none;
+  touch-action: none;
+}
+.sentinela-etiqueta:focus-visible,
+.sentinela-recolher:focus-visible {
+  outline: 2px solid #f2b705;
+  outline-offset: 2px;
+}
+.sentinela-minimizado {
+  width: auto;
+  border: 0;
+}
+.sentinela-minimizado .sentinela-etiqueta {
+  display: block;
+}
+.sentinela-minimizado .sentinela-topo,
+.sentinela-minimizado .sentinela-corpo,
+.sentinela-minimizado .sentinela-hora {
   display: none;
 }
 .sentinela-tabela {
@@ -100,7 +139,4 @@
   padding: 0 12px 8px;
   font-size: 11px;
   color: #4d5a75;
-}
-.sentinela-recolhido .sentinela-hora {
-  display: none;
 }

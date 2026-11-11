@@ -178,7 +178,7 @@
           <span class="col-valor">Valor unit.</span>
           <span class="col-total">Total</span>
         </div>
-        @for (item of card().itens; track $index) {
+        @for (item of itensVisiveis(); track $index) {
           <div class="tabela-linha">
             <span class="col-num">{{ item.numero_item ?? $index + 1 }}</span>
             <div class="col-desc">
@@ -207,7 +207,7 @@
       </div>
 
       <div class="cartoes">
-        @for (item of card().itens; track $index) {
+        @for (item of itensVisiveis(); track $index) {
           <div class="cartao-item">
             <span class="chip-numero">Item {{ item.numero_item ?? $index + 1 }}</span>
             <div class="item-descricao">{{ item.descricao_resumida ?? 'Sem descrição' }}</div>
@@ -237,6 +237,14 @@
           </div>
         }
       </div>
+
+      @if (podeRecolher()) {
+        <button type="button" class="ver-todos" (click)="alternarItens()">
+          {{
+            itensRecolhidos() ? 'Ver todos os ' + card().itens.length + ' itens' : 'Mostrar menos'
+          }}
+        </button>
+      }
     </div>
   } @else {
     <div class="painel painel-documentos">

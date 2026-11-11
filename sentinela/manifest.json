@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Sentinela · Licita",
-  "version": "0.2.4",
-  "description": "Lê o Compras.gov.br na sua própria sessão e manda para o Licita. Nunca resolve captcha, nunca guarda senha, nunca escreve no Compras.gov.",
+  "version": "0.2.5",
+  "description": "Lê o Compras.gov na sua sessão para o Licita. Nunca resolve captcha nem guarda senha. Só escreve o que você pede (tirar favorito).",
   "permissions": ["storage", "alarms", "tabs"],
   "host_permissions": [
     "https://cnetmobile.estaleiro.serpro.gov.br/*",

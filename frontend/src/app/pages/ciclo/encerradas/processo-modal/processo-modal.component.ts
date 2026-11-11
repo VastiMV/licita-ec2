@@ -10,6 +10,7 @@ import { CotadorService } from '../../../../services/cotador/cotador.service';
 import { EncerradasService } from '../../../../services/licitacoes/encerradas.service';
 import { ToastService } from '../../../../shared/ui/toast/toast.service';
 import { formatarData, formatarMoeda } from '../../../oportunidades/edital-card/edital-card.utils';
+import { abrirNoCompras } from '../../../torre/abrir-no-compras';
 import {
   DESFECHOS,
   ETAPAS,
@@ -27,6 +28,8 @@ import {
   textoDoDesfecho,
   tendencia,
 } from './processo.model';
+
+const COMPRAS_GOV = 'https://cnetmobile.estaleiro.serpro.gov.br/';
 
 /** O que o modal pede a quem abriu: hoje, só abrir a cotação. */
 export type ProcessoModalResultado = 'cotacao';
@@ -160,6 +163,18 @@ export class ProcessoModalComponent implements OnInit {
         this.toast.erro('Não foi possível gerar a planilha agora.');
       },
     });
+  }
+
+  /**
+   * Compras.gov: a sessão vale por aba, e uma aba nova cai no login (página
+   * inválida — GEN-53/64). Com a Sentinela, quem abre é ela, numa cópia da aba
+   * já logada. Outros portais seguem o link normal.
+   */
+  protected abrirPlataforma(evento: MouseEvent): void {
+    const url = this.cab.link_plataforma;
+    if (!url?.startsWith(COMPRAS_GOV)) return;
+    evento.preventDefault();
+    abrirNoCompras(url);
   }
 
   protected verCotacao(): void {

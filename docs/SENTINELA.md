@@ -1,4 +1,4 @@
-# Sentinela — plano e o que já existe (0.2.4, 10/11/2026)
+# Sentinela — plano e o que já existe (0.2.5, 11/11/2026)
 
 A Sentinela é uma **extensão do Chrome** no computador do Carlinhos. Ela é a
 ponte entre o Compras.gov.br (a sessão **dele**, já logada) e o Licita. Sem
@@ -142,6 +142,19 @@ nada é aberto, nada fica marcado como lido. Cada mensagem nova (até 3 dias)
 vira aviso no sino e no Telegram; convocação (830) e recurso (850) em
 vermelho.
 
+**0.2.5 (11/11/2026):**
+- **Painel do Cotador que dá para mover** (GEN-61): arraste pela faixa do
+  topo; a posição fica guardada neste Chrome (`chrome.storage.local`,
+  `camadaPosicao`) e o painel nunca sai da janela. O botão **–** minimiza:
+  vira a etiqueta **"Cotador"**, mesma cor, que abre de novo com um clique
+  (e também dá para arrastar). Fechar e minimizar são a mesma coisa (decisão
+  da operação, 11/11/2026). **Por quê:** o painel ficava preso no canto
+  inferior direito, em cima da tela do Compras.gov.
+- **Descrição da extensão corrigida** (GEN-57): dizia "nunca escreve no
+  Compras.gov", mas desde a 0.2.1 ela tira o favorito quando alguém descarta
+  pela lixeira do Licita. Agora diz: "Só escreve o que você pede (tirar
+  favorito)".
+
 **10/11/2026 — compra trazida pela Sentinela fica completa:** a compra
 que a Sentinela cria no Licita (a empresa já participa no Compras.gov) vinha
 só com o que o Compras.gov manda: **sem itens** (o Cotador abria vazio, sem
@@ -216,9 +229,12 @@ lendo as mesmas telas que ele leria.
 3. **Nunca marcar mensagem como lida** sem o Carlinhos abrir (abrir uma
    mensagem pela API marca como lida — só ler a **lista** não marca).
 4. **Ritmo humano:** poucas leituras, em horário comercial. Nada de rajada.
-5. **Só leitura** na v1.0. Ações que escrevem no Compras.gov (tirar dos
-   favoritos, enviar anexo, dar lance) ficam para depois, e cada uma pede
-   confirmação do Carlinhos.
+5. **Escrever no Compras.gov só com o clique de alguém.** Hoje a única
+   escrita é **tirar o favorito** de uma compra descartada pela lixeira do
+   Licita (desde a 0.2.1). Enviar anexo, proposta ou lance: não faz, e cada
+   ação nova pede decisão da operação antes. (Até 10/11/2026 esta regra dizia
+   "só leitura na v1.0" — ficou desatualizada na 0.2.1; corrigido em
+   11/11/2026, GEN-57.)
 
 ## O que ela lê (v1.0)
 
