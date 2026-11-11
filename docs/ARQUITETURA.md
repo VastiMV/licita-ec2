@@ -129,6 +129,40 @@ que combina com o requisito de pods efêmeros/escaláveis. Mecanismo:
   sessão padrão), só para operação interna — não é o mecanismo usado pelos
   clients.
 
+### Passe da documentação (`/documentacao`, GEN-63, 10/11/2026)
+
+O site da documentação é estático (MkDocs, imagem `licita-ec2-docs`) e fica
+atrás do **mesmo login**. O navegador não manda para `/documentacao` nem o
+`access` (está na memória da página) nem o cookie do `refresh` (só vale em
+`/api/auth/`). Por isso:
+
+1. Menu **Documentação** → tela `/abrir-documentacao` (já protegida pelo
+   login) → `POST /api/auth/documentacao/`.
+2. O backend devolve o **passe**: cookie `licita_docs`, assinado
+   (`django.core.signing`), `httpOnly`, `path=/documentacao`, que vence
+   junto com o login (claim `login_em` + `SESSAO_MAXIMA_HORAS`).
+3. A cada página, o **Caddy** pergunta a `GET /api/auth/documentacao/verificar/`
+   (`forward_auth`): **204** entra; **302** volta para `/abrir-documentacao`
+   (que, sem login, cai no login). Usuário desativado perde o passe.
+4. Sair (`logout`) apaga o passe.
+
+```mermaid
+sequenceDiagram
+    participant N as Navegador
+    participant F as Licita (Angular)
+    participant C as Caddy
+    participant B as Backend
+    participant D as docs (nginx)
+    N->>F: menu "Documentação"
+    F->>B: POST /api/auth/documentacao/ (Bearer)
+    B-->>N: cookie licita_docs (path /documentacao)
+    N->>C: GET /documentacao/...
+    C->>B: forward_auth verificar/
+    B-->>C: 204 (ou 302 → /abrir-documentacao)
+    C->>D: página estática
+    D-->>N: página
+```
+
 ## Pods (alternativa Kubernetes)
 
 Um pod por responsabilidade, todos **stateless e efêmeros** (nada em disco
@@ -311,13 +345,15 @@ imagem só existe se os testes passaram.
 Este repositório roda num **EC2 só** (AWS, us-east-2, IP fixo), sem
 Kubernetes: `deploy/ec2/docker-compose.yml` sobe as mesmas imagens com
 Postgres, RabbitMQ, worker, beat e **Caddy** (HTTPS automático via Let's
-Encrypt; faz o papel do Ingress: `/api` → backend, o resto → frontend).
+Encrypt; faz o papel do Ingress: `/api` → backend, `/documentacao` → `docs`
+(com o passe, ver "Passe da documentação"), o resto → frontend).
 
 | Botão (GitHub Actions) | O que faz |
 |---|---|
 | **Deploy EC2** | gera as imagens `latest` (opcional) e roda `deploy/ec2/atualizar.sh` no servidor por SSH: baixa as imagens, roda `migrate`, sobe o que mudou e recarrega o Caddy |
 | **Teste: ligar** | gera as imagens `teste` da branch escolhida e sobe `deploy/ec2/docker-compose.teste.yml` — outro banco, outras senhas, `teste.<domínio>` |
 | **Teste: desligar** | para o teste (opção de apagar o banco do teste) |
+| **Documentação: gerar imagem** | compila o site (`mkdocs build --strict`) e envia a imagem `licita-ec2-docs`; roda sozinho quando `docs/` muda no `main`. **Não publica**: vai para o ar no próximo Deploy EC2 |
 
 Segredos do GitHub: `EC2_HOST` (o IP) e `EC2_SSH_KEY` (a chave `.pem`). As
 senhas do sistema ficam só no servidor, em `/opt/licita/.env` (produção) e

@@ -88,6 +88,7 @@ describe('SidebarComponent', () => {
       'Empresas',
       'Fornecedores',
       'Produtos',
+      'Documentação',
     ]);
   });
 
@@ -123,7 +124,7 @@ describe('SidebarComponent', () => {
     fixture = TestBed.createComponent(SidebarComponent);
     fixture.detectChanges();
 
-    expect(itens().length).toBe(23);
+    expect(itens().length).toBe(24);
   });
 
   it('Configurações só aparece para administrador', () => {

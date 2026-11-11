@@ -8,6 +8,8 @@ export const ENDPOINTS = {
     login: 'auth/login/',
     refresh: 'auth/refresh/',
     logout: 'auth/logout/',
+    /** O passe do site da documentação (cookie só para /documentacao). */
+    documentacao: 'auth/documentacao/',
   },
   /** O vigia da Sentinela (extensão do Chrome), para o botão do topo. */
   /** O sino: últimas notificações e "marcar como lidas". */

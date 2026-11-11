@@ -1,0 +1,42 @@
+name: "Documentação: gerar imagem"
+
+# Gera a imagem do site da documentação (MkDocs) — GEN-63, 10/11/2026.
+# SÓ gera e envia a imagem; não publica nada. Vai para o ar no próximo
+# "Deploy EC2" (decisão da operação: publicação sempre com aprovação).
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - "mkdocs.yml"
+      - "deploy/docs/**"
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: docs-imagem
+  cancel-in-progress: true
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login no GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build e push (o mkdocs build --strict roda dentro do build)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: deploy/docs/Dockerfile
+          push: true
+          tags: ghcr.io/vastimv/licita-ec2-docs:latest

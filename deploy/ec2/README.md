@@ -358,6 +358,11 @@ nome `teste`, valor = o IP do EC2.
 | worker, beat | tarefas agendadas (Celery) |
 | postgres | o banco — dados no volume `licita_pgdata` |
 | rabbitmq | fila das tarefas |
+| docs | o site da documentação em `/documentacao` (só com o login do Licita; ver `docs/ARQUITETURA.md`, "Passe da documentação") |
+
+**Primeira vez da documentação:** rode **Documentação: gerar imagem** antes
+do **Deploy EC2** — sem a imagem `licita-ec2-docs`, o `docker compose pull`
+do deploy falha.
 
 ## Problemas comuns
 
