@@ -8,6 +8,66 @@ que muda para uma stack multiusuário sinalizado.
 
 ## Entidades
 
+### Mapa das tabelas principais
+
+Desenhado a partir dos `models.py` de `licitacoes`, `cotador`,
+`fornecedores`, `produtos`, `propostas`, `empresas`, `documentos`,
+`notificacoes`, `sentinela` e `tenants` (11/11/2026). Ficam de fora os campos
+e os "quem fez" (`criado_por`, `salva_por`…, todos ligados a `User`).
+
+```mermaid
+erDiagram
+    Tenant ||--o{ Empresa : "tem"
+    Tenant ||--o{ TipoDocumento : "tem"
+    Empresa ||--o{ Documento : "tem"
+    TipoDocumento ||--o{ Documento : "classifica"
+    Documento ||--o{ VersaoDocumento : "versões"
+    Documento ||--o{ EventoDocumento : "histórico"
+
+    OportunidadeSalva ||--o{ EventoOportunidadeSalva : "histórico"
+    OportunidadeSalva ||--o| ParticipacaoCompra : "no Compras.gov"
+    OportunidadeSalva ||--o{ ItemParticipado : "itens da empresa"
+    OportunidadeSalva ||--o{ ItemAcompanhado : "itens só acompanhados"
+    ItemParticipado ||--o{ PropostaDoItem : "propostas de todos"
+    ItemAcompanhado ||--o{ PropostaDoItem : "propostas de todos"
+    OportunidadeSalva ||--o{ DocumentoFinanceiro : "contrato, empenho, pagamento"
+    ItemParticipado |o--o{ DocumentoFinanceiro : "do item (opcional)"
+    OportunidadeSalva ||--o{ Entrega : "entregas"
+    ItemParticipado |o--o{ Entrega : "do item (opcional)"
+    OportunidadeSalva ||--o{ Notificacao : "avisos do sino"
+    Notificacao ||--o{ Leitura : "quem leu"
+    OportunidadeSalva ||--o{ Tarefa : "pedidos à Sentinela"
+
+    OportunidadeSalva ||--o| Cotacao : "Cotador"
+    Cotacao ||--o{ ItemCotacao : "itens"
+    ItemCotacao ||--o{ OfertaFornecedor : "ofertas"
+    Fornecedor ||--o{ OfertaFornecedor : "oferece"
+    Fabricante ||--o{ Marca : "tem"
+    Marca ||--o{ Modelo : "tem"
+    Fabricante }o--o{ Fornecedor : "afinidade"
+    Modelo ||--o{ PrecoFornecedor : "preços"
+    Fornecedor ||--o{ PrecoFornecedor : "preços"
+    Cotacao |o--o{ PrecoFornecedor : "de qual cotação"
+
+    OportunidadeSalva ||--o| Proposta : "proposta em Word"
+    Empresa ||--o{ Proposta : "em nome de"
+    Proposta ||--o{ ArquivoProposta : "arquivos"
+```
+
+Observações tiradas do código:
+
+- `PropostaDoItem` é de **um** item: ou `ItemParticipado` (a empresa
+  disputa) ou `ItemAcompanhado` (ele só acompanha).
+- `OfertaFornecedor` aponta também para `Fabricante`, `Marca` e `Modelo`
+  (opcionais; omitido no desenho para não poluir).
+- `MercadoDoItem` não se liga a nenhuma tabela: a chave é a descrição
+  normalizada do item (ver `mercado.py`).
+- Só `Empresa`, `Documento`, `TipoDocumento`, `ModeloProposta`,
+  `ArquivoProposta` e a configuração de armazenamento têm `tenant`.
+  `OportunidadeSalva`, `Cotacao`, `Fornecedor` e os produtos **não têm**
+  (hoje há um tenant só). Eles ganham a coluna no dia do segundo cliente
+  (ver "`Tenant` e `Empresa`" abaixo).
+
 ### `Pdm` — Padrão Descritivo de Material
 Índice local do catálogo oficial de materiais do compras.gov.br. A API não
 tem busca textual utilizável sobre o catálogo, então o catálogo inteiro

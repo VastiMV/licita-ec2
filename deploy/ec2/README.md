@@ -126,6 +126,38 @@ sudo sed -i 's/^DOMINIO=.*/DOMINIO=insidelicitacoes.com.br/' /opt/licita/.env
 **Atualizar a produção** depois de um merge na `main`:
 Actions → **Deploy EC2** → Run workflow. Só isso.
 
+O que acontece quando se aperta o botão (desenhado a partir de
+`.github/workflows/deploy-ec2.yml`, `build-image.yml` e `atualizar.sh`):
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor V as Quem aperta o botão
+    participant GH as GitHub Actions
+    participant R as GHCR (imagens)
+    participant E as EC2 (/opt/licita)
+
+    V->>GH: Deploy EC2 → Run workflow (main)
+    opt "gerar imagens" marcado (padrão)
+        GH->>R: build-image.yml: backend e frontend (:latest)
+    end
+    GH->>GH: confere os segredos EC2_HOST e EC2_SSH_KEY
+    GH->>E: envia docker-compose.yml, Caddyfile, atualizar.sh, security.txt
+    GH->>E: login no GHCR (token só deste job) + roda atualizar.sh
+    E->>E: backup do banco (pg_dump) — vazio? para aqui, nada muda
+    E->>E: apaga backups além dos 10 mais novos
+    E->>R: docker compose pull
+    E->>E: docker compose up -d
+    Note over E: migrate e permissoes rodam e terminam,<br/>depois sobe o backend
+    E->>E: recarrega o Caddy
+    E-->>GH: lista dos serviços no ar
+```
+
+A imagem da **documentação** não entra neste botão: ela é gerada pelo
+workflow **Documentação: gerar imagem** (sozinho, a cada mudança em `docs/`,
+`mkdocs.yml` ou `deploy/docs/` na `main`, ou pelo botão). O GitHub faz logout
+do GHCR no EC2 ao terminar. O `docker compose pull` do deploy só baixa a última que existir.
+
 **Ver se está tudo de pé** (no terminal do EC2):
 
 ```bash
@@ -140,7 +172,25 @@ cd /opt/licita && sudo docker compose logs --tail 100 backend
 
 ## Sincronias diárias (PNCP e Portal da Transparência)
 
-De segunda a sexta, sozinho (Celery Beat) — fim de semana não tem movimentação:
+O Celery Beat roda **5 tarefas** sozinho (horário de Brasília). A agenda
+nasce nas migrações; nada é configurado na mão.
+
+| Quando | Tarefa | O que faz |
+|---|---|---|
+| seg–sex, **7h45** | `licitacoes.conferencia_diaria` | Confere no PNCP a data e a situação das licitações em Preparar (adiada, suspensa, revogada, anulada); completa as salvas sem órgão ou sem itens; lista os itens das compras só acompanhadas; mercado de cada item (1x por semana por item); fim da vigia pela ata assinada com outra empresa |
+| seg–sex, **8h** | `licitacoes.sincronizar_pncp` | Ver abaixo |
+| seg–sex, **8h10** | `licitacoes.sincronizar_transparencia` | Ver abaixo |
+| a cada **1 dia** | `catalogo.sincronizar_catalogo_pdm` | Catálogo de tipos de material (PDM) do Compras.gov |
+| a cada **30 dias** | `capag.sincronizar_capag` | Notas CAPAG dos municípios (Tesouro) |
+
+As de "a cada N dias" contam a partir de quando o beat subiu, não têm hora
+marcada. Fim de semana não tem movimentação, por isso as outras são seg–sex.
+
+Além delas, duas rodam **na hora**, sem agenda:
+`licitacoes.completar_salva`, quando uma captura da Sentinela toca uma salva
+sem órgão ou sem itens (pede ao PNCP o que falta); e
+`notificacoes.enviar_telegram`, a cada aviso novo do sino (se o Telegram
+estiver ligado).
 
 - **8h — PNCP:** traz os itens que a empresa ganhou e as atas de registro de
   preços, para cada CNPJ ativo em Cadastros › Empresas. Licitação ganha que
@@ -354,8 +404,10 @@ nome `teste`, valor = o IP do EC2.
 |---|---|
 | caddy | HTTPS (certificado automático) e manda `/api` para o backend |
 | frontend | as telas (Angular) |
-| backend | a API (Django) — roda `migrate` antes de subir |
-| worker, beat | tarefas agendadas (Celery) |
+| migrate | roda `manage.py migrate` e termina; o backend só sobe depois dele |
+| permissoes | acerta o dono do volume de arquivos (uid 1000) e termina |
+| backend | a API (Django) |
+| worker, beat | tarefas agendadas (Celery). O beat é **um só**: dois agendariam tudo em dobro |
 | postgres | o banco — dados no volume `licita_pgdata` |
 | rabbitmq | fila das tarefas |
 | docs | o site da documentação em `/documentacao` (só com o login do Licita; ver `docs/ARQUITETURA.md`, "Passe da documentação") |

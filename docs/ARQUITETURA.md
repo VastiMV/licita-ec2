@@ -4,18 +4,63 @@ Domínio de negócio em [`DOMINIO.md`](DOMINIO.md).
 
 **Produção (este repositório): 1 EC2 na AWS com `docker compose`** —
 `deploy/ec2/docker-compose.yml` sobe `caddy` (HTTPS), `frontend`, `backend`,
-`worker` e `beat` (Celery), `postgres` e `rabbitmq`, mais os passos
-`migrate` e `permissoes`. Detalhes na seção "Produção — EC2 com docker
-compose" e em [`deploy/ec2/README.md`](https://github.com/VastiMV/licita-ec2/blob/main/deploy/ec2/README.md).
+`docs` (site da documentação), `worker` e `beat` (Celery), `postgres` e
+`rabbitmq`, mais os passos `migrate` e `permissoes`. Detalhes na seção
+"Produção — EC2 com docker compose" e em [`deploy/ec2/README.md`](https://github.com/VastiMV/licita-ec2/blob/main/deploy/ec2/README.md).
 
+### Visão geral (produção)
+
+Desenhado a partir de `deploy/ec2/docker-compose.yml`, `deploy/ec2/Caddyfile`
+e dos clientes em `backend/apps/integracoes/clients/`, `capag/sync.py` e
+`notificacoes/telegram.py`.
+
+```mermaid
+flowchart LR
+    pessoa["Pessoa no navegador"]
+    sentinela["Sentinela<br/>(extensão do Chrome)"]
+
+    subgraph ec2["EC2 (docker compose)"]
+        caddy["caddy<br/>HTTPS"]
+        frontend["frontend<br/>Angular + nginx"]
+        docs["docs<br/>MkDocs + nginx"]
+        backend["backend<br/>Django + DRF (Daphne)"]
+        worker["worker<br/>Celery"]
+        beat["beat<br/>Celery (um só)"]
+        postgres[("postgres 16")]
+        rabbitmq[["rabbitmq"]]
+    end
+
+    subgraph fora["Fontes externas"]
+        pncp["PNCP"]
+        dados["Dados Abertos<br/>Compras.gov"]
+        portal["Portal da<br/>Transparência"]
+        tesouro["Tesouro<br/>(CAPAG)"]
+        telegram["Telegram"]
+        cnet["Compras.gov<br/>(tela do fornecedor)"]
+    end
+
+    pessoa --> caddy
+    sentinela -- "/api/sentinela/" --> caddy
+    sentinela -- "lê na aba logada" --> cnet
+    caddy -- "/api/*" --> backend
+    caddy -- "/documentacao* (com passe)" --> docs
+    caddy -- "resto" --> frontend
+    backend --> postgres
+    backend -- "enfileira" --> rabbitmq
+    beat -- "agenda" --> rabbitmq
+    rabbitmq --> worker
+    worker --> postgres
+    backend -- "busca" --> pncp
+    backend -- "busca" --> dados
+    worker --> pncp
+    worker --> dados
+    worker --> portal
+    worker --> tesouro
+    worker --> telegram
 ```
-internet ──► caddy (HTTPS) ──┬──► frontend (Angular, nginx)
-                             └──► backend (Django + DRF, Daphne)
-                                     │
-                     ┌───────────────┼──────────────┐
-                     ▼               ▼              ▼
-                 postgres        rabbitmq ◄── worker + beat (Celery)
-```
+
+O servidor **nunca** fala com a tela do fornecedor no Compras.gov: só a
+Sentinela, na aba que a pessoa já abriu e logou (ver `COMPRAS_GOV.md`).
 
 O desenho abaixo e a seção "Pods" descrevem a **alternativa Kubernetes**
 (`k8s/`), usada pelo repositório original.
@@ -100,22 +145,63 @@ que combina com o requisito de pods efêmeros/escaláveis. Mecanismo:
 
 ### Fluxo
 
-1. `POST /api/auth/login/` — recebe `email`/senha, devolve `access` (curta
-   duração, ~5–15 min) no corpo da resposta e seta o `refresh` (~7 dias) como
-   cookie `httpOnly`, `Secure`, `SameSite=Lax`.
+Conferido no código em 11/11/2026 (`apps/accounts/views.py`,
+`serializers.py`, `config/settings/base.py`, `core/auth/` no frontend).
+
+1. `POST /api/auth/login/` — recebe `email`/senha, devolve o `access` no
+   corpo e grava o `refresh` como cookie `httpOnly`, `Secure`,
+   `SameSite=Lax`, **só no caminho `/api/auth/`** (não vai para o resto da
+   API). O `refresh` leva a hora da entrada (`login_em`).
 2. Angular guarda o `access` **em memória** (campo privado do `AuthService`),
    nunca em `localStorage`/`sessionStorage` — reduz o que um XSS consegue
    roubar de forma persistente.
-3. `HttpInterceptor` injeta `Authorization: Bearer <access>` em toda chamada
-   à API.
-4. Request que volta `401` dispara `POST /api/auth/refresh/` (o cookie
-   `httpOnly` vai junto automaticamente, sem o JS tocar nele); o interceptor
-   trava chamadas concorrentes de refresh para não disparar várias em
-   paralelo, aplica o `access` novo e repete o request original.
-5. `POST /api/auth/logout/` invalida o `refresh` (blacklist do
-   `simplejwt`) e o Angular descarta o `access` da memória.
-6. Rotas protegidas usam `canActivate` (functional guard) checando se há
-   `access` válido em memória; sem ele, redireciona para `/login`.
+3. O interceptor (`auth.interceptor.ts`) põe `Authorization: Bearer <access>`
+   em toda chamada à API.
+4. Resposta `401` dispara `POST /api/auth/refresh/` (o cookie vai junto
+   sozinho). Várias chamadas ao mesmo tempo dividem **uma** renovação. Com o
+   `access` novo, repete a chamada original. Se a renovação falhar, limpa a
+   sessão e manda para `/login`.
+5. **Recarregar a página** apaga o `access` da memória: o guard
+   (`auth.guard.ts`) tenta a renovação antes de mandar para o login.
+6. **O login vale 12 horas desde a entrada**, mesmo com uso
+   (`SESSAO_MAXIMA_HORAS`, padrão 12). A renovação confere `login_em`; passou
+   do prazo, responde 401 e apaga o cookie. Cada renovação troca o `refresh`
+   e põe o velho na lista negra (`ROTATE_REFRESH_TOKENS`,
+   `BLACKLIST_AFTER_ROTATION`).
+7. `POST /api/auth/logout/` põe o `refresh` na lista negra e apaga os cookies
+   do `refresh` e do passe da documentação; o Angular descarta o `access`.
+
+| Item | Valor padrão | Variável |
+|---|---|---|
+| `access` | 15 minutos | `JWT_ACCESS_LIFETIME_MINUTES` |
+| `refresh` | o menor entre 30 dias e o limite do login, ou seja, **12 horas** | `JWT_REFRESH_LIFETIME_DAYS`, `SESSAO_MAXIMA_HORAS` |
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant N as Navegador (Angular)
+    participant B as backend /api/auth/
+    participant A as resto da API
+
+    N->>B: POST login/ (email, senha)
+    B-->>N: access (corpo) + cookie refresh (httpOnly, path /api/auth/, login_em)
+    N->>A: GET ... com Bearer access
+    A-->>N: 200
+    Note over N,A: depois de 15 min o access vence
+    N->>A: GET ... com Bearer access vencido
+    A-->>N: 401
+    N->>B: POST refresh/ (cookie vai sozinho)
+    alt menos de 12h desde a entrada
+        B-->>N: access novo + refresh novo (o velho vai para a lista negra)
+        N->>A: repete o GET
+        A-->>N: 200
+    else passou de 12h ou refresh inválido
+        B-->>N: 401 + apaga o cookie
+        N->>N: limpa a sessão e vai para /login
+    end
+    N->>B: POST logout/
+    B-->>N: lista negra + apaga cookies (refresh e passe da documentação)
+```
 
 ### Implicações de infraestrutura
 

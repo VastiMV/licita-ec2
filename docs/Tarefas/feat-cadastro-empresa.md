@@ -111,8 +111,11 @@ marcado na mão, vira conta.
   *Teste antes:* progresso reflete o evento de upload; filtro por vencidos;
   "+ versão" é a ação principal da linha.
 
-- [ ] **11. Fechar o ciclo** — *bloqueado: o app `alertas` ainda não existe
-  (ver `INSTALLED_APPS`), então o alerta de vencimento não tem onde nascer.*
+- [ ] **11. Fechar o ciclo** — **a confirmar.** *Estava bloqueado esperando o
+  app `alertas`, mas Alertas saiu do produto (`feat-remover-legado`). Hoje os
+  avisos nascem no sino (`apps/notificacoes`) e vão para o Telegram. Falta a
+  operação dizer se este item continua e, se sim, se o aviso de vencimento
+  vai para o sino.*
   Alerta de vencimento em 30, 15 e 3 dias, com link para o emissor (segundo
   tipo de alerta do módulo que já existe), e a mesma aba de documentos no
   cadastro de fornecedores — que é o que torna a situação dele calculada em

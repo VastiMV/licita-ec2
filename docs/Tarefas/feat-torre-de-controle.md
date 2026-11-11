@@ -149,7 +149,7 @@ garantida.
 
 ### Passo 1 — etapas novas no backend
 - [x] Models `ParticipacaoCompra`, `ItemParticipado`, `DocumentoFinanceiro`, `Entrega` (migração só acrescenta)
-- [x] `torre.py` (ao lado do `ciclo.py`): `ESTAGIOS` e as 13 etapas; regra de etapa por item; cartão com a etapa de cada item
+- [x] `torre.py` (ao lado do `ciclo.py`): `ESTAGIOS` e as 13 etapas (14 desde 10/11/2026, com Aguardando sessão); regra de etapa por item; cartão com a etapa de cada item
 - [x] `encerradas.py`: motivos de Encerradas (perdida, fracassada, deserta, revogada, anulada) e o descarte `sem_proposta`, com a mesma regra da Torre (`test_saidas.py` garante que cada licitação está em um lugar só)
 - [x] API do quadro novo (`GET /api/licitacoes/torre/`) sem quebrar `GET /api/licitacoes/ciclo/`
 - [x] Lançamento manual do que nenhum sistema informa: ordem de fornecimento e entrega, e por enquanto contrato e o empenho de estados e prefeituras (`salvas/<id>/documentos-financeiros/`, `salvas/<id>/entregas/`; apaga só o que é manual). A situação do item fica para a Sentinela beta
@@ -169,7 +169,7 @@ garantida.
 ### Passo 4 — Torre de Controle (frontend), ao lado da tela atual
 - [x] Quadro com os 4 estágios lado a lado, etapa em cada cartão, mais urgente no topo (`/torre`)
 - [x] Estágio aberto: etapas como colunas, os outros estágios em faixas nas laterais, como no protótipo v2 (`/torre/estagio/<estagio>`)
-- [x] Menu novo: Buscar no topo, 13 etapas, Encerradas > Descartadas, Propostas (PDF), Cadastros
+- [x] Menu novo: Buscar no topo, 13 etapas (hoje 14), Encerradas > Descartadas, Propostas (PDF), Cadastros
 - [x] Identidade do protótipo "Licita v1.0": menu azul escuro com o número de cada etapa, cartão com compra, posição, conta e trilha das próximas etapas, letra Plus Jakarta Sans
 - [x] No topo: empresa, Radar ("em breve"), Sentinela ("não instalada") e sino — com o estado verdadeiro até a Sentinela beta
 - [x] Publicado em produção em 08/11/2026 (sábado à noite, fora de sessão)
