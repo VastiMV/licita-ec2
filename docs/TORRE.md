@@ -33,6 +33,28 @@ São **4 estágios** e **14 etapas**, nesta ordem (a ordem importa: a etapa
 | Receber | Liquidado (`liquidado`) | liquidação | Portal da Transparência (federal) |
 | Receber | Recebido (`recebido`) | pagamento | Portal da Transparência (federal) |
 
+```mermaid
+flowchart LR
+    subgraph preparar["Preparar"]
+        oportunidade["Oportunidade"] --> cotacao["Cotação"] --> cadastro["Cadastro de proposta"]
+    end
+    subgraph disputar["Disputar"]
+        aguardando["Aguardando sessão"] --> disputa["Disputa"] --> julgamento["Aguardando julgamento"] --> habilitada["Aceita e habilitada"] --> adjudicacao["Habilitada (aguardando adjudicação)"]
+    end
+    subgraph contratar["Contratar"]
+        homologado["Homologado"] --> contrato["Contrato"] --> empenho["Empenho / OF"]
+    end
+    subgraph receber["Receber"]
+        entrega["Entrega"] --> liquidado["Liquidado"] --> recebido["Recebido"]
+    end
+    cadastro --> aguardando
+    adjudicacao --> homologado
+    empenho --> entrega
+```
+
+A seta mostra a **ordem** (`torre.ESTAGIOS`), não um caminho obrigatório: a
+etapa é calculada a cada vez, e uma licitação pode pular etapas.
+
 Coisas que **não** são etapa:
 
 - **O PDF da proposta** (proposta comercial/ajustada). Ele é pedido **depois
@@ -115,6 +137,45 @@ Regra da operação (07/11/2026): **cotar não é participar.**
   09/11/2026). As listas de Encerradas e Descartadas e os números do menu
   saem dela (`encerradas.classificar`). Ao mudar, rode `test_saidas.py`.
 - Nada é apagado. "Tirar da lista" é remoção lógica.
+
+### Como a Torre decide (diagrama)
+
+Desenhado a partir de `torre.avaliar` e `encerradas.classificar`, na ordem do
+código (11/11/2026). A primeira pergunta com "sim" decide.
+
+```mermaid
+flowchart TD
+    inicio(["Licitação salva"]) --> removida{"Removida?"}
+    removida -- "pela lixeira" --> dManual["Descartadas<br/>Descartada manualmente"]
+    removida -- "tirada da lista" --> dLista["Descartadas<br/>Tirada da lista<br/>(ou o motivo do prazo, se venceu antes)"]
+    removida -- "não" --> situacao{"Compra revogada, anulada,<br/>fracassada ou deserta?"}
+    situacao -- "sim" --> eSituacao["Encerradas<br/>Revogada / Anulada / Fracassada / Deserta"]
+    situacao -- "não" --> itens{"A Sentinela leu<br/>itens da empresa?"}
+    itens -- "sim" --> vivos{"Algum item<br/>não perdido?"}
+    vivos -- "sim" --> etapaItem["Quadro: a etapa do item<br/>mais adiante (seção 2)"]
+    vivos -- "não" --> ePerdida["Encerradas<br/>Perdida"]
+    itens -- "não" --> semProposta{"Participação sem proposta<br/>cadastrada, e sessão já aberta<br/>ou prazo vencido?"}
+    semProposta -- "sim" --> dSem["Descartadas<br/>Sem proposta cadastrada"]
+    semProposta -- "não" --> comProposta{"Participação com<br/>proposta cadastrada?"}
+    comProposta -- "sim" --> qCadastro["Quadro: Disputa (lances)<br/>ou Cadastro de proposta"]
+    comProposta -- "não" --> suspensa{"Suspensa ou<br/>sem data da sessão?"}
+    suspensa -- "sim" --> qEspera["Quadro: Cotação ou Oportunidade<br/>(nunca sai por prazo)"]
+    suspensa -- "não" --> acompanha{"Participação, sem cotação,<br/>e prazo vencido ou sessão já aberta?"}
+    acompanha -- "sim" --> eAcompanha["Encerradas<br/>Acompanhando o resultado"]
+    acompanha -- "não" --> depois{"Participação e<br/>sessão já aberta?"}
+    depois -- "sim" --> qDepois["Quadro: Disputa ou Aguardando julgamento<br/>+ aviso 'abrir a compra no Compras.gov'"]
+    depois -- "não" --> prazo{"Prazo da proposta<br/>vencido?"}
+    prazo -- "não" --> qPreparar["Quadro: Cotação ou Oportunidade"]
+    prazo -- "sim" --> temCotacao{"Tem cotação?"}
+    temCotacao -- "não" --> dPrazoSem["Descartadas<br/>Prazo venceu sem cotação"]
+    temCotacao -- "sim" --> antigo{"Fora do Compras.gov e com<br/>proposta do fluxo antigo?"}
+    antigo -- "sim" --> qConfirmar["Quadro: Cadastro de proposta<br/>+ aviso 'confirmar participação'"]
+    antigo -- "não" --> dPrazoCom["Descartadas<br/>Prazo venceu com cotação"]
+```
+
+**"Acompanhando o resultado"** existe no código (Encerradas), mas a tabela
+acima ainda não o mostra: onde ele deve ficar e com que data está **a
+confirmar** (GEN-56).
 
 ## 4. Registro de preços (ata)
 

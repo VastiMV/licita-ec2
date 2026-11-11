@@ -81,7 +81,7 @@ dentro do processo.
   (sem `oportunidade_id`) é recusado com 400; o card da Pesquisar mostra só
   "Salvar"; o Cotador continua abrindo das salvas.
 
-- [ ] **6. O quadro antigo do Ciclo de Licitação**
+- [ ] **7. O quadro antigo do Ciclo de Licitação**
   A Torre de Controle o substituiu em 08/11/2026 (`docs/TORRE.md`). Hoje
   `/ciclo` e `/ciclo/visao-geral` já redirecionam para `/torre`; o código
   continua no repositório sem tela. Saem: `pages/ciclo/quadro/`,

@@ -8,6 +8,53 @@ Este documento junta o que foi pesquisado e decidido (07–08/11/2026) para
 quem for construir. **Todos os endereços do Compras.gov** (o que pede login,
 o que abre direto, o que pede captcha): [`COMPRAS_GOV.md`](COMPRAS_GOV.md).
 
+## O caminho de uma captura
+
+Desenhado a partir de `sentinela/pagina.js`, `ponte.js`, `fundo.js` e, no
+servidor, `apps/sentinela/views.py` (`CapturaView`) e `ingestao.py`.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant P as Página do Compras.gov<br/>(pagina.js)
+    participant Po as ponte.js
+    participant F as fundo.js
+    participant L as Licita<br/>POST /api/sentinela/captura/
+    participant I as ingestao.receber
+    participant W as worker (Celery)
+    participant PN as PNCP
+
+    P->>P: a página recebe a resposta de uma consulta
+    Note over P: só copia se o endereço está na lista INTERESSA
+    P->>Po: postMessage (mesma aba)
+    Po->>F: chrome.runtime.sendMessage
+    F->>L: {url, dados, versao} + cabeçalho X-Sentinela-Chave
+    L->>I: receber(url, dados)
+    I->>I: acha o tipo pelo endereço (ROTAS)
+    alt endereço que não interessa
+        I-->>L: tipo "ignorado"
+    else participacoes ou participacao
+        I->>I: acha a salva (chave PNCP, código da compra ou descartada)
+        opt não achou
+            I->>I: cria a salva (decisão de 08/11/2026)
+        end
+        I->>I: grava a participação
+        opt salva sem órgão ou sem itens
+            I->>W: completar_salva (depois de gravar)
+            W->>PN: detalhar_compra + listar_itens
+            W->>W: preenche só os campos vazios + evento CORRECAO
+        end
+    else itens, propostas, fase recursal, diligências, favoritas, mensagens
+        I->>I: grava no que já existe (propostas, prazos, sino), sem criar salva
+    end
+    I-->>L: resumo
+    L->>L: registra o pulso (se não foi ignorado)
+    L-->>F: 200 com o resumo (422 se o formato mudou)
+```
+
+Só as capturas de **participações** criam salva. A ronda (que consulta
+sozinha) não lê participação, então **não cria nem completa** salva.
+
 ## O que já existe (beta 0.1)
 
 Construída em 08/11/2026. Código da extensão em [`sentinela/`](https://github.com/VastiMV/licita-ec2/tree/main/sentinela)
