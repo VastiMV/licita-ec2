@@ -73,3 +73,21 @@ class EpisodiosTests(TestCase):
         eps = episodios_de_queda([P(0), P(5), P(19), P(40)])
 
         self.assertEqual([len(e) for e in eps], [3, 1])
+
+
+class SemSessaoTests(TestCase):
+    """0.2.6: "aba sem sessão" tem estado próprio (antes virava "sessão caiu")."""
+
+    def test_o_estado_novo_deixa_o_topo_ambar_e_entra_nas_quedas(self):
+        from .estado import estado_atual
+
+        Pulso.objects.create(
+            estado="sem_sessao",
+            detalhe="Abra o Compras.gov na área do fornecedor (a aba pública não tem a sessão)",
+            versao="0.2.6",
+        )
+
+        self.assertEqual(estado_atual()["estado"], "precisa_de_voce")
+        saida = StringIO()
+        call_command("diagnostico", "quedas", stdout=saida)
+        self.assertIn("   1 · aba sem sessão", saida.getvalue())

@@ -308,6 +308,11 @@ class ApiTests(APITestCase):
         with mock.patch.object(autenticacao, "env", SimpleNamespace(sentinela_chave="")):
             self.assertEqual(self.post("pulso/", {}, chave="").status_code, 403)
 
+    def test_pulso_aceita_sem_sessao_da_0_2_6(self):
+        resposta = self.post("pulso/", {"estado": "sem_sessao", "detalhe": "Aperte F5", "versao": "0.2.6"})
+
+        self.assertEqual(resposta.status_code, 200)
+
     def test_pulso_grava_o_estado(self):
         resposta = self.post("pulso/", {"estado": "verificacao", "versao": "0.1.0"})
 

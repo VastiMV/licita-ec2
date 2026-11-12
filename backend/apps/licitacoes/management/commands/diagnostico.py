@@ -54,6 +54,8 @@ def motivo_da_queda(detalhe: str) -> str:
     `sentinela/fundo.js`)."""
 
     texto = detalhe or ""
+    if "área do fornecedor" in texto or "aba pública" in texto:
+        return "aba sem sessão (F5, aba nova ou pública)"
     if texto.startswith("retoken"):
         return "retoken falhou (a própria página não renovou a sessão)"
     if "F5" in texto or "sem_sessao" in texto:
@@ -178,9 +180,13 @@ class Command(BaseCommand):
         dias = int(argumento) if argumento.isdigit() and int(argumento) > 0 else 7
         desde = timezone.now() - dt.timedelta(days=dias)
         pulsos = list(
-            Pulso.objects.filter(recebido_em__gte=desde, estado__in=["sessao_caiu", "sem_aba"]).order_by("recebido_em")
+            Pulso.objects.filter(recebido_em__gte=desde, estado__in=["sessao_caiu", "sem_sessao", "sem_aba"]).order_by(
+                "recebido_em"
+            )
         )
-        quedas = [p for p in pulsos if p.estado == "sessao_caiu"]
+        # Até a 0.2.5 "sem sessão" chegava como "sessão caiu"; desde a 0.2.6
+        # tem estado próprio. Os dois entram aqui, separados pelo motivo.
+        quedas = [p for p in pulsos if p.estado in ("sessao_caiu", "sem_sessao")]
         sem_aba = [p for p in pulsos if p.estado == "sem_aba"]
         self.linha(f"Últimos {dias} dias: {len(quedas)} 'sessão caiu' · {len(sem_aba)} 'sem aba'")
 

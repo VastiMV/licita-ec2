@@ -212,12 +212,9 @@
       },
     );
     if (resposta.status === 401) {
+      // Quem avisa é o fundo, uma vez só (0.2.6, GEN-45): antes a página e o
+      // fundo avisavam o mesmo 401.
       sessao.authorization = "";
-      entregar({
-        tipo: "estado",
-        estado: "sessao_caiu",
-        detalhe: "O Compras.gov pediu login de novo (401)",
-      });
     }
     const texto = await resposta.text().catch(() => "");
     let dados = null;

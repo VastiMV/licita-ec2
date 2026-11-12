@@ -67,18 +67,61 @@ async function pulso(estado, detalhe = "") {
 }
 
 // O vigia: há uma aba do Compras.gov aberta? (é nela que a sessão vive)
+// 0.2.6 (GEN-45, 12/11/2026):
+// - sem aba fora do horário de trabalho é normal: não avisa (eram ~200
+//   avisos por semana, quase todos à noite e no domingo);
+// - com a sessão fora, fica quieto: o topo do Licita continua no aviso da
+//   queda (a última notícia) em vez de voltar ao verde a cada 3 minutos.
 async function vigiar() {
   const abas = await chrome.tabs.query({ url: COMPRAS });
+  if (!abas.length) {
+    if (emHorarioDeTrabalho())
+      await pulso("sem_aba", "Nenhuma aba do Compras.gov aberta");
+    return;
+  }
+  if ((await sessaoAtual()) !== "ok") return;
+  await pulso("ok");
+}
+
+// ---- a sessão do Compras.gov: uma queda, um aviso (GEN-45) -----------------
+//
+// Antes, cada ronda (10 em 10 min) avisava "sessão caiu" de novo enquanto
+// ninguém fizesse login: 1 queda virava até 35 avisos. E o mesmo 401 era
+// avisado duas vezes (pela página e pelo fundo). Agora o fundo guarda o
+// estado e só avisa quando ele **muda**: caiu, sem sessão na aba, voltou.
+
+async function sessaoAtual() {
+  const { sessao } = await chrome.storage.local.get({ sessao: "ok" });
+  return sessao;
+}
+
+async function marcarSessao(estado, detalhe = "") {
+  const atual = await sessaoAtual();
+  if (atual === estado) return;
+  // Depois de um 401 a página apaga o token, e a ronda seguinte vê "sem
+  // sessão": é a mesma queda, não um aviso novo.
+  if (atual === "sessao_caiu" && estado === "sem_sessao") return;
+  await chrome.storage.local.set({ sessao: estado });
   await pulso(
-    abas.length ? "ok" : "sem_aba",
-    abas.length ? "" : "Nenhuma aba do Compras.gov aberta",
+    estado,
+    estado === "ok" ? "A sessão do Compras.gov voltou" : detalhe,
   );
 }
 
 // Manda à aba uma lista de consultas; ela faz uma de cada vez, com pausa.
 async function executarNaAba(pedidos) {
-  const aba = await abaDoCompras();
-  if (!aba) return null;
+  // Só a aba da área do fornecedor tem a sessão (0.2.6): a pública dava
+  // "sem sessão" e virava aviso de queda.
+  const aba = await abaDoCompras({ soLogada: true });
+  if (!aba) {
+    const abertas = await chrome.tabs.query({ url: COMPRAS });
+    if (abertas.length)
+      await marcarSessao(
+        "sem_sessao",
+        "Abra o Compras.gov na área do fornecedor (a aba pública não tem a sessão)",
+      );
+    return null;
+  }
   try {
     return await chrome.tabs.sendMessage(aba.id, { tipo: "executar", pedidos });
   } catch (erro) {
@@ -90,16 +133,25 @@ async function executarNaAba(pedidos) {
   }
 }
 
-function avisarSeASessaoCaiu(resultados) {
+async function conferirSessao(resultados) {
   const falha = resultados.find(
     (r) => r.erro === "sem_sessao" || r.status === 401,
   );
-  if (!falha) return false;
-  const detalhe =
-    falha.erro === "sem_sessao"
-      ? "Aperte F5 na aba do Compras.gov (a Sentinela ainda não viu a sessão)"
-      : "O Compras.gov pediu login de novo";
-  pulso("sessao_caiu", detalhe);
+  if (!falha) {
+    if (resultados.some((r) => r.status >= 200 && r.status < 300))
+      await marcarSessao("ok");
+    return false;
+  }
+  if (falha.erro === "sem_sessao")
+    await marcarSessao(
+      "sem_sessao",
+      "Aperte F5 na aba do Compras.gov (a Sentinela ainda não viu a sessão)",
+    );
+  else
+    await marcarSessao(
+      "sessao_caiu",
+      "O Compras.gov pediu login de novo (401)",
+    );
   return true;
 }
 
@@ -122,7 +174,7 @@ async function fazerTarefas() {
     }));
   const resposta = await executarNaAba(pedidos);
   if (!resposta) return; // sem aba: a tarefa espera
-  if (avisarSeASessaoCaiu(resposta.resultados)) return;
+  if (await conferirSessao(resposta.resultados)) return;
   for (const r of resposta.resultados) {
     const ok = r.status >= 200 && r.status < 300;
     await licita(`tarefas/${r.id}/`, {
@@ -172,7 +224,7 @@ async function fazerRonda(forcar = false) {
     await guardarUltimo("ultimaRonda", "sem aba do Compras.gov aberta");
     return;
   }
-  if (avisarSeASessaoCaiu(resposta.resultados)) return;
+  if (await conferirSessao(resposta.resultados)) return;
   let enviadas = 0;
   for (const r of resposta.resultados) {
     if ((r.status !== 200 && r.status !== 206) || r.dados === null) continue;
@@ -226,12 +278,12 @@ async function abrirCompra(url) {
     await chrome.windows.update(copia.windowId, { focused: true });
 }
 
-async function abaDoCompras() {
+async function abaDoCompras({ soLogada = false } = {}) {
   const abas = await chrome.tabs.query({ url: COMPRAS });
   // Prefere a aba logada (área do fornecedor).
-  return (
-    abas.find((a) => (a.url || "").includes("/seguro/")) || abas[0] || null
-  );
+  const logada = abas.find((a) => (a.url || "").includes("/seguro/"));
+  if (soLogada) return logada || null;
+  return logada || abas[0] || null;
 }
 
 chrome.runtime.onMessage.addListener((mensagem, _remetente, responder) => {
@@ -242,6 +294,8 @@ chrome.runtime.onMessage.addListener((mensagem, _remetente, responder) => {
     return false;
   }
   if (mensagem.tipo === "captura") {
+    // A página leu um dado da área logada: a sessão está viva.
+    marcarSessao("ok");
     licita("captura/", {
       method: "POST",
       body: JSON.stringify({
@@ -257,7 +311,9 @@ chrome.runtime.onMessage.addListener((mensagem, _remetente, responder) => {
     return false;
   }
   if (mensagem.tipo === "estado") {
-    pulso(mensagem.estado, mensagem.detalhe || "");
+    if (mensagem.estado === "sessao_caiu")
+      marcarSessao("sessao_caiu", mensagem.detalhe || "");
+    else pulso(mensagem.estado, mensagem.detalhe || "");
     return false;
   }
   if (mensagem.tipo === "camada") {
