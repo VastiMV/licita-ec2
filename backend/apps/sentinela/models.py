@@ -22,6 +22,9 @@ class Pulso(models.Model):
     class Estado(models.TextChoices):
         OK = "ok", "Lendo"
         SESSAO_CAIU = "sessao_caiu", "A sessão do Compras.gov caiu"
+        # 0.2.6 (GEN-45): a aba não mostrou a sessão (F5, aba nova, aba
+        # pública). Antes era contado como "sessão caiu".
+        SEM_SESSAO = "sem_sessao", "A aba do Compras.gov está sem a sessão (F5 ou área do fornecedor)"
         VERIFICACAO = "verificacao", "O Compras.gov pediu verificação (captcha)"
         SEM_ABA = "sem_aba", "Nenhuma aba do Compras.gov aberta"
         ERRO = "erro", "Erro"

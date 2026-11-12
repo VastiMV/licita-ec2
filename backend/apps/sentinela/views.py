@@ -30,7 +30,7 @@ class _DaExtensao(APIView):
 
 
 class PulsoView(_DaExtensao):
-    """Sinal de vida: `{"estado": "ok"|"sessao_caiu"|"verificacao"|"sem_aba"|"erro", "detalhe", "versao"}`."""
+    """Sinal de vida: `{"estado": "ok"|"sessao_caiu"|"sem_sessao"|"verificacao"|"sem_aba"|"erro", "detalhe", "versao"}`."""
 
     def post(self, request):
         estado = request.data.get("estado") or Pulso.Estado.OK

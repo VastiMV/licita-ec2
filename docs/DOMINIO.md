@@ -522,7 +522,7 @@ de verdade no catálogo.
 | Tesouro Transparente (`tesourotransparente.gov.br/ckan/...`) | notas CAPAG (município/estado) — `apps/capag` |
 | Dados Abertos do Compras.gov (resultados e atas por `niFornecedor`) | o que a empresa ganhou e as atas de registro de preços — sincronia diária às 8h (`sincronia_pncp.py`), ver [`TORRE.md`](TORRE.md) |
 | Portal da Transparência (`api.portaldatransparencia.gov.br`, `despesas/documentos-por-favorecido`) | empenho, liquidação e pagamento federais — sincronia diária às 8h10 (`sincronia_transparencia.py`). Precisa da chave `PORTAL_TRANSPARENCIA_CHAVE` (header `chave-api-dados`) |
-| Compras.gov.br na sessão do fornecedor | lido pela **Sentinela** (extensão do Chrome, 0.2.5), ver [`SENTINELA.md`](SENTINELA.md) |
+| Compras.gov.br na sessão do fornecedor | lido pela **Sentinela** (extensão do Chrome, 0.2.6), ver [`SENTINELA.md`](SENTINELA.md) |
 
 O sync do catálogo (~41 páginas de 500 registros) roda **sequencial, com um
 intervalo entre páginas** (`catalogo_sync_intervalo_segundos` em

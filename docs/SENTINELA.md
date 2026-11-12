@@ -1,4 +1,4 @@
-# Sentinela — plano e o que já existe (0.2.5, 11/11/2026)
+# Sentinela — plano e o que já existe (0.2.6, 12/11/2026)
 
 A Sentinela é uma **extensão do Chrome** no computador do Carlinhos. Ela é a
 ponte entre o Compras.gov.br (a sessão **dele**, já logada) e o Licita. Sem
@@ -154,6 +154,25 @@ vermelho.
   Compras.gov", mas desde a 0.2.1 ela tira o favorito quando alguém descarta
   pela lixeira do Licita. Agora diz: "Só escreve o que você pede (tirar
   favorito)".
+
+**0.2.6 (12/11/2026, GEN-45):** menos alarme falso de "sessão caiu".
+Medição dos 7 dias antes (consulta `quedas`): **141 avisos, mas só 24
+quedas**. 80 eram "aba sem sessão" repetida a cada ronda depois de uma queda;
+cada 401 era avisado 2 vezes; e ~200 "sem aba" à noite e no fim de semana.
+- **Uma queda, um aviso.** O fundo guarda o estado da sessão
+  (`chrome.storage.local`, `sessao`) e só avisa quando ele **muda**: caiu,
+  sem sessão, voltou ("A sessão do Compras.gov voltou"). Enquanto estiver
+  fora, o sinal de vida fica quieto e o topo do Licita continua âmbar.
+- **Um aviso por 401** (só o fundo avisa; a página não avisa mais).
+- **"Aba sem sessão" tem estado próprio** (`sem_sessao`), separado de
+  "sessão caiu". Depois de um 401, o "sem sessão" seguinte é a mesma queda.
+- **A ronda e as tarefas só usam a aba da área do fornecedor** (`/seguro/`).
+  Aba pública não tem sessão: com só ela aberta, o aviso é "abra o
+  Compras.gov na área do fornecedor".
+- **"Sem aba" só em horário de trabalho** (seg–sex, 8h–19h).
+- **Ícone** da extensão = o favicon do Licita (`sentinela/icones/`).
+- **A confirmar (fica no GEN-45):** pegar o token novo quando a página
+  renova a sessão (o "retoken"). Precisa de um HAR do retoken.
 
 **10/11/2026 — compra trazida pela Sentinela fica completa:** a compra
 que a Sentinela cria no Licita (a empresa já participa no Compras.gov) vinha

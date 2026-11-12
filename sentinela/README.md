@@ -41,6 +41,12 @@ o Licita abre aba nova como antes (`licita.js` marca a página do Licita com
 - A cotação do painel não confere mais a cada minuto: é lida ao abrir a
   compra e no F5 (o ↻ continua).
 
+**0.2.6 (12/11/2026):** menos alarme falso. A Sentinela avisa a queda da
+sessão **uma vez** (e avisa quando ela volta), não a cada 10 minutos. "Aba
+sem sessão" (F5, aba pública) tem aviso próprio. A ronda só usa a aba da
+**área do fornecedor**. "Nenhuma aba aberta" só é avisado em horário de
+trabalho. O ícone agora é o do Licita.
+
 **0.2.5 (11/11/2026):** o painel do Cotador na tela do Compras.gov **dá
 para mover**: arraste pela faixa azul de cima, e ele lembra o lugar neste
 Chrome. O botão **–** minimiza: vira a etiqueta **"Cotador"**; um clique

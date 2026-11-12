@@ -4,11 +4,15 @@
 |---|---|---|
 | `nao_instalada` | cinza/âmbar | nunca falou |
 | `ok` | verde | falou há pouco, tudo certo |
-| `precisa_de_voce` | âmbar | a última notícia foi sessão caída, captcha pedido ou nenhuma aba aberta |
+| `precisa_de_voce` | âmbar | a última notícia foi sessão caída, aba sem sessão, captcha pedido ou nenhuma aba aberta |
 | `parada` | vermelho | em horário de trabalho, sem notícia há mais de `MINUTOS_PARADA` |
 
 Fora do horário de trabalho (noite, fim de semana) o silêncio é normal:
 continua `ok`, com a hora da última notícia.
+
+Desde a Sentinela 0.2.6 (GEN-45, 12/11/2026) ela avisa a queda **uma vez**
+e fica quieta enquanto a sessão estiver fora: a última notícia continua
+sendo a queda, e o topo fica âmbar até ela avisar que a sessão voltou.
 """
 
 from __future__ import annotations
