@@ -12,7 +12,10 @@ Em ordem de prioridade, até `MAXIMO` consultas por ronda (ritmo de gente):
 1. **Favoritos** (09/11/2026): numa consulta só, quais compras de Preparar
    ainda estão nos favoritos do Compras.gov. A que saiu de lá ganha o aviso
    "fora dos favoritos no Compras.gov" (Lavras, 60/2027).
-2. Para cada item vivo da empresa numa compra depois da sessão (fase 3 ou 4):
+2. Para cada item vivo da empresa numa compra depois da sessão (fase 3 ou 4)
+   — **ou** numa compra ainda gravada como antes da sessão cuja sessão (ou,
+   sem data, o prazo) já passou (GEN-71, 12/11/2026: sem isso a compra ficava
+   em "Aguardando sessão" para sempre se ninguém abrisse a tela):
    a **proposta** (situação, posição, pedido de desconto, convocação). Nos
    itens em que ela está na frente (até 2º) ou já aceita/habilitada, também
    a **fase recursal** (o recurso do 56/2026 item 22 que ninguém viu) e as
@@ -107,6 +110,8 @@ def _vigia_diaria(agora: dt.datetime) -> list[str]:
     hoje = timezone.localdate(agora)
     itens = (
         ItemParticipado.objects.filter(vigia_encerrada_em__isnull=True, oportunidade__link_plataforma__contains="compra=")
+        # Proposta retirada não tem convocação nem recurso para vigiar (GEN-71).
+        .filter(retirada_em__isnull=True)
         .filter(Q(vigiado_em__isnull=True) | Q(vigiado_em__lt=_inicio_do_dia(agora)))
         .select_related("oportunidade")
         .prefetch_related("propostas")
@@ -158,12 +163,24 @@ def _da_empresa() -> list[str]:
         return []
     cnpj = cnpjs[0]
     caminhos: list[str] = []
-    from apps.licitacoes.torre import etapa_do_item
+    from apps.licitacoes.torre import FASES_COMPRA_ANTES_DA_SESSAO, etapa_do_item
 
     hoje = timezone.localdate()
+    agora = timezone.now()
+    sessao_passou = Q(oportunidade__participacao__fase_compra__in=FASES_COMPRA_ANTES_DA_SESSAO) & (
+        Q(oportunidade__participacao__sessao_abre_em__lte=agora)
+        | Q(
+            oportunidade__participacao__sessao_abre_em__isnull=True,
+            oportunidade__data_encerramento_proposta__lt=hoje,
+        )
+    )
     itens = (
-        ItemParticipado.objects.filter(oportunidade__participacao__fase_compra__in=FASES_DEPOIS_DA_SESSAO)
+        ItemParticipado.objects.filter(
+            Q(oportunidade__participacao__fase_compra__in=FASES_DEPOIS_DA_SESSAO)
+            | (sessao_passou & Q(valor_proposta_inicial__isnull=False))
+        )
         .exclude(vencedor_e_a_empresa=False)
+        .exclude(retirada_em__isnull=False)
         .exclude(situacao_proposta__in=PERDIDO)
         .select_related("oportunidade")
         .prefetch_related("propostas")

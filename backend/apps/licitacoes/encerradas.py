@@ -21,6 +21,8 @@ participar, com ou sem cotação:
   participação, numa compra que a Sentinela não lê (fora do Compras.gov.br);
 - ``sem_proposta`` — apareceu em "Minhas participações" sem proposta
   cadastrada quando a sessão abriu.
+- ``proposta_retirada`` — tinha preço lançado e retirou a proposta de todos
+  os itens antes do certame (GEN-71, 12/11/2026, Cabedelo 27/2026).
 
 A regra é a mesma da Torre de Controle (`torre.avaliar`), escrita aqui como
 consulta para a lista filtrar e ordenar no banco; `test_saidas.py` garante
@@ -82,6 +84,7 @@ MOTIVOS_DESCARTE = {
     "prazo_oportunidade": "Prazo venceu sem cotação",
     "prazo_cotacao": "Prazo venceu com cotação",
     "sem_proposta": "Sem proposta cadastrada",
+    "proposta_retirada": "Proposta retirada",
 }
 
 
@@ -291,6 +294,9 @@ def _desfecho(salva, eventos: list[dict]) -> dict:
             "A sessão pública abriu e a empresa estava sem proposta cadastrada no Compras.gov.br."
         )
         return {"tipo": "sem_proposta", "data": salva.descartada_em, "por": None, "porque": porque}
+    if salva.motivo == "proposta_retirada":
+        porque = "A empresa retirou a proposta de todos os itens no Compras.gov.br e não foi ao certame."
+        return {"tipo": "proposta_retirada", "data": salva.descartada_em, "por": None, "porque": porque}
     if salva.motivo == "perdida":
         porque = (
             "A empresa perdeu todos os itens em que tinha proposta: desclassificada, "

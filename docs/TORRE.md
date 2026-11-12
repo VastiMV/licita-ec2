@@ -130,6 +130,25 @@ Regra da operação (07/11/2026): **cotar não é participar.**
 | Descartadas | prazo venceu sem cotação | Prazo venceu sem cotação |
 | Descartadas | prazo venceu com cotação, fora do Compras.gov.br — ou no Compras.gov.br **sem nenhuma participação** lida pela Sentinela (desde 10/11/2026) | Prazo venceu com cotação |
 | Descartadas | apareceu nas participações do Compras.gov **sem proposta cadastrada** (a lista "meus itens" vem vazia) | Sem proposta cadastrada |
+| Descartadas | tinha preço lançado e **retirou a proposta** de todos os itens (o Compras.gov diz que a empresa não participa mais, "meus itens" vem vazio, ou o item volta sem a proposta dela) | Proposta retirada |
+
+**Proposta retirada (12/11/2026, GEN-71).** Caso real: Dispensa 27/2026
+(Cabedelo). A sessão passou, ele retirou a proposta e não participou, e a
+compra ficou em "Aguardando sessão" para sempre. Três motivos: (1) a leitura
+"não é mais participante" era ignorada inteira; (2) os itens com preço
+continuavam gravados; (3) a ronda só relia compras na fase 3 ou 4. Agora:
+
+- o item ganha `retirada_em` e sai do quadro ("proposta retirada"). Se a
+  proposta for lida de novo com preço, a marca some;
+- **todos** os itens retirados → **Descartadas · Proposta retirada**
+  (decisão da operação: não foi ao certame). Retirou uns e perdeu outros →
+  Encerradas · Perdida;
+- a ronda também relê as compras ainda gravadas **antes da sessão** cuja
+  sessão (ou, sem data, o prazo) já passou (ver `SENTINELA.md`).
+- **A confirmar:** a resposta real do Compras.gov para proposta retirada
+  (não há exemplo gravado). A regra usa o que já se sabe: um item em que a
+  empresa não tem proposta volta **sem** o bloco `propostaItem` (59/2026,
+  item 1, HAR de 08/11/2026).
 
 - **Uma licitação está em um lugar só:** no quadro, em Encerradas ou em
   Descartadas. `test_saidas.py` garante isso.
@@ -141,7 +160,7 @@ Regra da operação (07/11/2026): **cotar não é participar.**
 ### Como a Torre decide (diagrama)
 
 Desenhado a partir de `torre.avaliar` e `encerradas.classificar`, na ordem do
-código (11/11/2026). A primeira pergunta com "sim" decide.
+código (11/11/2026; proposta retirada em 12/11/2026). A primeira pergunta com "sim" decide.
 
 ```mermaid
 flowchart TD
@@ -153,7 +172,9 @@ flowchart TD
     situacao -- "não" --> itens{"A Sentinela leu<br/>itens da empresa?"}
     itens -- "sim" --> vivos{"Algum item<br/>não perdido?"}
     vivos -- "sim" --> etapaItem["Quadro: a etapa do item<br/>mais adiante (seção 2)"]
-    vivos -- "não" --> ePerdida["Encerradas<br/>Perdida"]
+    vivos -- "não" --> retirados{"Todos com a<br/>proposta retirada?"}
+    retirados -- "sim" --> dRetirada["Descartadas<br/>Proposta retirada"]
+    retirados -- "não" --> ePerdida["Encerradas<br/>Perdida"]
     itens -- "não" --> semProposta{"Participação sem proposta<br/>cadastrada, e sessão já aberta<br/>ou prazo vencido?"}
     semProposta -- "sim" --> dSem["Descartadas<br/>Sem proposta cadastrada"]
     semProposta -- "não" --> comProposta{"Participação com<br/>proposta cadastrada?"}

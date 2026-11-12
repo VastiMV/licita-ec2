@@ -74,6 +74,12 @@ export const DESFECHOS: Record<
     curto: 'Sem proposta',
     icone: 'x',
   },
+  proposta_retirada: {
+    familia: 'neutro',
+    nome: 'Proposta retirada',
+    curto: 'Retirada',
+    icone: 'x',
+  },
   perdida: { familia: 'perigo', nome: 'Perdida', curto: 'Perdida', icone: 'x' },
   acompanhando: {
     familia: 'neutro',

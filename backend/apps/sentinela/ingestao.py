@@ -139,7 +139,18 @@ def _ler_participacao(dados, params, codigo, **_) -> dict:
     if not isinstance(dados, dict):
         raise CapturaInvalida("participação: era esperado um objeto")
     if dados.get("isFornecedorParticipante") is False:
-        return {"compras": 0, "criadas": 0}
+        # Não participa. Se a compra já está no Licita com preço lançado, ele
+        # retirou a proposta (GEN-71, 12/11/2026): antes esta leitura era
+        # ignorada inteira e a compra ficava em "Aguardando sessão".
+        # **A confirmar** com uma resposta real de proposta retirada.
+        salva = _salva_pelo_codigo(codigo)
+        if not salva:
+            return {"compras": 0, "criadas": 0}
+        _gravar_participacao(salva, dados, dados)
+        retirados = _retirar(salva)
+        if retirados:
+            _marcar_proposta(salva, False)
+        return {"compras": 1, "criadas": 0, "retirados": retirados}
     salva, criada = _salva_da_compra(dados, codigo=codigo)
     if not salva:
         return {"compras": 0, "criadas": 0}
@@ -178,11 +189,15 @@ def _ler_itens(dados, params, codigo, **_) -> dict:
         ]
         gravados = sum(_gravar_item(salva, item, cnpjs) for item in com_proposta)
     primeira_pagina = params.get("pagina", "0") in ("0", "")
+    retirados = 0
     if gravados or (so_da_empresa and primeira_pagina):
         # Com item, há proposta. "Meus itens" vazio na primeira página: sem proposta.
         _marcar_proposta(salva, bool(gravados))
+        if not gravados:
+            # Tinha preço e agora não tem nenhum item: retirou (GEN-71).
+            retirados = _retirar(salva)
     _talvez_voltar(salva)
-    return {"itens": gravados}
+    return {"itens": gravados, "retirados": retirados}
 
 
 def _ler_proposta_do_item(dados, params, codigo, cnpj, item, **_) -> dict:
@@ -196,9 +211,18 @@ def _ler_proposta_do_item(dados, params, codigo, cnpj, item, **_) -> dict:
     if gravados:
         _marcar_proposta(salva, True)
     numero = str(item)
+    retirados = 0
+    sem_proposta = [
+        r for r in registros if isinstance(r, dict) and str(r.get("identificador") or "") == numero
+        and not r.get("propostaItem")
+    ]  # fmt: skip
+    if sem_proposta and not gravados:
+        # O item volta **sem** a proposta da empresa (como no 59/2026 item 1,
+        # em que ela não entrou). Se aqui havia preço, ele retirou (GEN-71).
+        retirados = _retirar(salva, numero)
     ItemParticipado.objects.filter(oportunidade=salva, numero_item=numero).update(vigiado_em=timezone.now())
     _talvez_voltar(salva)
-    return {"itens": gravados}
+    return {"itens": gravados, "retirados": retirados}
 
 
 def _ler_itens_antes_da_sessao(dados, params, codigo, **_) -> dict:
@@ -728,6 +752,19 @@ def avisar_situacao(salva: OportunidadeSalva, titulo: str, nivel: str) -> None:
     )
 
 
+def _retirar(salva: OportunidadeSalva, numero: str | None = None) -> int:
+    """Marca como retirada a proposta dos itens com preço lançado (de um item
+    só, ou de todos). Item sem preço não é proposta: fica como está. Devolve
+    quantos foram marcados agora (GEN-71, 12/11/2026)."""
+
+    itens = ItemParticipado.objects.filter(
+        oportunidade=salva, valor_proposta_inicial__isnull=False, retirada_em__isnull=True
+    )
+    if numero is not None:
+        itens = itens.filter(numero_item=numero)
+    return itens.update(retirada_em=timezone.now())
+
+
 def _marcar_proposta(salva: OportunidadeSalva, tem: bool) -> None:
     ParticipacaoCompra.objects.update_or_create(
         oportunidade=salva, defaults={"proposta_cadastrada": tem, "fonte": Fonte.SENTINELA}
@@ -775,6 +812,8 @@ def _gravar_item(salva: OportunidadeSalva, item: dict, cnpjs: set[str]) -> int:
         "valor_lance_final": _valor(valores.get("valorPropostaInicialOuLances")),
         "sessao_julgamento": int(item.get("numeroSessaoJulgHab") or 1),
         "fonte": Fonte.SENTINELA,
+        # Proposta dele lida de novo: não está retirada (GEN-71).
+        "retirada_em": None,
     }
     # Convocação e negociação só quando a resposta traz (a lista de propostas
     # de todos não traz a negociação: não pode apagar a que já se sabe).
