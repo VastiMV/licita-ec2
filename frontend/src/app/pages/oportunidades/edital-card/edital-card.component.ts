@@ -21,6 +21,9 @@ type Aba = 'itens' | 'documentos';
  * (`@media` no breakpoint de 880px que o handoff define), não dois DOMs
  * escolhidos em runtime — mais simples de manter e não depende de JS pra
  * saber a largura da tela. */
+/** Quantos itens o card mostra recolhido (decisão da operação, GEN-30). */
+export const ITENS_RECOLHIDOS = 3;
+
 @Component({
   selector: 'app-edital-card',
   imports: [IconComponent],
@@ -48,7 +51,22 @@ export class EditalCardComponent {
   /** A página é quem sabe abrir arquivo (`window.open`) — o card só avisa. */
   readonly baixarEdital = output<void>();
 
+  /** Na busca, só os primeiros itens aparecem, com "Ver todos": licitação
+   * com muitos itens obrigava a rolar muito até o próximo card (GEN-30,
+   * 11/11/2026). O modal de salvas mostra todos. */
+  readonly recolherItens = input(false);
+
   protected readonly abaAtiva = signal<Aba>('itens');
+  protected readonly verTodos = signal(false);
+  protected readonly itensRecolhidos = computed(
+    () => this.recolherItens() && !this.verTodos() && this.card().itens.length > ITENS_RECOLHIDOS,
+  );
+  protected readonly itensVisiveis = computed(() =>
+    this.itensRecolhidos() ? this.card().itens.slice(0, ITENS_RECOLHIDOS) : this.card().itens,
+  );
+  protected readonly podeRecolher = computed(
+    () => this.recolherItens() && this.card().itens.length > ITENS_RECOLHIDOS,
+  );
 
   // Helpers de formatação expostos pro template (ver edital-card.utils.ts).
   protected readonly moeda = formatarMoeda;
@@ -144,6 +162,10 @@ export class EditalCardComponent {
   protected readonly seloCapag = computed(
     () => this.contratacao().capag ?? this.detalhe()?.capag ?? null,
   );
+
+  protected alternarItens(): void {
+    this.verTodos.update((v) => !v);
+  }
 
   protected mudarAba(aba: Aba): void {
     this.abaAtiva.set(aba);

@@ -37,6 +37,14 @@ app-navbar {
   max-width: none;
 }
 
+// Telas com tabela (Descartadas, Encerradas, Fornecedores, Relatórios…) também
+// usam a largura toda: com 1060px a tabela rolava de lado (GEN-51,
+// 11/11/2026). Formulários e telas sem tabela continuam estreitos — decisão
+// da operação.
+.container:has(table, app-relatorios-page) {
+  max-width: none;
+}
+
 .container:has(app-estagio-page) {
   max-width: none;
   padding-inline: 0;

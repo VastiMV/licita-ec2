@@ -23,6 +23,6 @@ Descartadas sem esperar a Sentinela (Geriatria 34/2026); a chave do robô do
 Telegram nunca aparece em erros.
 
 **Falta (próxima semana):** 12 (contratos no PNCP) e 16 (tirar o ciclo antigo).
-Na máquina do Carlinhos: instalar a Sentinela **0.2.4** (traz a caixa de
-mensagens).
+Na máquina do Carlinhos: instalar a Sentinela **0.2.5** (traz a caixa de
+mensagens da 0.2.4 e o painel do Cotador que dá para mover, GEN-61).
 

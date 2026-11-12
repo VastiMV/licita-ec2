@@ -113,7 +113,7 @@ data alterada, compra suspensa, fora dos favoritos, resultados. **Os mesmos
 avisos vão para o Telegram** de quem estiver cadastrado (botão "Testar
 Telegram" no painel do sino; configuração em `deploy/ec2/README.md`).
 
-**Sentinela (0.2.4, 10/11/2026):** extensão do Chrome no computador do
+**Sentinela (0.2.5, 11/11/2026):** extensão do Chrome no computador do
 Carlinhos ([`sentinela/`](sentinela/), guia em
 [`sentinela/README.md`](sentinela/README.md)). Traz para a Torre as compras e
 os itens em que ele participa no Compras.gov, mostra a **camada de disputa**

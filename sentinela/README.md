@@ -27,7 +27,7 @@ atualização — antes ele lia uma vez só, ao abrir a compra.
 do Compras.gov que já está logada** — a sessão do Compras.gov vale por aba,
 e uma aba nova cairia no login. A aba original não é tocada. Sem Sentinela,
 o Licita abre aba nova como antes (`licita.js` marca a página do Licita com
-`data-sentinela`; `abrirNoCompras` em `torre-acoes.service.ts`).
+`data-sentinela`; `abrirNoCompras` em `frontend/src/app/pages/torre/abrir-no-compras.ts`).
 
 **0.1.4 (08/11/2026):**
 - **Ronda das propostas.** A cada 10 minutos (seg–sex, 8h–19h), para cada
@@ -40,6 +40,12 @@ o Licita abre aba nova como antes (`licita.js` marca a página do Licita com
   da licitação. Botão "Conferir propostas agora" nas opções.
 - A cotação do painel não confere mais a cada minuto: é lida ao abrir a
   compra e no F5 (o ↻ continua).
+
+**0.2.5 (11/11/2026):** o painel do Cotador na tela do Compras.gov **dá
+para mover**: arraste pela faixa azul de cima, e ele lembra o lugar neste
+Chrome. O botão **–** minimiza: vira a etiqueta **"Cotador"**; um clique
+abre de novo. A descrição da extensão agora diz a verdade: ela só escreve no
+Compras.gov o que você pede no Licita (tirar dos favoritos).
 
 **0.2.4 (10/11/2026):** a ronda lê a **caixa de mensagens** do fornecedor
 (todas as compras juntas: pregoeiro, convocação, recurso, impugnação). A

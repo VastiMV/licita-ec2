@@ -314,8 +314,14 @@ Frontend em `frontend/src/app/pages/torre/`.
   As frases são montadas em `torre.utils.ts` (testadas em
   `torre.utils.spec.ts`).
 - **Clique no cartão** (`torre-acoes.service.ts`): em Preparar abre o modal
-  da oportunidade ou o Cotador; nos outros estágios abre a compra no
-  Compras.gov em outra aba.
+  da oportunidade ou o Cotador; nos outros estágios (Disputar, Contratar,
+  Receber) abre o modal **Processo** do Licita (onde está, onde parou, linha
+  do tempo). Lá dentro: "Ver cotação" (abre o Cotador) e o link do
+  Compras.gov, que abre pela Sentinela numa cópia da aba já logada.
+  **Por quê (11/11/2026, GEN-53/64):** o cartão abria o Compras.gov direto;
+  sem a aba logada a página era inválida. Por isso `GET torre/` agora manda
+  `salva` (o registro inteiro) e `valor_cotado` em **todos** os cartões, não
+  só em Preparar.
 - **Oportunidade e Cotação** no menu abrem as listas que já existiam
   (Salvas e Cotador), não uma lista nova.
 - **Menu** (`layout/sidebar/`): azul escuro, Buscar em destaque, os 4

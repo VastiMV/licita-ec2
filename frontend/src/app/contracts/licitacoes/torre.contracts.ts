@@ -73,7 +73,10 @@ export interface CartaoTorre {
   readonly valor_total_estimado: string | null;
   readonly link_plataforma: string;
   readonly cotacao_id: number | null;
-  /** Só em Preparar: o registro inteiro, para os modais que já existem. */
+  /** Total da cotação (nulo sem cotação) — cabeçalho do modal Processo. */
+  readonly valor_cotado: number | null;
+  /** O registro inteiro, para os modais que já existem: em Preparar, o
+   * visualizador e o Cotador; dali em diante, o modal Processo. */
   readonly salva: OportunidadeSalvaResponse | null;
   readonly itens: readonly ItemTorre[];
   /** Soma dos itens ganhos ou à frente (sem os perdendo). */

@@ -6,6 +6,8 @@ import { ModalService } from '../../shared/overlay/modal.service';
 import { ToastService } from '../../shared/ui/toast/toast.service';
 import { CotadorModalComponent } from '../oportunidades/cotador-modal/cotador-modal.component';
 import { OportunidadeModalComponent } from '../oportunidades/salvas/oportunidade-modal/oportunidade-modal.component';
+import { CartaoTorre } from '../../contracts/licitacoes/torre.contracts';
+import { ProcessoModalComponent } from '../ciclo/encerradas/processo-modal/processo-modal.component';
 import { TorreAcoesService, abrirNoCompras } from './torre-acoes.service';
 import { COTADA, FARROUPILHA } from './torre.testing';
 
@@ -52,7 +54,47 @@ describe('TorreAcoesService', () => {
     expect(modal.abrir).toHaveBeenNthCalledWith(2, CotadorModalComponent, expect.anything());
   });
 
-  it('depois de Preparar, abre a compra no Compras.gov sem recarregar', () => {
+  describe('depois de Preparar (GEN-53/64)', () => {
+    const SALVA = {
+      id: 61,
+      itens: [],
+      link_plataforma:
+        'https://cnetmobile.estaleiro.serpro.gov.br/comprasnet-web/public/compras/acompanhamento-compra?compra=15812705000612026',
+    } as unknown as CartaoTorre['salva'];
+
+    it('abre o modal Processo com o link do fornecedor, sem recarregar', () => {
+      const { acoes, modal } = servico();
+      const cartao = { ...FARROUPILHA, salva: SALVA };
+      const recargas: boolean[] = [];
+
+      acoes.abrir(cartao).subscribe((r) => recargas.push(r));
+
+      expect(modal.abrir).toHaveBeenCalledWith(
+        ProcessoModalComponent,
+        expect.objectContaining({
+          id: 61,
+          link_plataforma: FARROUPILHA.link_plataforma,
+          cotacao_id: null,
+          valor_cotado: null,
+        }),
+      );
+      expect(recargas).toEqual([false]);
+    });
+
+    it('com cotação, abre o Processo (não o Cotador); "Ver cotação" segue para o Cotador', () => {
+      const { acoes, modal } = servico('cotacao');
+      const cartao = { ...FARROUPILHA, salva: SALVA, cotacao_id: 4, valor_cotado: 1200 };
+      const recargas: boolean[] = [];
+
+      acoes.abrir(cartao).subscribe((r) => recargas.push(r));
+
+      expect(modal.abrir).toHaveBeenNthCalledWith(1, ProcessoModalComponent, expect.anything());
+      expect(modal.abrir).toHaveBeenNthCalledWith(2, CotadorModalComponent, expect.anything());
+      expect(recargas).toEqual([true]);
+    });
+  });
+
+  it('sem o registro da salva, cai no Compras.gov sem recarregar', () => {
     const { acoes, modal } = servico();
     const abrirJanela = vi.spyOn(window, 'open').mockReturnValue(null);
     const recargas: boolean[] = [];

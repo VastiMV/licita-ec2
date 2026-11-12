@@ -67,6 +67,7 @@ const DETALHE_CARREGADO: DetalheEstado = {
     [salva]="salva()"
     [salvando]="salvando()"
     [podeSalvar]="podeSalvar()"
+    [recolherItens]="recolherItens()"
     (salvar)="salvarPedido.set(true)"
     (baixarEdital)="baixarEdital.set(true)"
   />`,
@@ -77,6 +78,7 @@ class HostComponent {
   readonly salva = signal(false);
   readonly salvando = signal(false);
   readonly podeSalvar = signal(true);
+  readonly recolherItens = signal(false);
   readonly salvarPedido = signal(false);
   readonly baixarEdital = signal(false);
 }
@@ -126,6 +128,55 @@ describe('EditalCardComponent', () => {
     expect(fixture.debugElement.query(By.css('.tabela-linha')).nativeElement.textContent).toContain(
       'Locação de máquina de café expresso',
     );
+  });
+
+  describe('itens recolhidos na busca (GEN-30)', () => {
+    const CINCO = Array.from({ length: 5 }, (_, i) => ({
+      ...OPORTUNIDADE,
+      numero_item: String(i + 1),
+      descricao_resumida: `Item ${i + 1}`,
+    }));
+
+    function linhas(): number {
+      return fixture.debugElement.queryAll(By.css('.tabela-linha')).length;
+    }
+
+    it('com mais de 3 itens, mostra só os 3 primeiros e "Ver todos"; o total soma todos', () => {
+      host.card.set(montarCard(CINCO));
+      host.recolherItens.set(true);
+      fixture.detectChanges();
+
+      expect(linhas()).toBe(3);
+      expect(fixture.debugElement.queryAll(By.css('.cartao-item')).length).toBe(3);
+      expect(texto()).toContain('Ver todos os 5 itens');
+      expect(texto()).toContain('5 itens · valor');
+    });
+
+    it('"Ver todos" abre a lista inteira e "Mostrar menos" recolhe de novo', () => {
+      host.card.set(montarCard(CINCO));
+      host.recolherItens.set(true);
+      fixture.detectChanges();
+
+      clicarBotao('.ver-todos');
+      expect(linhas()).toBe(5);
+      expect(texto()).toContain('Mostrar menos');
+
+      clicarBotao('.ver-todos');
+      expect(linhas()).toBe(3);
+    });
+
+    it('com até 3 itens, ou fora da busca, mostra tudo e não tem o botão', () => {
+      host.card.set(montarCard(CINCO.slice(0, 3)));
+      host.recolherItens.set(true);
+      fixture.detectChanges();
+      expect(fixture.debugElement.query(By.css('.ver-todos'))).toBeNull();
+
+      host.card.set(montarCard(CINCO));
+      host.recolherItens.set(false);
+      fixture.detectChanges();
+      expect(linhas()).toBe(5);
+      expect(fixture.debugElement.query(By.css('.ver-todos'))).toBeNull();
+    });
   });
 
   it('clicar em "Documentos" troca de painel', () => {

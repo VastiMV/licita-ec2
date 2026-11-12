@@ -131,6 +131,11 @@ manifests já usam esse nome; o valor `licita` que aparecia aqui antes nunca foi
   `empresas/`, `fornecedores/`, `produtos/`, `configuracoes/`, `auth/`.
 - `layout/`: o menu (`sidebar/`, com a contagem por etapa), o topo
   (`navbar/` + `topo-status/`: empresa, Radar, Sentinela, sino) e o `shell/`.
+- **Largura** (`shell.component.scss`): o conteúdo tem no máximo 1060px,
+  menos na Torre e nas **telas com tabela** (Descartadas, Encerradas,
+  Fornecedores, Relatórios…), que usam a janela toda. Formulários continuam
+  estreitos. Por quê (11/11/2026, GEN-51): com 1060px as tabelas rolavam de
+  lado. Só tabela, não todas as telas: decisão da operação.
 - Cores, espaçamentos e letra só em `src/styles/_tokens.scss` (nenhum
   componente declara cor solta). O visual segue o protótipo "Licita v1.0".
 - Um `ApiService`/`HttpInterceptor` central cuida do token JWT e do refresh.

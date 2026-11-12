@@ -1,13 +1,21 @@
 // A camada de disputa: um painel no canto da tela do Compras.gov.br com os
 // números da cotação do Licita para a compra aberta — teto, ideal, piso,
 // custo e lucro de cada item. Só mostra; nunca preenche nem envia nada.
+//
+// 0.2.5 (GEN-61, 11/11/2026): o painel pode ser **arrastado** pela faixa do
+// topo (a posição fica guardada neste Chrome) e **minimizado**: vira uma
+// etiqueta "Cotador", da mesma cor, que abre de novo com um clique. Fechar e
+// minimizar são a mesma coisa (decisão da operação).
 (() => {
   "use strict";
 
   const CODIGO = /(?:compra=|\/)(\d{17})(?:[/?&#]|$)/;
+  const CHAVE_POSICAO = "camadaPosicao";
+  const MARGEM = 8; // px: o painel nunca sai da janela
+  const ARRASTO_MINIMO = 4; // px: menos que isso é clique, não arrasto
   let codigoAtual = null;
   let painel = null;
-  let recolhido = false;
+  let minimizado = false;
 
   const moeda = (valor) =>
     valor === null || valor === undefined || valor === ""
@@ -39,15 +47,13 @@
     painel = el("aside", "sentinela-camada");
     painel.setAttribute("aria-label", "Sentinela: números da cotação");
     const topo = el("div", "sentinela-topo");
+    topo.title = "Arraste para mudar o painel de lugar";
     const titulo = el("strong", "sentinela-titulo", "Sentinela");
-    const botao = el("button", "sentinela-recolher", "–");
-    botao.type = "button";
-    botao.setAttribute("aria-label", "Recolher ou abrir o painel");
-    botao.addEventListener("click", () => {
-      recolhido = !recolhido;
-      painel.classList.toggle("sentinela-recolhido", recolhido);
-      botao.textContent = recolhido ? "+" : "–";
-    });
+    const minimizar = el("button", "sentinela-recolher", "–");
+    minimizar.type = "button";
+    minimizar.title = "Minimizar";
+    minimizar.setAttribute("aria-label", "Minimizar o painel");
+    minimizar.addEventListener("click", () => alternar(true));
     // Atualizar agora: depois de mexer na cotação no Licita.
     const atualizar = el("button", "sentinela-recolher", "↻");
     atualizar.type = "button";
@@ -61,14 +67,112 @@
       () => codigoAtual && carregar(codigoAtual),
     );
     const botoes = el("div", "sentinela-botoes");
-    botoes.append(atualizar, botao);
+    botoes.append(atualizar, minimizar);
     topo.append(titulo, botoes);
+    // Minimizado, o painel é só esta etiqueta. Também dá para arrastar.
+    const etiqueta = el("button", "sentinela-etiqueta", "Cotador");
+    etiqueta.type = "button";
+    etiqueta.title = "Abrir o painel do Cotador (arraste para mudar de lugar)";
+    etiqueta.setAttribute("aria-label", "Abrir o painel do Cotador");
+    etiqueta.addEventListener("click", () => {
+      if (!arrastou) alternar(false);
+    });
     painel.append(
+      etiqueta,
       topo,
       el("div", "sentinela-corpo"),
       el("p", "sentinela-hora", ""),
     );
     document.body.append(painel);
+    arrastavel(topo);
+    arrastavel(etiqueta);
+    painel.classList.toggle("sentinela-minimizado", minimizado);
+    restaurarPosicao();
+    window.addEventListener("resize", () => {
+      const r = painel.getBoundingClientRect();
+      if (painel.style.left) posicionar(r.left, r.top);
+    });
+  }
+
+  function alternar(minimizar) {
+    minimizado = minimizar;
+    painel.classList.toggle("sentinela-minimizado", minimizado);
+    // Mudou de tamanho: continua inteiro dentro da janela.
+    if (painel.style.left) {
+      const r = painel.getBoundingClientRect();
+      posicionar(r.left, r.top);
+    }
+  }
+
+  // ---- arrastar ----------------------------------------------------------
+
+  let arrastou = false;
+
+  function arrastavel(alca) {
+    alca.addEventListener("pointerdown", (evento) => {
+      if (evento.button !== 0) return;
+      // Os botões do topo continuam sendo botões.
+      if (
+        alca !== evento.target.closest(".sentinela-etiqueta, .sentinela-topo")
+      )
+        return;
+      if (evento.target.closest(".sentinela-botoes")) return;
+      const inicio = painel.getBoundingClientRect();
+      const x0 = evento.clientX;
+      const y0 = evento.clientY;
+      arrastou = false;
+      alca.setPointerCapture(evento.pointerId);
+
+      const mover = (e) => {
+        const dx = e.clientX - x0;
+        const dy = e.clientY - y0;
+        if (!arrastou && Math.hypot(dx, dy) < ARRASTO_MINIMO) return;
+        arrastou = true;
+        painel.classList.add("sentinela-arrastando");
+        posicionar(inicio.left + dx, inicio.top + dy);
+      };
+      const soltar = () => {
+        alca.removeEventListener("pointermove", mover);
+        alca.removeEventListener("pointerup", soltar);
+        alca.removeEventListener("pointercancel", soltar);
+        painel.classList.remove("sentinela-arrastando");
+        if (arrastou) guardarPosicao();
+      };
+      alca.addEventListener("pointermove", mover);
+      alca.addEventListener("pointerup", soltar);
+      alca.addEventListener("pointercancel", soltar);
+    });
+  }
+
+  function posicionar(esquerda, topo) {
+    const r = painel.getBoundingClientRect();
+    const maxX = Math.max(MARGEM, window.innerWidth - r.width - MARGEM);
+    const maxY = Math.max(MARGEM, window.innerHeight - r.height - MARGEM);
+    painel.style.left = `${Math.min(Math.max(esquerda, MARGEM), maxX)}px`;
+    painel.style.top = `${Math.min(Math.max(topo, MARGEM), maxY)}px`;
+    painel.style.right = "auto";
+    painel.style.bottom = "auto";
+  }
+
+  // A posição fica neste Chrome (storage da extensão), não no Licita.
+  function guardarPosicao() {
+    if (!viva()) return;
+    const r = painel.getBoundingClientRect();
+    chrome.storage.local
+      .set({ [CHAVE_POSICAO]: { esquerda: r.left, topo: r.top } })
+      .catch(() => {});
+  }
+
+  function restaurarPosicao() {
+    if (!viva()) return;
+    chrome.storage.local
+      .get(CHAVE_POSICAO)
+      .then((guardado) => {
+        const p = guardado && guardado[CHAVE_POSICAO];
+        if (p && Number.isFinite(p.esquerda) && Number.isFinite(p.topo))
+          posicionar(p.esquerda, p.topo);
+      })
+      .catch(() => {});
   }
 
   function mostrar(conteudo, subtitulo) {

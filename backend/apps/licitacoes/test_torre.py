@@ -113,7 +113,9 @@ class TorreTests(APITestCase):
         self.assertEqual(self.etapa(so_salva), "oportunidade")
         self.assertEqual(self.etapa(cotada), "cotacao")
 
-    def test_cartao_de_preparar_traz_a_salva_e_a_cotacao_para_os_modais(self):
+    def test_todo_cartao_traz_a_salva_e_a_cotacao_para_os_modais(self):
+        # Fora de Preparar a salva também vem: o cartão abre o modal Processo
+        # (GEN-53/64, 11/11/2026).
         cotada = self.salva()
         self.cotar(cotada)
         ganha = self.salva(prazo_em_dias=-40)
@@ -124,8 +126,11 @@ class TorreTests(APITestCase):
         cartao_ganha = self.cartao(torre, ganha)
 
         self.assertEqual(cartao_cotada["cotacao_id"], cotada.cotacao.pk)
+        self.assertEqual(cartao_cotada["valor_cotado"], float(cotada.cotacao.valor_cotado))
+        self.assertIsNone(cartao_ganha["valor_cotado"])
         self.assertEqual(cartao_cotada["salva"]["id"], cotada.pk)
-        self.assertIsNone(cartao_ganha["salva"])
+        self.assertEqual(cartao_ganha["estagio"], "contratar")
+        self.assertEqual(cartao_ganha["salva"]["id"], ganha.pk)
 
     def test_abrir_leva_para_a_pagina_do_fornecedor(self):
         salva = self.salva()

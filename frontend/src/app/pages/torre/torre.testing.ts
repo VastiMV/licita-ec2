@@ -17,6 +17,7 @@ export const FARROUPILHA: CartaoTorre = {
   link_plataforma:
     'https://cnetmobile.estaleiro.serpro.gov.br/comprasnet-web/public/compras/acompanhamento-compra?compra=15812705000612026',
   cotacao_id: null,
+  valor_cotado: null,
   salva: null,
   itens: [
     {
