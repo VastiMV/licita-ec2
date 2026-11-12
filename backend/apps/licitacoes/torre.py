@@ -125,6 +125,11 @@ def etapa_do_item(item, documentos, entregas, hoje: dt.date) -> EtapaDoItem:
     (sem item), que valem para todos os itens ganhos.
     """
 
+    # Proposta retirada (GEN-71, 12/11/2026): não há mais proposta dele no
+    # item — nada de convocação nem recurso o traz de volta.
+    if item.retirada_em:
+        return EtapaDoItem(None, perdido="proposta retirada")
+
     # Convocação, pedido de desconto ou recurso em aberto: o item está vivo,
     # mesmo que antes tenha sido dado como perdido (09/11/2026).
     if not chamado_de_volta(item):
@@ -496,6 +501,11 @@ def avaliar(salva: OportunidadeSalva, hoje: dt.date) -> tuple[dict | None, Saida
             if resultado.etapa and (etapa is None or ORDEM[resultado.etapa] > ORDEM[etapa]):
                 etapa = resultado.etapa
         if etapa is None:
+            if all(i.retirada_em for i in itens):
+                # Retirou a proposta de todos os itens: não foi ao certame
+                # (decisão da operação, 12/11/2026, GEN-71 — Cabedelo 27/2026).
+                retirada = max(i.retirada_em for i in itens)
+                return None, Saida("descartadas", "Proposta retirada", "proposta_retirada", _data(retirada))
             ultima = max((i.atualizado_em for i in itens if i.atualizado_em), default=None)
             return None, Saida("encerradas", "Perdida", "perdida", _data(ultima) or prazo)
     elif participacao and participacao.proposta_cadastrada is False and (

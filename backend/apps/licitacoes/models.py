@@ -552,6 +552,11 @@ class ItemParticipado(models.Model):
         help_text="Do resultado do PNCP. Nulo = sem resultado; falso = homologado para outro fornecedor.",
     )
 
+    # Proposta retirada (GEN-71, 12/11/2026): o Compras.gov passou a dizer
+    # que a empresa não tem mais proposta neste item (Dispensa 27/2026,
+    # Cabedelo: ele retirou e não participou). Preço novo lido apaga.
+    retirada_em = models.DateTimeField("proposta retirada em", null=True, blank=True)
+
     # A vigia de quem já perdeu (09/11/2026): 1x por dia até a ata/contrato
     # ser assinado com outra empresa, ou 180 dias depois da homologação.
     vigiado_em = models.DateTimeField("vigiado em", null=True, blank=True)

@@ -11,7 +11,12 @@ import { OportunidadeSalvaResponse } from './oportunidade-salva.contracts';
 /** Por que foi descartada: tirada da lista antes do prazo, ou o prazo
  * venceu (com ou sem cotação). */
 export type MotivoDescarte =
-  'descartada_manual' | 'descartada' | 'prazo_oportunidade' | 'prazo_cotacao' | 'sem_proposta';
+  | 'descartada_manual'
+  | 'descartada'
+  | 'prazo_oportunidade'
+  | 'prazo_cotacao'
+  | 'sem_proposta'
+  | 'proposta_retirada';
 
 export const MOTIVOS_DESCARTE: readonly { value: MotivoDescarte; label: string }[] = [
   { value: 'descartada_manual', label: 'Descartada manualmente' },
@@ -19,6 +24,7 @@ export const MOTIVOS_DESCARTE: readonly { value: MotivoDescarte; label: string }
   { value: 'prazo_oportunidade', label: 'Prazo venceu sem cotação' },
   { value: 'prazo_cotacao', label: 'Prazo venceu com cotação' },
   { value: 'sem_proposta', label: 'Sem proposta cadastrada' },
+  { value: 'proposta_retirada', label: 'Proposta retirada' },
 ];
 
 /** Onde a licitação estava quando foi descartada. */

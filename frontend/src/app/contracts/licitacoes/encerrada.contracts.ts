@@ -80,6 +80,7 @@ export type TipoDesfecho =
   | 'descartada'
   | 'descartada_manual'
   | 'sem_proposta'
+  | 'proposta_retirada'
   | 'prazo_oportunidade'
   | 'prazo_cotacao';
 

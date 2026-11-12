@@ -193,7 +193,7 @@ as listas (participações e itens) e o chat.
 | **Sessão** | `pagina.js` guarda o `authorization` que a própria página usa, **só na memória da aba**. Nunca é gravado, nunca sai do computador |
 | **Consultas próprias** | só uma lista fechada (`PERMITIDO` em `pagina.js`): proposta do item (`?filtro=2`), fase recursal, diligências e `DELETE …/favorita`. Nada com captcha |
 | **Tarefas** | a cada 1 min pergunta `GET tarefas/` (hoje: tirar favorito pedido pela lixeira) e responde `POST tarefas/<id>/` |
-| **Ronda** | a cada 10 min (dias úteis, 8h–19h) pega `GET ronda/` e consulta, uma por vez com pausa, proposta/recurso/diligências de cada item com proposta; manda as respostas para `captura/`. Botão "Fazer a ronda agora" nas opções |
+| **Ronda** | a cada 10 min (dias úteis, 8h–19h) pega `GET ronda/` e consulta, uma por vez com pausa, proposta/recurso/diligências de cada item com proposta; manda as respostas para `captura/`. Botão "Fazer a ronda agora" nas opções. Desde 12/11/2026 (GEN-71) entram também as compras ainda gravadas **antes da sessão** cuja sessão (ou, sem data, o prazo) já passou — antes elas só mudavam se ele abrisse a tela. Item com **proposta retirada** sai da ronda e da vigia diária. Só o servidor mudou: a Sentinela continua a mesma (0.2.5) |
 | **Sessão caiu** | 401 ou sessão ainda não vista → estado "precisa de você" no topo do Licita ("abra ou atualize a aba do Compras.gov") |
 
 Testes de ponta a ponta: `sentinela/testes/teste-extensao.js` e
