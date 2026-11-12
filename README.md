@@ -132,7 +132,7 @@ Transparência** traz empenho, liquidação e pagamento dos órgãos federais.
 
 **Conferência pelo assistente, só leitura:** botão **Consultar EC2** no
 GitHub Actions (`diagnostico`: itens-suspeitos, compra, torre, sentinela,
-telegram) e a chave de leitura `LEITURA_CHAVE` (só GET) — ver
+quedas, telegram) e a chave de leitura `LEITURA_CHAVE` (só GET) — ver
 `deploy/ec2/README.md`.
 
 As regras de cada uma estão em [`docs/TORRE.md`](docs/TORRE.md) e

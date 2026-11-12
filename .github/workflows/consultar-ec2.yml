@@ -15,9 +15,10 @@ on:
           - compra
           - torre
           - sentinela
+          - quedas
           - telegram
       argumento:
-        description: "Para 'compra': o código de 17 dígitos ou o id da salva"
+        description: "Para 'compra': o código de 17 dígitos ou o id da salva. Para 'quedas': quantos dias (padrão 7)"
         type: string
         default: ""
 

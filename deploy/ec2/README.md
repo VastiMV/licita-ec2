@@ -252,7 +252,9 @@ e sem poder mudar nada**, de dois jeitos:
 
 1. **Botão "Consultar EC2"** (GitHub → Actions → Consultar EC2 → Run
    workflow): roda `python manage.py diagnostico` no servidor —
-   `itens-suspeitos`, `compra <código>`, `torre`, `sentinela`. Só lê. O
+   `itens-suspeitos`, `compra <código>`, `torre`, `sentinela`,
+   `quedas [dias]` (as "sessão caiu" por motivo, dia e hora — GEN-45),
+   `telegram`. Só lê. O
    resultado fica no registro do job (visível para quem acessa o
    repositório). Usa os mesmos segredos do deploy.
 2. **Chave de leitura** (`LEITURA_CHAVE`): com ela no cabeçalho

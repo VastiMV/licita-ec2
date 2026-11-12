@@ -9,6 +9,11 @@ pelo botão "Consultar EC2" do GitHub Actions, `.github/workflows/consultar-ec2.
   sinal de cada item, e as propostas lidas;
 - `torre` — quantas licitações em cada etapa e quantas saíram;
 - `sentinela` — o que a Sentinela fez nas últimas 24 horas;
+- `quedas [dias]` — as "sessão caiu" e "sem aba" dos últimos dias (padrão 7):
+  por motivo, por dia, por hora e por versão, e os episódios (quedas a menos
+  de 15 minutos uma da outra contam como um). Para o GEN-45 (12/11/2026):
+  separar queda real (retoken), token velho (401 numa consulta da
+  Sentinela) e aba sem sessão ("Aperte F5", aba pública);
 - `telegram` — se o robô está ligado e quem mandou mensagem para ele (o
   número do chat que vai em `TELEGRAM_CHAT_IDS`).
 
@@ -27,7 +32,7 @@ from django.utils import timezone
 from apps.licitacoes.models import ItemParticipado, OportunidadeSalva
 from apps.licitacoes.torre import avaliar, etapa_do_item, montar_torre, posicao_efetiva, rotulo_da_compra, sinal_do_item
 
-CONSULTAS = ("itens-suspeitos", "compra", "torre", "sentinela", "telegram")
+CONSULTAS = ("itens-suspeitos", "compra", "torre", "sentinela", "quedas", "telegram")
 
 
 def itens_suspeitos():
@@ -42,6 +47,30 @@ def itens_suspeitos():
         .select_related("oportunidade")
         .order_by("oportunidade_id", "numero_item")
     )
+
+
+def motivo_da_queda(detalhe: str) -> str:
+    """Agrupa o texto do aviso em três causas (ver `sentinela/pagina.js` e
+    `sentinela/fundo.js`)."""
+
+    texto = detalhe or ""
+    if texto.startswith("retoken"):
+        return "retoken falhou (a própria página não renovou a sessão)"
+    if "F5" in texto or "sem_sessao" in texto:
+        return "aba sem sessão (F5, aba nova ou pública)"
+    if "401" in texto or "login de novo" in texto:
+        return "401 numa consulta da Sentinela"
+    return f"outro: {texto or '—'}"
+
+
+def episodios_de_queda(quedas, intervalo=dt.timedelta(minutes=15)):
+    episodios: list[list] = []
+    for p in quedas:
+        if episodios and p.recebido_em - episodios[-1][-1].recebido_em <= intervalo:
+            episodios[-1].append(p)
+        else:
+            episodios.append([p])
+    return episodios
 
 
 class Command(BaseCommand):
@@ -142,6 +171,43 @@ class Command(BaseCommand):
             f"Itens com propostas lidas: {ItemParticipado.objects.filter(propostas_lidas_em__isnull=False).count()}"
             f" de {ItemParticipado.objects.filter(classificacao__isnull=False).count()} com posição"
         )
+
+    def quedas(self, argumento):
+        from apps.sentinela.models import Pulso
+
+        dias = int(argumento) if argumento.isdigit() and int(argumento) > 0 else 7
+        desde = timezone.now() - dt.timedelta(days=dias)
+        pulsos = list(
+            Pulso.objects.filter(recebido_em__gte=desde, estado__in=["sessao_caiu", "sem_aba"]).order_by("recebido_em")
+        )
+        quedas = [p for p in pulsos if p.estado == "sessao_caiu"]
+        sem_aba = [p for p in pulsos if p.estado == "sem_aba"]
+        self.linha(f"Últimos {dias} dias: {len(quedas)} 'sessão caiu' · {len(sem_aba)} 'sem aba'")
+
+        self.linha("Sessão caiu, por motivo:")
+        for motivo, n in Counter(motivo_da_queda(p.detalhe) for p in quedas).most_common():
+            self.linha(f"  {n:4} · {motivo}")
+        self.linha("Sessão caiu, por detalhe (texto exato):")
+        for detalhe, n in Counter(p.detalhe or "—" for p in quedas).most_common(10):
+            self.linha(f"  {n:4} · {detalhe}")
+        self.linha(f"Sessão caiu, por versão: {dict(Counter(p.versao or '—' for p in quedas))}")
+        self.linha("Por dia (sessão caiu / sem aba):")
+        por_dia_q = Counter(f"{timezone.localtime(p.recebido_em):%d/%m %a}" for p in quedas)
+        por_dia_a = Counter(f"{timezone.localtime(p.recebido_em):%d/%m %a}" for p in sem_aba)
+        for dia in sorted(set(por_dia_q) | set(por_dia_a), key=lambda d: (d[3:5], d[:2])):
+            self.linha(f"  {dia} · {por_dia_q.get(dia, 0):3} / {por_dia_a.get(dia, 0):3}")
+        self.linha("Por hora (sessão caiu / sem aba):")
+        por_hora_q = Counter(timezone.localtime(p.recebido_em).hour for p in quedas)
+        por_hora_a = Counter(timezone.localtime(p.recebido_em).hour for p in sem_aba)
+        for hora in sorted(set(por_hora_q) | set(por_hora_a)):
+            self.linha(f"  {hora:02}h · {por_hora_q.get(hora, 0):3} / {por_hora_a.get(hora, 0):3}")
+
+        episodios = episodios_de_queda(quedas)
+        self.linha(f"Episódios (quedas a menos de 15 min uma da outra = um só): {len(episodios)}")
+        for ep in episodios[-15:]:
+            inicio, fim = timezone.localtime(ep[0].recebido_em), timezone.localtime(ep[-1].recebido_em)
+            motivos = ", ".join(sorted({motivo_da_queda(p.detalhe) for p in ep}))
+            self.linha(f"  {inicio:%d/%m %H:%M}–{fim:%H:%M} · {len(ep)} avisos · {motivos}")
 
     def telegram(self, _):
         from apps.notificacoes.telegram import RoboRecusou, chats, quem_falou_com_o_robo
