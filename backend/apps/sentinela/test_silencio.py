@@ -138,3 +138,20 @@ class ConsultaPorDiaTests(_Base):
         self.assertIn("Dia a dia (últimos 7)", texto)
         self.assertIn("⚠ ligada e sem leitura", texto)
         self.assertIn("Agora: fora do horário de trabalho", texto)
+
+
+class TopoComErroDaRondaTests(_Base):
+    """0.2.7: a ronda que falha 2 vezes manda "erro" com o motivo."""
+
+    def test_topo_mostra_o_motivo(self):
+        p = Pulso.objects.create(
+            estado="erro",
+            detalhe="Ligada, mas não consegue ler: a aba do Compras.gov não respondeu (dê F5 nela)",
+            versao="0.2.7",
+        )
+        Pulso.objects.filter(pk=p.pk).update(recebido_em=quando(14, 11, 0))
+
+        estado = estado_atual(quando(14, 11, 1))
+
+        self.assertEqual(estado["estado"], "precisa_de_voce")
+        self.assertIn("a aba do Compras.gov não respondeu", estado["detalhe"])

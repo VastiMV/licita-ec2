@@ -41,6 +41,12 @@ o Licita abre aba nova como antes (`licita.js` marca a página do Licita com
 - A cotação do painel não confere mais a cada minuto: é lida ao abrir a
   compra e no F5 (o ↻ continua).
 
+**0.2.7 (14/11/2026):** se a ronda falhar duas vezes seguidas (aba que não
+responde, erro no Licita ou no Compras.gov), a Sentinela avisa o Licita com o
+motivo — o topo fica âmbar — e avisa de novo quando voltar a ler. A aba do
+Compras.gov da área do fornecedor não é mais descartada pelo Chrome, e, se
+estiver descarregada, a Sentinela a recarrega antes da ronda.
+
 **0.2.6 (12/11/2026):** menos alarme falso. A Sentinela avisa a queda da
 sessão **uma vez** (e avisa quando ela volta), não a cada 10 minutos. "Aba
 sem sessão" (F5, aba pública) tem aviso próprio. A ronda só usa a aba da
