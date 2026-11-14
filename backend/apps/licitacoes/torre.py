@@ -454,6 +454,24 @@ def _data(momento) -> dt.date | None:
     return timezone.localdate(momento) if momento else None
 
 
+# Etapas do item antes da sessão abrir: é só aqui que a regra da suspensa
+# vale (decisão da operação, 14/11/2026, GEN-72). Suspensa no meio da disputa,
+# do julgamento ou do recurso fica na etapa do item, com "Compra suspensa".
+ANTES_DA_SESSAO = {"cadastro_proposta", "aguardando_sessao"}
+
+
+def _etapa_suspensa(cotacao, preco_no_compras: bool, etiquetas: list) -> str:
+    """Compra suspensa ou sem data da sessão, antes da sessão (GEN-72,
+    14/11/2026 — Butantan 9/2026: preço lançado no Compras.gov, sem cotação no
+    Licita, aparecia em Disputar › Aguardando sessão). Decisão da operação:
+    fica em Preparar esperando a data nova — **Cotação** se há cotação no
+    Licita **ou** preço no Compras.gov; senão **Oportunidade**."""
+
+    if preco_no_compras and cotacao is None:
+        etiquetas.append(Etiqueta("aviso", "preço lançado no Compras.gov, sem cotação no Licita"))
+    return "cotacao" if cotacao or preco_no_compras else "oportunidade"
+
+
 def avaliar(salva: OportunidadeSalva, hoje: dt.date) -> tuple[dict | None, Saida | None]:
     """O cartão da licitação na Torre, ou para onde ela saiu (com o motivo e
     a data). É a **única** regra: as listas de Encerradas e Descartadas e os
@@ -497,6 +515,9 @@ def avaliar(salva: OportunidadeSalva, hoje: dt.date) -> tuple[dict | None, Saida
     )
     if sem_prazo:
         etiquetas.append(Etiqueta("aviso", "Sem prazo definido"))
+    # Para a regra da suspensa (GEN-72) vale só o "sem data" que o Compras.gov
+    # disse; data apenas não lida não tira a compra de Disputar.
+    suspensa_ou_sem_data = suspensa or (sem_prazo and participacao.sessao_sem_data)
 
     cartoes_itens = []
     etapa = None
@@ -538,12 +559,18 @@ def avaliar(salva: OportunidadeSalva, hoje: dt.date) -> tuple[dict | None, Saida
                 return None, Saida("descartadas", "Proposta retirada", "proposta_retirada", _data(retirada))
             ultima = max((i.atualizado_em for i in itens if i.atualizado_em), default=None)
             return None, Saida("encerradas", "Perdida", "perdida", _data(ultima) or prazo)
+        if suspensa_ou_sem_data and etapa in ANTES_DA_SESSAO:
+            etapa = _etapa_suspensa(cotacao, any(i.valor_proposta_inicial for i in itens), etiquetas)
     elif participacao and participacao.proposta_cadastrada is False and (
         participacao.fase_compra not in FASES_COMPRA_ANTES_DA_SESSAO or prazo_vencido
     ) and not (suspensa or sem_prazo):
         return None, Saida(
             "descartadas", "Sem proposta cadastrada", "sem_proposta", _data(participacao.atualizada_em)
         )
+    elif suspensa_ou_sem_data and not (
+        participacao and participacao.fase_compra not in FASES_COMPRA_ANTES_DA_SESSAO
+    ):
+        etapa = _etapa_suspensa(cotacao, bool(participacao and participacao.proposta_cadastrada), etiquetas)
     elif participacao and participacao.proposta_cadastrada:
         etapa = "disputa" if participacao.fase_compra in FASES_COMPRA_EM_DISPUTA else "cadastro_proposta"
     elif suspensa or sem_prazo:

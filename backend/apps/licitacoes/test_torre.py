@@ -461,7 +461,68 @@ class TorreTests(APITestCase):
 
         self.assertIsNone(self.cartao(torre, deserta))
         cartao = self.cartao(torre, suspensa)
-        self.assertEqual(cartao["etapa"], "cadastro_proposta")
+        # Suspensa antes da sessão, com proposta no Compras.gov: Preparar ›
+        # Cotação (decisão da operação, 14/11/2026, GEN-72). Antes ficava em
+        # Cadastro de proposta.
+        self.assertEqual(cartao["etapa"], "cotacao")
+        textos = [e["texto"] for e in cartao["etiquetas"]]
+        self.assertIn("Compra suspensa", textos)
+        self.assertIn("preço lançado no Compras.gov, sem cotação no Licita", textos)
+
+    # -- suspensa ou sem data, antes da sessão (GEN-72, 14/11/2026) -----------
+
+    def _butantan(self, sem_data_dito=True, **participacao):
+        """Pregão 9/2026, Butantan: Disputa agendada (99), Publicada (PD), sem
+        data da sessão, preço lançado nos itens 1 e 2, sem cotação no Licita."""
+        salva = self.salva(prazo_em_dias=-19)
+        dados = {"fase_compra": "99", "situacao_compra": "PD", "proposta_cadastrada": True,
+                 "sessao_sem_data": sem_data_dito, **participacao}  # fmt: skip
+        ParticipacaoCompra.objects.create(oportunidade=salva, **dados)
+        for n in ("1", "2"):
+            self.item(salva, numero=n, fase_item="AS", valor_proposta_inicial=Decimal("170"))
+        return salva
+
+    def test_butantan_sem_data_dita_pelo_compras_gov_vai_para_cotacao(self):
+        salva = self._butantan()
+
+        cartao = self.cartao(self.torre(), salva)
+
+        self.assertEqual(cartao["etapa"], "cotacao")
+        textos = [e["texto"] for e in cartao["etiquetas"]]
+        self.assertIn("Sem prazo definido", textos)
+        self.assertIn("preço lançado no Compras.gov, sem cotação no Licita", textos)
+
+    def test_data_so_nao_lida_fica_em_aguardando_sessao(self):
+        salva = self._butantan(sem_data_dito=False)
+
+        self.assertEqual(self.etapa(salva), "aguardando_sessao")
+
+    def test_com_cotacao_no_licita_vai_para_cotacao_sem_a_etiqueta_do_preco(self):
+        salva = self._butantan()
+        self.cotar(salva)
+
+        cartao = self.cartao(self.torre(), salva)
+
+        self.assertEqual(cartao["etapa"], "cotacao")
+        self.assertNotIn(
+            "preço lançado no Compras.gov, sem cotação no Licita", [e["texto"] for e in cartao["etiquetas"]]
+        )
+
+    def test_suspensa_sem_preco_e_sem_cotacao_vai_para_oportunidade(self):
+        salva = self.salva(prazo_em_dias=-5)
+        ParticipacaoCompra.objects.create(oportunidade=salva, fase_compra="1", situacao_compra="SU")
+        self.item(salva, numero="1", fase_item="AS")  # item sem preço
+
+        self.assertEqual(self.etapa(salva), "oportunidade")
+
+    def test_suspensa_depois_da_disputa_fica_na_etapa_do_item(self):
+        salva = self.salva(prazo_em_dias=-5)
+        ParticipacaoCompra.objects.create(oportunidade=salva, fase_compra="3", situacao_compra="SU")
+        self.item(salva, numero="1", fase_item="LA", classificacao=1, valor_proposta_inicial=Decimal("10"))
+
+        cartao = self.cartao(self.torre(), salva)
+
+        self.assertEqual(cartao["etapa"], "disputa")
         self.assertIn("Compra suspensa", [e["texto"] for e in cartao["etiquetas"]])
 
     # -- contratar e receber ------------------------------------------------

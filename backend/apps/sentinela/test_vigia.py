@@ -80,6 +80,30 @@ class SuspensaESemPrazoTests(_Base):
         self.assertIn("Compra suspensa", textos(s))
 
 
+class SessaoSemDataTests(_Base):
+    """GEN-72 (14/11/2026): o Licita guarda quando o Compras.gov **disse** que
+    a sessão não tem data — diferente de data ainda não lida."""
+
+    def test_campo_vazio_marca_sem_data_e_data_desmarca(self):
+        s = salva(prazo_dias=-19)
+        compra = {"numeroUasg": "986371", "modalidade": "5", "numero": "55", "ano": "2026",
+                  "faseCompraFaseExterna": "99"}  # fmt: skip
+
+        receber(f"{BASE}/{CUBATAO}/participacao", {**compra, "dataHoraPrevisaoAbertura": None})
+        self.assertIs(ParticipacaoCompra.objects.get(oportunidade=s).sessao_sem_data, True)
+
+        receber(f"{BASE}/{CUBATAO}/participacao", {**compra, "dataHoraPrevisaoAbertura": "2026-11-20T09:00:00"})
+        self.assertIs(ParticipacaoCompra.objects.get(oportunidade=s).sessao_sem_data, False)
+
+    def test_sem_o_campo_na_resposta_nao_muda(self):
+        s = salva(prazo_dias=-19)
+        ParticipacaoCompra.objects.create(oportunidade=s, fase_compra="99", sessao_sem_data=True)
+
+        receber(f"{BASE}/{CUBATAO}/participacao", {"numeroUasg": "986371", "faseCompraFaseExterna": "99"})
+
+        self.assertIs(ParticipacaoCompra.objects.get(oportunidade=s).sessao_sem_data, True)
+
+
 class DataAlteradaTests(_Base):
     def test_o_orgao_adiou_o_prazo_historico_e_sino(self):
         s = salva(prazo_dias=1)
