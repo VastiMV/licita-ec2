@@ -58,7 +58,6 @@ apps/
                       Controle (torre.py — ver docs/TORRE.md), a saída do quadro —
                       Encerradas × Descartadas (encerradas.py) — e as sincronias
                       diárias com PNCP e Portal da Transparência (sincronia_*.py).
-                      ciclo.py é o quadro antigo, sem tela (sai em feat-remover-legado)
   tenants/            Tenant — de quem são os registros (uma linha só hoje)
   empresas/           Os CNPJs com que a equipe disputa
   documentos/         Dossiê de habilitação da empresa (certidões, validade, versões)

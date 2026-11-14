@@ -42,9 +42,8 @@ class OportunidadeSalvaQuerySet(models.QuerySet):
         return self.filter(removida_em__isnull=True)
 
     def sem_cotacao(self) -> "OportunidadeSalvaQuerySet":
-        """As que ainda estão na etapa Oportunidade do Ciclo de Licitação.
-        Com cotação salva, a licitação passou para a etapa Cotação e sai da
-        lista de Salvas (ver `ciclo.py`)."""
+        """As que ainda estão na etapa Oportunidade. Com cotação salva, a
+        licitação passou para a etapa Cotação e sai da lista de Salvas."""
 
         return self.filter(cotacao__isnull=True)
 

@@ -11,7 +11,7 @@ Feito em partes pequenas: cada uma testada, salva e publicada sozinha.
 | 12 | Fim da vigia por **contrato publicado no PNCP** (reserva: Portal da Transparência, federal) | a fazer |
 | 13 | **Caixa de mensagens** do Compras.gov (`comprasnet-mensagem/v1/mensagens`) na ronda → sino. Lê só a lista, que já traz o texto. **Nunca abre** a mensagem (abrir marca como lida). O plano previa abrir quando o texto não viesse, com autorização da operação; não foi preciso (`sentinela/pagina.js`, `ronda.py`) | publicado (10/11) · Sentinela 0.2.4 |
 | 14 | **Telegram**: os avisos do sino no celular (robô criado pela operação; chave só no `.env`) | publicado e ligado (10/11): Vasti e Carlinhos; botão "Testar Telegram" no sino |
-| 16 | Tirar o "Ciclo de Licitação" antigo do código | a fazer |
+| 16 | Tirar o "Ciclo de Licitação" antigo do código | feito (14/11, GEN-47) |
 
 Fora deste build:
 - Painel da camada só com o item aberto e aviso de lance abaixo do piso: dependem de um .har da tela de lances (próximo pregão em disputa).
@@ -22,7 +22,7 @@ Também em 10/11/2026: prazo vencido com cotação e **fora dos favoritos** →
 Descartadas sem esperar a Sentinela (Geriatria 34/2026); a chave do robô do
 Telegram nunca aparece em erros.
 
-**Falta (próxima semana):** 12 (contratos no PNCP) e 16 (tirar o ciclo antigo).
+**Falta:** 12 (contratos no PNCP).
 Na máquina do Carlinhos: instalar a Sentinela **0.2.6** (menos alarme falso de
 sessão caída, GEN-45; ícone do Licita).
 

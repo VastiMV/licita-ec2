@@ -15,7 +15,7 @@ from rest_framework.test import APITestCase
 from apps.armazenamento.models import ConfigArmazenamento
 from apps.cotador.test_views import item_cotado
 from apps.empresas.models import Empresa
-from apps.licitacoes import test_ciclo
+from apps.licitacoes import test_em_cotacao
 from apps.licitacoes.models import EventoOportunidadeSalva
 from apps.tenants.atual import tenant_atual
 
@@ -24,16 +24,17 @@ from .models import ArquivoProposta, Proposta
 
 
 class GerarPropostaTests(APITestCase):
-    setUp = test_ciclo.CicloTests.setUp
-    salva = test_ciclo.CicloTests.salva
-    cotar = test_ciclo.CicloTests.cotar
-    quadro = test_ciclo.CicloTests.quadro
-    coluna = test_ciclo.CicloTests.coluna
+    setUp = test_em_cotacao.EmCotacaoTests.setUp
+    salva = test_em_cotacao.EmCotacaoTests.salva
+    cotar = test_em_cotacao.EmCotacaoTests.cotar
+
+    def em_propostas(self):
+        return [linha["id"] for linha in self.client.get("/api/propostas/").data["results"]]
 
     def gerar(self, salva):
         return self.client.post("/api/propostas/", {"oportunidade_id": salva.pk}, format="json")
 
-    def test_gerar_tira_do_cotador_e_poe_na_coluna_proposta(self):
+    def test_gerar_tira_do_cotador_e_poe_em_propostas(self):
         salva = self.salva("1")
         self.cotar(salva, itens=[item_cotado(valor_referencia="50.00")])
 
@@ -41,11 +42,7 @@ class GerarPropostaTests(APITestCase):
 
         self.assertEqual(resposta.status_code, 201)
         self.assertEqual(self.client.get("/api/licitacoes/cotacoes/").data["results"], [])
-        quadro = self.quadro()
-        self.assertEqual(self.coluna(quadro, "cotacao")["cartoes"], [])
-        coluna = self.coluna(quadro, "proposta")
-        self.assertTrue(coluna["disponivel"])
-        self.assertEqual([c["id"] for c in coluna["cartoes"]], [salva.pk])
+        self.assertEqual(self.em_propostas(), [salva.pk])
         self.assertTrue(
             salva.eventos.filter(tipo=EventoOportunidadeSalva.Tipo.PROPOSTA).exists()
         )
@@ -70,9 +67,7 @@ class GerarPropostaTests(APITestCase):
         salva.save()
 
         self.assertEqual(self.client.get("/api/licitacoes/encerradas/").data["count"], 0)
-        self.assertEqual(
-            [c["id"] for c in self.coluna(self.quadro(), "proposta")["cartoes"]], [salva.pk]
-        )
+        self.assertEqual(self.em_propostas(), [salva.pk])
 
     def test_cotacao_com_proposta_nao_pode_ser_apagada(self):
         salva = self.salva("1")
@@ -98,9 +93,9 @@ def _texto(conteudo: bytes) -> str:
 
 
 class ModuloPropostasTests(APITestCase):
-    setUp_ciclo = test_ciclo.CicloTests.setUp
-    salva = test_ciclo.CicloTests.salva
-    cotar = test_ciclo.CicloTests.cotar
+    setUp_ciclo = test_em_cotacao.EmCotacaoTests.setUp
+    salva = test_em_cotacao.EmCotacaoTests.salva
+    cotar = test_em_cotacao.EmCotacaoTests.cotar
 
     def setUp(self):
         self.setUp_ciclo()

@@ -100,12 +100,45 @@ describe('EncerradasPage', () => {
 
   it('pesquisar manda os filtros e volta para a primeira página', () => {
     montar();
-    pagina().filtros.patchValue({ motivo: 'concluido', uf: 'PR' });
+    pagina().filtros.patchValue({ motivo: 'concluido', uasg: '925001', uf: 'PR' });
     pagina().pesquisar();
 
     expect(service.listar).toHaveBeenLastCalledWith(
-      expect.objectContaining({ motivo: 'concluido', uf: 'PR', page: 1 }),
+      expect.objectContaining({ motivo: 'concluido', uasg: '925001', uf: 'PR', page: 1 }),
     );
+  });
+
+  // Mesmos filtros de Descartadas (GEN-55, 14/11/2026).
+  it('tem o campo UASG', () => {
+    montar();
+
+    const rotulos = fixture.debugElement
+      .queryAll(By.css('app-input-text'))
+      .map((el) => el.componentInstance.label());
+    expect(rotulos).toContain('UASG');
+  });
+
+  it('escolher um mês no Período manda o mês inteiro, e o Período não vai para a API', () => {
+    montar();
+    pagina().filtros.patchValue({ periodo: '2026-02' });
+    pagina().pesquisar();
+
+    const params = service.listar.mock.lastCall![0];
+    expect(params).toEqual(
+      expect.objectContaining({ data_inicial: '2026-02-01', data_final: '2026-02-28' }),
+    );
+    expect(params).not.toHaveProperty('periodo');
+  });
+
+  it('"de" e "até" só aparecem em "Escolher datas…"', () => {
+    montar();
+    const datas = () => fixture.debugElement.queryAll(By.css('app-date-picker')).length;
+    expect(datas()).toBe(0);
+
+    pagina().filtros.patchValue({ periodo: 'datas' });
+    fixture.detectChanges();
+
+    expect(datas()).toBe(2);
   });
 
   it('"Ver cotação" só aparece para quem chegou a cotar', () => {

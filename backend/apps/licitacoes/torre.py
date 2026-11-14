@@ -1,6 +1,6 @@
 """A Torre de Controle — o ciclo inteiro, da oportunidade ao pagamento.
 
-Mesma regra do `ciclo.py`: **a etapa é calculada, nunca gravada.** O que
+**A etapa é calculada, nunca gravada.** O que
 muda são as entradas. Além da cotação, contam os fatos de fora, guardados
 nos models da Torre (ver `models.py`):
 
@@ -18,9 +18,9 @@ licitação sai para Encerradas.
 **O PDF da proposta não define etapa.** Ele é a proposta ajustada, enviada
 depois de ganhar, durante o julgamento (convocação de anexo).
 
-Desde 08/11/2026 é a tela inicial e substitui o quadro do `ciclo.py` (que
-sai em `feat-remover-legado`). A explicação completa, para quem chega, está
-em docs/TORRE.md.
+Desde 08/11/2026 é a tela inicial. O quadro antigo do Ciclo de Licitação
+saiu do código em 14/11/2026 (GEN-47). A explicação completa, para quem
+chega, está em docs/TORRE.md.
 """
 
 from __future__ import annotations

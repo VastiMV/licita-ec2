@@ -64,6 +64,17 @@ class SaidasComFatosDaTorreTests(Base):
 
         self.assertEqual(motivos, {"1": "deserta", "2": "revogada", "3": "anulada", "4": "fracassada"})
 
+    def test_encerradas_filtra_por_uasg_como_descartadas(self):
+        """Mesmos filtros nas duas telas (GEN-55, 14/11/2026)."""
+
+        for sequencial, uasg in (("1", "925001"), ("2", "926002")):
+            salva = self.salva(sequencial, -10, uasg=uasg)
+            ParticipacaoCompra.objects.create(oportunidade=salva, situacao_compra="RE")
+
+        self.assertEqual(sorted(self.por_sequencial(self.listar(uasg="926002"))), ["2"])
+        # Parte do código também acha (quem digita os primeiros números).
+        self.assertEqual(sorted(self.por_sequencial(self.listar(uasg=" 9250"))), ["1"])
+
     def test_suspensa_nao_sai_do_ciclo(self):
         salva = self.salva("1", -10)
         ParticipacaoCompra.objects.create(oportunidade=salva, situacao_compra="SU", proposta_cadastrada=True)

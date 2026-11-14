@@ -48,8 +48,7 @@ src/
                            Cotador (fórmulas em cotador.model.ts, funções puras)
       ciclo/               o que a Torre usa do Ciclo antigo: cotador/, propostas/,
                            encerradas/ (com o processo-modal/ que mostra a história) e
-                           descartadas/. quadro/ é o quadro antigo, sem rota (sai em
-                           feat-remover-legado)
+                           descartadas/. periodo.utils.ts: o campo Período das duas listas
       empresas/, fornecedores/, produtos/   os cadastros
       configuracoes/       armazenamento/ e usuarios/ (só administrador)
       auth/login/          login (a única tela fora do shell)

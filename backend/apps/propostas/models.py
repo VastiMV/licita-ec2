@@ -1,8 +1,8 @@
 """Propostas — a etapa depois do Cotador.
 
 O botão "Gerar proposta" do Cotador cria o registro, e é ele que move a
-licitação de etapa (a etapa é calculada, ver `apps.licitacoes.ciclo`): sai
-do Cotador e aparece em Ciclo › Propostas e na coluna Proposta do quadro.
+licitação de etapa (a etapa é calculada, ver `apps.licitacoes.torre`): sai
+do Cotador e aparece em Propostas (PDF).
 
 A tela de Propostas é **o lugar de tudo o que sobe na plataforma**: a
 proposta comercial (gerada em Word a partir do modelo do cliente, ver
