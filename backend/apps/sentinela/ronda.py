@@ -51,7 +51,11 @@ PERDIDO = ["1", "2", "9", "5"]
 JA_JULGADO = {"3", "4", "6"}
 INTERVALO = dt.timedelta(hours=2)
 POR_RONDA = 15
-MAXIMO = 60
+# Até 100 consultas por ronda, a cada 10 min (decisão da operação, 14/11/2026,
+# GEN-89). Era 60, escolhido por um agente em 09/11 sem decisão da operação; a
+# fila enchia e as "propostas de todos" (o fim da fila, de onde vem a
+# homologação) não eram lidas.
+MAXIMO = 100
 FAVORITAS_POR_CONSULTA = 30
 
 

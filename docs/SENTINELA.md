@@ -222,11 +222,23 @@ os campos vazios com os dados da busca e registra quem salvou
 (`salvas._completar_com_a_busca`) — antes devolvia a existente sem mudar
 nada.
 
-**Ordem da ronda (a cada 10 min, seg–sex 8h–19h, até 60 consultas):** caixa de
+**Ordem da ronda (a cada 10 min, seg–sex 8h–19h, até 100 consultas):** caixa de
 mensagens → favoritos das compras de Preparar → proposta/recurso/diligência
 dos itens vivos → vigia diária dos perdidos → propostas de todos (até 15) →
 itens das compras acompanhadas. A lista vem do Licita (`ronda/`); o que a
 extensão pode consultar está fixo em `pagina.js` (`PERMITIDO`).
+
+**Teto de 100 e homologação pela proposta da empresa (14/11/2026, GEN-89).**
+Caso real: Pregão 56/2026, item 22, homologado no Compras.gov e no Licita em
+Disputar › Finalizadas. O teto era **60**, escolhido por um agente em 09/11
+(PR #16), sem decisão da operação. A fila enchia e as "propostas de todos" (o
+fim da fila, de onde vinha a homologação) não eram lidas. Decisões da
+operação:
+- teto de **100** consultas por ronda;
+- a **proposta da empresa** (lida em toda ronda) já traz `homologado` no
+  item: com `homologado: true` e a proposta dela **adjudicada** (situação 6),
+  o item ganha `vencedor_e_a_empresa` e `homologado_em` (o dia da leitura;
+  se já havia data, fica a antiga) e vai para Contratar › Homologado.
 
 **Ainda não feito:** avisar quando o lance digitado ficar abaixo do piso
 (precisa ver a tela real de disputa); o painel da camada mostrar só o item

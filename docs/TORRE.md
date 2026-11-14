@@ -91,7 +91,10 @@ trás e para no primeiro que encontra:
 4. Tem **entrega** → Entrega.
 5. Tem **empenho** ou **ordem de fornecimento** → Empenho / OF.
 6. Tem **contrato** ou **ata** → Contrato.
-7. **Vencedor homologado** (PNCP ou Sentinela) → Homologado.
+7. **Vencedor homologado** (PNCP ou Sentinela) → Homologado. Pela Sentinela,
+   desde 14/11/2026 (GEN-89), basta a **proposta da empresa** vir com
+   `homologado: true` e situação adjudicada (6); antes só pelas propostas de
+   todos (ver `SENTINELA.md`).
 8. Adjudicado (situação 6, fase `AE`) → Finalizadas.
 9. Em recurso (`AR`, `AC`, `D1`, `D2`) ou habilitado com prazo de recurso
    aberto → Recursos (com etiqueta).

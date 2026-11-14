@@ -54,7 +54,7 @@ from apps.licitacoes.models import (
     ParticipacaoCompra,
     PropostaDoItem,
 )
-from apps.licitacoes.torre import MODALIDADE_COMPRAS_GOV, proposta_vencedora
+from apps.licitacoes.torre import MODALIDADE_COMPRAS_GOV, PROPOSTA_ADJUDICADA, proposta_vencedora
 
 logger = logging.getLogger(__name__)
 
@@ -822,6 +822,15 @@ def _gravar_item(salva: OportunidadeSalva, item: dict, cnpjs: set[str]) -> int:
     if "situacaoUltimaNegociacao" in proposta or antes is None:
         campos["negociacao"] = str(proposta.get("situacaoUltimaNegociacao") or "")[:1]
         campos["negociacao_texto"] = proposta.get("justificativaUltimaNegociacao") or ""
+    # Homologado e a proposta dela é a adjudicada → ela venceu (GEN-89,
+    # 14/11/2026, decisão da operação). O item já vem com `homologado` na
+    # proposta da empresa, que a ronda lê sempre — antes só se sabia pelas
+    # propostas de todos (fim da fila) ou pelo PNCP (56/2026 item 22 ficou em
+    # Finalizadas homologado no Compras.gov).
+    if item.get("homologado") is True and situacao == PROPOSTA_ADJUDICADA:
+        campos["vencedor_e_a_empresa"] = True
+        if antes is None or antes.homologado_em is None:
+            campos["homologado_em"] = timezone.localdate()
     registro, _ = ItemParticipado.objects.update_or_create(oportunidade=salva, numero_item=numero, defaults=campos)
     _avisar_chamado(salva, registro, antes)
     return 1
