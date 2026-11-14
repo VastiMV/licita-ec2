@@ -73,8 +73,10 @@ describe('SidebarComponent', () => {
       'Aguardando sessão',
       'Disputa',
       'Aguardando julgamento',
-      'Aceita e habilitada',
+      'Propostas aceitas',
       'Habilitada (aguardando adjudicação)',
+      'Recursos',
+      'Finalizadas',
       'Homologado',
       'Contrato',
       'Empenho / OF',
@@ -124,7 +126,7 @@ describe('SidebarComponent', () => {
     fixture = TestBed.createComponent(SidebarComponent);
     fixture.detectChanges();
 
-    expect(itens().length).toBe(24);
+    expect(itens().length).toBe(26);
   });
 
   it('Configurações só aparece para administrador', () => {
@@ -141,7 +143,7 @@ describe('SidebarComponent', () => {
   it('cada etapa aponta para a sua lista; Oportunidade e Cotação para as que já existiam', () => {
     const rotas = itens().map((i) => i.path());
 
-    expect(rotas.slice(0, 19)).toEqual([
+    expect(rotas.slice(0, 21)).toEqual([
       '/oportunidades/buscar',
       '/torre',
       '/oportunidades/salvas',
@@ -150,8 +152,10 @@ describe('SidebarComponent', () => {
       '/torre/etapa/aguardando_sessao',
       '/torre/etapa/disputa',
       '/torre/etapa/aguardando_julgamento',
-      '/torre/etapa/julgado_habilitado',
+      '/torre/etapa/propostas_aceitas',
       '/torre/etapa/aguardando_adjudicacao',
+      '/torre/etapa/recursos',
+      '/torre/etapa/finalizadas',
       '/torre/etapa/homologado',
       '/torre/etapa/contrato',
       '/torre/etapa/empenho',

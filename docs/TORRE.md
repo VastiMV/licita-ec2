@@ -13,7 +13,7 @@ arquivo está cada regra.
 
 ## 1. Estágios e etapas
 
-São **4 estágios** e **14 etapas**, nesta ordem (a ordem importa: a etapa
+São **4 estágios** e **16 etapas**, nesta ordem (a ordem importa: a etapa
 "mais adiante" ganha).
 
 | Estágio | Etapa (`chave`) | Quando a licitação está nela | De onde vem o fato |
@@ -22,11 +22,13 @@ São **4 estágios** e **14 etapas**, nesta ordem (a ordem importa: a etapa
 | Preparar | Cotação (`cotacao`) | tem cotação salva no Cotador, no prazo | Licita (Cotador) |
 | Preparar | Cadastro de proposta (`cadastro_proposta`) | aceita/cadastrada no Compras.gov, **ainda sem preço lançado** no item | Sentinela |
 | Disputar | Aguardando sessão (`aguardando_sessao`) | **preço lançado** no Compras.gov e a sessão ainda não abriu (10/11/2026). Etiqueta com a data da sessão; sem cotação no Licita, avança assim mesmo com o aviso "sem cotação no Licita" | Sentinela |
-| Disputar | Disputa (`disputa`) | sessão aberta, item em disputa (lances) | Sentinela |
-| Disputar | Aguardando julgamento (`aguardando_julgamento`) | disputa encerrada, proposta ainda sem situação | Sentinela |
-| Disputar | Aceita e habilitada (`julgado_habilitado`) | proposta **aceita** e depois **fornecedor habilitado**; com recurso aberto fica aqui com etiqueta | Sentinela |
-| Disputar | Habilitada (aguardando adjudicação) (`aguardando_adjudicacao`) | habilitado, recurso encerrado, ainda não adjudicado | Sentinela |
-| Contratar | Homologado (`homologado`) | proposta adjudicada **ou** resultado homologado no PNCP. Abre o estágio Contratar: ganhou, agora é esperar contrato ou empenho (pedido do Carlinhos, 08/11/2026) | Sentinela + PNCP (dias úteis) |
+| Disputar | Disputa (`disputa`) | sessão aberta: análise das propostas (`AP`) e lances. Compra em análise (`2`), em disputa (`3`) ou em seleção de fornecedores (`4`) sem itens lidos também (14/11/2026) | Sentinela |
+| Disputar | Aguardando julgamento (`aguardando_julgamento`) | disputa encerrada (`E`), proposta ainda sem situação | Sentinela |
+| Disputar | Propostas aceitas (`propostas_aceitas`) | proposta **aceita** (situação `3`), ainda não habilitada (14/11/2026) | Sentinela |
+| Disputar | Habilitada (aguardando adjudicação) (`aguardando_adjudicacao`) | fornecedor **habilitado** (`4`), sem recurso aberto | Sentinela |
+| Disputar | Recursos (`recursos`) | item em recurso, contrarrazões ou decisão (`AR`, `AC`, `D1`, `D2`), ou habilitado com prazo de recurso aberto. Etiqueta vermelha com o prazo (14/11/2026) | Sentinela |
+| Disputar | Finalizadas (`finalizadas`) | **adjudicado** (`AE` ou proposta `6`): falta só a homologação. Pelo art. 71 da Lei 14.133, a adjudicação vem depois dos recursos (14/11/2026) | Sentinela |
+| Contratar | Homologado (`homologado`) | resultado **homologado** (PNCP ou Sentinela). Abre o estágio Contratar: ganhou, agora é esperar contrato ou empenho (pedido do Carlinhos, 08/11/2026) | Sentinela + PNCP (dias úteis) |
 | Contratar | Contrato (`contrato`) | contrato ou **ata** de registro de preços | PNCP (ata, diário) · contrato à mão |
 | Contratar | Empenho / OF (`empenho`) | empenho ou ordem de fornecimento | Portal da Transparência (federal, diário) · OF e estados/prefeituras à mão |
 | Receber | Entrega (`entrega`) | entrega lançada | à mão |
@@ -39,7 +41,7 @@ flowchart LR
         oportunidade["Oportunidade"] --> cotacao["Cotação"] --> cadastro["Cadastro de proposta"]
     end
     subgraph disputar["Disputar"]
-        aguardando["Aguardando sessão"] --> disputa["Disputa"] --> julgamento["Aguardando julgamento"] --> habilitada["Aceita e habilitada"] --> adjudicacao["Habilitada (aguardando adjudicação)"]
+        aguardando["Aguardando sessão"] --> disputa["Disputa"] --> julgamento["Aguardando julgamento"] --> aceitas["Propostas aceitas"] --> adjudicacao["Habilitada (aguardando adjudicação)"] --> recursos["Recursos"] --> finalizadas["Finalizadas"]
     end
     subgraph contratar["Contratar"]
         homologado["Homologado"] --> contrato["Contrato"] --> empenho["Empenho / OF"]
@@ -48,7 +50,7 @@ flowchart LR
         entrega["Entrega"] --> liquidado["Liquidado"] --> recebido["Recebido"]
     end
     cadastro --> aguardando
-    adjudicacao --> homologado
+    finalizadas --> homologado
     empenho --> entrega
 ```
 
@@ -60,8 +62,9 @@ Coisas que **não** são etapa:
 - **O PDF da proposta** (proposta comercial/ajustada). Ele é pedido **depois
   de ganhar**, durante o julgamento (convocação de anexo). Gerar o PDF não
   muda a etapa. Fica no menu em "Propostas (PDF)".
-- **Recurso** — é etiqueta ("recurso até 10/11") no cartão em Julgado e
-  habilitado.
+- **Recurso** de outra empresa num item em que a Inside não está na fase de
+  recurso: é etiqueta ("recurso de X · contrarrazões até…"). O item em
+  recurso tem a etapa **Recursos** (14/11/2026).
 - **Suspensa** — é etiqueta. A licitação continua onde estava.
 
 ## 2. A etapa é do item
@@ -77,21 +80,29 @@ trás e para no primeiro que encontra:
 1. Item **perdido** → não conta (sai da conta do cartão):
    homologado para outro fornecedor, proposta desclassificada (situação
    1, 2 ou 9), fornecedor inabilitado (5) ou **1º já habilitado** (outra
-   empresa à frente já foi aceita/habilitada; 09/11/2026). Exceção:
-   convocação, pedido de desconto ou recurso em aberto traz o item de volta.
+   empresa à frente já foi aceita/habilitada; 09/11/2026) ou **julgamento /
+   habilitação encerrados sem a Inside** (fase `JE`/`HE` sem proposta
+   aceita, habilitada ou adjudicada; 14/11/2026). Exceção: convocação,
+   pedido de desconto, **diligência** ou recurso em aberto traz o item de
+   volta. O item em `JE` sem a Inside é lido **a cada ronda** (10 min), não
+   só na vigia diária: o 2º colocado pode ser convocado com prazo de horas.
 2. Tem **pagamento** → Recebido.
 3. Tem **liquidação** → Liquidado.
 4. Tem **entrega** → Entrega.
 5. Tem **empenho** ou **ordem de fornecimento** → Empenho / OF.
 6. Tem **contrato** ou **ata** → Contrato.
-7. Adjudicado (situação 6, fase `AE`) ou **vencedor no PNCP** → Homologado.
-8. Fornecedor habilitado (4): com recurso aberto → Aceita e habilitada
-   (com etiqueta); sem recurso → Habilitada (aguardando adjudicação).
-9. Proposta aceita (3) → Aceita e habilitada.
-10. Fase do item em disputa (lances) → Disputa.
-11. Fase depois da disputa, ou já tem classificação → Aguardando julgamento.
-12. Preço lançado (`valor_proposta_inicial`) → Aguardando sessão.
-13. Senão → Cadastro de proposta.
+7. **Vencedor homologado** (PNCP ou Sentinela) → Homologado.
+8. Adjudicado (situação 6, fase `AE`) → Finalizadas.
+9. Em recurso (`AR`, `AC`, `D1`, `D2`) ou habilitado com prazo de recurso
+   aberto → Recursos (com etiqueta).
+10. Fornecedor habilitado (4) → Habilitada (aguardando adjudicação).
+11. Proposta aceita (3) → Propostas aceitas.
+12. Abertura suspensa (`LS`) → Aguardando sessão.
+13. Análise das propostas (`AP`) ou lances → Disputa.
+14. Fase depois da disputa (`E`, `PE`, `PR`, `JR`), ou já tem classificação
+    → Aguardando julgamento.
+15. Preço lançado (`valor_proposta_inicial`) → Aguardando sessão.
+16. Senão → Cadastro de proposta.
 
 Um item em **2º lugar ou pior** fica marcado como `perdendo` (em cinza no
 cartão: "2 itens perdendo (podem ser chamados)"). Ele **não** é perdido: o

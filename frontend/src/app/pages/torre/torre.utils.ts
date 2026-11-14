@@ -100,8 +100,10 @@ const ETAPAS_DO_ESTAGIO: Record<EstagioTorre, readonly (readonly [EtapaTorre, st
     ['aguardando_sessao', 'Aguardando sessão'],
     ['disputa', 'Disputa'],
     ['aguardando_julgamento', 'Aguardando julgamento'],
-    ['julgado_habilitado', 'Aceita e habilitada'],
+    ['propostas_aceitas', 'Propostas aceitas'],
     ['aguardando_adjudicacao', 'Habilitada (aguardando adjudicação)'],
+    ['recursos', 'Recursos'],
+    ['finalizadas', 'Finalizadas'],
   ],
   contratar: [
     ['homologado', 'Homologado'],
@@ -116,7 +118,7 @@ const ETAPAS_DO_ESTAGIO: Record<EstagioTorre, readonly (readonly [EtapaTorre, st
 };
 
 /** A trilha do cartão: a etapa de agora e as que faltam no estágio
- * ("● Aguardando julgamento › Aceita e habilitada › …") — o que vem depois,
+ * ("● Aguardando julgamento › Propostas aceitas › …") — o que vem depois,
  * sem precisar lembrar. */
 export function trilhaDoCartao(cartao: CartaoTorre): { rotulo: string; atual: boolean }[] {
   const etapas = ETAPAS_DO_ESTAGIO[cartao.estagio];

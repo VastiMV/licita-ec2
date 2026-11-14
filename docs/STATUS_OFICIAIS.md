@@ -82,26 +82,28 @@ Lido em `ParticipacaoCompra.fase_compra`.
 ### 3.3 Fase do item — `FaseItemEnum`
 
 Lido em `ItemParticipado.fase_item`. Grupos em `torre.py`
-(`FASES_ITEM_EM_DISPUTA`, `FASES_ITEM_DEPOIS_DA_DISPUTA`,
-`FASES_ITEM_EM_RECURSO`, `FASE_ITEM_ADJUDICADO`).
+(`FASES_ITEM_EM_DISPUTA`, `FASE_ITEM_ABERTURA_SUSPENSA`,
+`FASES_ITEM_DEPOIS_DA_DISPUTA`, `FASES_ITEM_JULGAMENTO_ENCERRADO`,
+`FASES_ITEM_EM_RECURSO`, `FASE_ITEM_ADJUDICADO`). Atualizado com o GEN-83
+(14/11/2026).
 
 | Código | Nome oficial | Licita | Etapa |
 |---|---|---|---|
 | `AS` | Aguardando abertura da sessão pública | ✅ | com preço "Aguardando sessão"; sem preço "Cadastro de proposta" |
-| `AP` | Pendente da análise de propostas | ⚠️ | "Aguardando sessão" ([D8](#d8)) |
+| `AP` | Pendente da análise de propostas | ✅ | "Disputa" (antes dos lances; GEN-82) |
 | `F` | Aguardando disputa | ⚠️ | "Aguardando sessão" ([D8](#d8)) |
 | `AA` `LA` `LF` `AL` `FE` `RA` `AF` | Etapas aberta/fechada, encerramento, reinício | ✅ | "Disputa" |
 | `AM` `DM` `A7` `D7` `DF` | Desempates (ME/EPP, 7174, disputa final art. 60) | ✅ | "Disputa" |
 | `B3` `JT` | Decisão sobre cota · julgamento de técnica | ✅ | "Disputa" |
-| `LS` | Abertura Suspensa | ⚠️ | "Disputa", sem aviso ([D8](#d8)) |
+| `LS` | Abertura Suspensa | ✅ | "Aguardando sessão" (GEN-82) |
 | `E` | Disputa Encerrada | ✅ | "Aguardando julgamento" |
 | `JR` | Julgamento/Habilitação reabertos | ✅ | "Aguardando julgamento" |
-| `JE` | Julgamento encerrado | ⚠️ | "Aguardando julgamento"\* ([D4](#d4)) |
-| `HE` | Habilitação encerrada | ⚠️ | "Aguardando julgamento"\* ([D4](#d4)) |
+| `JE` | Julgamento encerrado | ✅ | sem proposta aceita/habilitada/adjudicada: perdido "julgamento encerrado sem a Inside" → Encerradas, **lido a cada ronda** (GEN-78) |
+| `HE` | Habilitação encerrada | ✅ | sem proposta aceita/habilitada/adjudicada: perdido "habilitação encerrada sem a Inside" → Encerradas, vigia diária (GEN-78) |
 | `PE` | Aguardando encerramento | ⚠️ | "Aguardando julgamento"\* ([D4](#d4)) |
 | `PR` | Aguardando reabertura | ⚠️ | "Aguardando julgamento"\* ([D4](#d4)) |
-| `AR` `AC` `D1` `D2` | Recursos, contrarrazões, decisão, revisão | ⚠️ | só com proposta `4`: "Aceita e habilitada" + vermelho "em fase de recurso" ([D4](#d4)) |
-| `AE` | Adjudicação encerrada (`APTO_HOMOLOGACAO`) | ⚠️ | "Homologado" ([D3](#d3)) |
+| `AR` `AC` `D1` `D2` | Recursos, contrarrazões, decisão, revisão | ✅ | "Recursos" + vermelho (item vivo, qualquer posição; GEN-83) |
+| `AE` | Adjudicação encerrada (`APTO_HOMOLOGACAO`) | ✅ | "Finalizadas" (GEN-78) |
 
 \* Só quando a proposta da empresa não tem situação. Com situação, ela manda.
 
@@ -114,10 +116,10 @@ Lido em `ItemParticipado.situacao_proposta`.
 | `1` | Desclassificada na análise | ✅ | perdido "proposta desclassificada" |
 | `9` | Desclassificada na sala de disputa | ✅ | perdido "proposta desclassificada" |
 | `2` | Desclassificada no julgamento | ✅ | perdido "proposta desclassificada" |
-| `3` | Proposta aceita | ⚠️ | "Aceita e habilitada" (ainda falta habilitar) ([D3](#d3)) |
-| `4` | Fornecedor habilitado | ✅ | "Habilitada (aguardando adjudicação)"; com recurso, "Aceita e habilitada" + vermelho |
+| `3` | Proposta aceita | ✅ | "Propostas aceitas" (GEN-83) |
+| `4` | Fornecedor habilitado | ✅ | "Habilitada (aguardando adjudicação)"; com recurso aberto, "Recursos" + vermelho |
 | `5` | Fornecedor inabilitado | ✅ | perdido "fornecedor inabilitado" |
-| `6` | Proposta adjudicada | ⚠️ | "Homologado" ([D3](#d3)) |
+| `6` | Proposta adjudicada | ✅ | "Finalizadas", como `AE` (GEN-78) |
 | `7` | Pendente aceite para assumir cota | ❌ | guarda o código, sem regra ([D7](#d7)) |
 | `8` | Recusa para assumir cota | ❌ | guarda o código, não conta como perdido ([D7](#d7)) |
 
@@ -345,18 +347,18 @@ Dezesseis pedidos, cada um ligado a um cartão GEN (rótulo
 
 | # | Decisão | Cartão |
 |---|---|---|
-| 1 | Disputar ganha 3 fases: **Propostas aceitas**, **Finalizadas** e **Recursos** | GEN-83 |
-| 2 | `AP` (pendente da análise de propostas) → **Aguardando julgamento** | GEN-82 ([D8](#d8)) |
-| 3 | `LS` (abertura suspensa) → **Aguardando sessão** | GEN-82 ([D8](#d8)) |
-| 4 | `JE` (julgamento encerrado): item da Inside ganhou → **Propostas aceitas**; não ganhou → **Encerradas** | GEN-78 ([D4](#d4)) |
-| 5 | `HE` (habilitação encerrada): mesma regra do `JE` | GEN-78 ([D4](#d4)) |
+| 1 | Disputar ganha 3 fases: **Propostas aceitas**, **Finalizadas** e **Recursos** · **feito no GEN-83** (ordem: aceitas → habilitada → recursos → finalizadas) | GEN-83 |
+| 2 | `AP` (pendente da análise de propostas) → **Disputa** (revisto pela Vasti: é antes dos lances) · **feito no GEN-83** | GEN-82 ([D8](#d8)) |
+| 3 | `LS` (abertura suspensa) → **Aguardando sessão** · **feito no GEN-83** | GEN-82 ([D8](#d8)) |
+| 4 | `JE` (julgamento encerrado): item da Inside ganhou → **Propostas aceitas**; não ganhou → **Encerradas**, lido a cada 10 min · **feito no GEN-83** | GEN-78 ([D4](#d4)) |
+| 5 | `HE` (habilitação encerrada): mesma regra do `JE` (vigia diária) · **feito no GEN-83** | GEN-78 ([D4](#d4)) |
 | 6 | PNCP `2`/`3` (revogada/anulada): com preço → **Cadastro de proposta**; sem preço → **Oportunidades**, mantendo as etiquetas | GEN-80 ([D6](#d6)) |
 | 7 | Card da Torre: **linha do tempo à parte** (botão ou janela) e resumo da participação: cotação, itens, preço, ganhou/perdeu e por quanto | GEN-84 |
 | 8 | Revogada/anulada: **mesma regra para Compras.gov e PNCP**; com cotação → Encerradas **em observação**; reaberta → volta para Cadastro de proposta com a nova data | GEN-80 ([D6](#d6)) |
 | 9 | Fracassada com cotação → Encerradas **com aviso**. Deserta → **relatório** de oportunidade (a Inside não fez proposta) | GEN-80 ([D6](#d6)) · GEN-85 |
-| 10 | Compra `2` (em análise de propostas) → **Aguardando julgamento** | GEN-86 |
-| 11 | Compra `4` (seleção de fornecedores iniciada) → **Disputa** | GEN-86 |
-| 12 | `AR`, `AC`, `D1`, `D2`, `AE` → nova fase **Recursos**, com **Telegram** a cada mudança | GEN-78 ([D4](#d4)) · GEN-83 |
+| 10 | Compra `2` (em análise de propostas) → **Disputa** (revisto pela Vasti) · **feito no GEN-83** | GEN-86 |
+| 11 | Compra `4` (seleção de fornecedores iniciada) → **Disputa** · **feito no GEN-83** | GEN-86 |
+| 12 | `AR`, `AC`, `D1`, `D2` → nova fase **Recursos** (feito no GEN-83), com **Telegram** a cada mudança (GEN-88). `AE` → **Finalizadas** (revisto: adjudicação vem depois dos recursos) | GEN-78 ([D4](#d4)) · GEN-83 |
 | 13 | Toda licitação de cada tela tem que aparecer na Torre (Preparar mostrava 4, Oportunidades 13) | GEN-87 |
 | 14 | Suspensa ou sem prazo: sem cotação → **Oportunidades**; com cotação → **Cadastro de proposta**; avança quando recebe data; **Telegram**; vigiar a data nova mesmo quando a compra some do Compras.gov | GEN-72 |
 | 15 | Os nomes no Licita têm que **bater com os do Compras.gov.br** | GEN-77 ([D3](#d3)) |
@@ -366,12 +368,10 @@ Dezesseis pedidos, cada um ligado a um cartão GEN (rótulo
 
 1. **Itens 6 e 8 se contradizem** para revogada/anulada no PNCP com preço
    (Cadastro de proposta × Encerradas em observação).
-2. **Fase "Finalizadas":** o que entra nela e qual a diferença para Encerradas.
-3. **Item 11:** a compra `4` vem **depois** dos lances. Ir para "Disputa"
-   (fase dos lances) ou para o estágio "Disputar"?
-4. **Item 12:** `AE` é "adjudicação encerrada", não recurso.
-5. **Itens 4 e 5:** o que conta como "ganhou".
-6. **Item 9** citou "(RE, AN, SU)". Os códigos oficiais de fracassada e
+2. ~~Fase "Finalizadas"~~ · ~~item 11~~ · ~~`AE` em Recursos~~ ·
+   ~~o que conta como "ganhou"~~: resolvidos com a Vasti em 14/11/2026
+   ("ganhou" = proposta aceita, habilitada ou adjudicada).
+3. **Item 9** citou "(RE, AN, SU)". Os códigos oficiais de fracassada e
    deserta são `FR` e `DE`; foram considerados esses.
 
 ### Fato que muda o item 16

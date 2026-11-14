@@ -323,3 +323,34 @@ class CotouENaoParticipouTests(_Base):
         OportunidadeSalva.objects.filter(pk=self.s.pk).update(favorita_no_compras=True)
 
         self.assertEqual(classificar(HOJE)[self.s.pk][:2], ("descartadas", "prazo_cotacao"))
+
+
+class JulgamentoEncerradoSemAInsideTests(_Base):
+    """GEN-78 (14/11/2026): `JE` sem a Inside ganhar sai para Encerradas, mas
+    é lido a cada ronda (10 min), não só na vigia diária: o 2º colocado pode
+    ser convocado com prazo de horas."""
+
+    CAMINHO = (
+        f"/comprasnet-fase-externa/v1/compras/{CUBATAO}/em-selecao-fornecedores/participacoes/{CNPJ}/itens/3/propostas?filtro=2"
+    )
+
+    def setUp(self):
+        super().setUp()
+        self.s = salva()
+        ParticipacaoCompra.objects.create(oportunidade=self.s, fase_compra="4", proposta_cadastrada=True)
+        ItemParticipado.objects.create(oportunidade=self.s, numero_item="3", classificacao=2, fase_item="JE")
+
+    def test_sai_para_encerradas(self):
+        self.assertIsNone(cartao(self.s))
+        self.assertEqual(classificar(HOJE)[self.s.pk][:2], ("encerradas", "perdida"))
+
+    def test_continua_na_ronda_depois_de_lido(self):
+        self.assertIn(self.CAMINHO, consultas())
+
+        url = f"{BASE}/{CUBATAO}/em-selecao-fornecedores/participacoes/{CNPJ}/itens/3/propostas"
+        receber(
+            url,
+            [{"identificador": "3", "fase": "JE", "propostaItem": {"participante": {"identificacao": CNPJ}, "classificacao": 2}}],
+        )
+
+        self.assertIn(self.CAMINHO, consultas())

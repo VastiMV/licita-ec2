@@ -153,12 +153,15 @@ const MENU: readonly Entrada[] = [
         label: 'Aguardando julgamento',
         icon: 'calendar',
       },
-      { path: '/torre/etapa/julgado_habilitado', label: 'Aceita e habilitada', icon: 'check' },
+      // Fases de 14/11/2026 (GEN-83): aceita → habilitada → recursos → adjudicada.
+      { path: '/torre/etapa/propostas_aceitas', label: 'Propostas aceitas', icon: 'check' },
       {
         path: '/torre/etapa/aguardando_adjudicacao',
         label: 'Habilitada (aguardando adjudicação)',
         icon: 'calendar',
       },
+      { path: '/torre/etapa/recursos', label: 'Recursos', icon: 'documentos' },
+      { path: '/torre/etapa/finalizadas', label: 'Finalizadas', icon: 'check' },
     ],
   },
   {

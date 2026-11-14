@@ -51,8 +51,14 @@ ESTAGIOS: list[tuple[str, str, list[tuple[str, str]]]] = [
             ("aguardando_sessao", "Aguardando sessão"),
             ("disputa", "Disputa"),
             ("aguardando_julgamento", "Aguardando julgamento"),
-            ("julgado_habilitado", "Aceita e habilitada"),
+            # Fases de 14/11/2026 (GEN-83, decisão da operação): a ordem segue
+            # o processo do Compras.gov — aceita, habilitada, recursos e, por
+            # último, adjudicada (art. 71 da Lei 14.133: adjudicação vem
+            # depois dos recursos).
+            ("propostas_aceitas", "Propostas aceitas"),
             ("aguardando_adjudicacao", "Habilitada (aguardando adjudicação)"),
+            ("recursos", "Recursos"),
+            ("finalizadas", "Finalizadas"),
         ],
     ),
     # Homologado abre Contratar (pedido do Carlinhos, 08/11/2026): ganhou,
@@ -70,17 +76,31 @@ ROTULO = {chave: rotulo for _, _, etapas in ESTAGIOS for chave, rotulo in etapas
 ESTAGIO_DA_ETAPA = {chave: estagio for estagio, _, etapas in ESTAGIOS for chave, _ in etapas}
 ORDEM = {chave: posicao for posicao, chave in enumerate(ETAPAS)}
 
-# Códigos do Compras.gov.br (comprasnet-fase-externa/v1/enums).
+# Códigos do Compras.gov.br (comprasnet-fase-externa/v1/enums; cópia em
+# docs/referencia/). Grupos decididos com a operação em 14/11/2026 (GEN-82,
+# GEN-83, GEN-86, GEN-78): ver docs/STATUS_OFICIAIS.md.
+# `AP` (análise das propostas) acontece antes dos lances: conta como Disputa.
 FASES_ITEM_EM_DISPUTA = {
-    "AA", "LS", "LA", "LF", "AL", "FE", "RA", "AF", "AM", "DM", "A7", "D7", "DF", "B3", "JT",
+    "AP", "AA", "LA", "LF", "AL", "FE", "RA", "AF", "AM", "DM", "A7", "D7", "DF", "B3", "JT",
 }  # fmt: skip
-FASES_ITEM_DEPOIS_DA_DISPUTA = {"E", "JE", "HE", "PE", "PR", "JR"}
+# `LS` (abertura suspensa): os lances ainda não abriram.
+FASE_ITEM_ABERTURA_SUSPENSA = "LS"
+FASES_ITEM_DEPOIS_DA_DISPUTA = {"E", "PE", "PR", "JR"}
+# Julgamento (`JE`) ou habilitação (`HE`) encerrados: quem ganhou já tem a
+# proposta aceita/habilitada/adjudicada. Sem isso, a Inside não ganhou o item.
+FASES_ITEM_JULGAMENTO_ENCERRADO = {"JE", "HE"}
 FASES_ITEM_EM_RECURSO = {"AR", "AC", "D1", "D2"}
 FASE_ITEM_ADJUDICADO = "AE"
-FASE_COMPRA_EM_DISPUTA = "3"
+# Compra em análise (2), em disputa (3) ou em seleção de fornecedores (4):
+# sem itens lidos, o cartão fica em Disputa (GEN-86).
+FASES_COMPRA_EM_DISPUTA = {"2", "3", "4"}
 FASES_COMPRA_ANTES_DA_SESSAO = {"", "1", "5", "6", "99"}
 
 PROPOSTA_DESCLASSIFICADA = {"1", "2", "9"}
+PERDIDO_NO_JULGAMENTO = {
+    "JE": "julgamento encerrado sem a Inside",
+    "HE": "habilitação encerrada sem a Inside",
+}
 PROPOSTA_ACEITA = "3"
 FORNECEDOR_HABILITADO = "4"
 FORNECEDOR_INABILITADO = "5"
@@ -139,6 +159,10 @@ def etapa_do_item(item, documentos, entregas, hoje: dt.date) -> EtapaDoItem:
             return EtapaDoItem(None, perdido="proposta desclassificada")
         if item.situacao_proposta == FORNECEDOR_INABILITADO:
             return EtapaDoItem(None, perdido="fornecedor inabilitado")
+        if item.fase_item in FASES_ITEM_JULGAMENTO_ENCERRADO and item.situacao_proposta not in JA_JULGADA:
+            # Decisão de 14/11/2026 (GEN-78): vai para Encerradas, mas a
+            # ronda continua lendo a cada 10 min (`sentinela/ronda.py`).
+            return EtapaDoItem(None, perdido=PERDIDO_NO_JULGAMENTO[item.fase_item])
         if item.situacao_proposta not in JA_JULGADA and primeiro_ja_habilitado(item):
             # Na frente dele já aceitaram/habilitaram outra empresa: na prática
             # perdeu; só volta por recurso ou se o outro não assinar (vigia).
@@ -156,31 +180,33 @@ def etapa_do_item(item, documentos, entregas, hoje: dt.date) -> EtapaDoItem:
     if tipos & {"contrato", "ata"}:
         return EtapaDoItem("contrato")
 
-    if (
-        item.situacao_proposta == PROPOSTA_ADJUDICADA
-        or item.vencedor_e_a_empresa
-        or item.homologado_em
-        or item.fase_item == FASE_ITEM_ADJUDICADO
-    ):
+    if item.vencedor_e_a_empresa or item.homologado_em:
         return EtapaDoItem("homologado")
 
-    if item.situacao_proposta == FORNECEDOR_HABILITADO:
-        recurso_aberto = item.fase_item in FASES_ITEM_EM_RECURSO or (
-            item.recurso_ate is not None and item.recurso_ate >= hoje
+    # Adjudicada (`AE` ou proposta 6) → Finalizadas: falta só a homologação
+    # (14/11/2026, GEN-78).
+    if item.situacao_proposta == PROPOSTA_ADJUDICADA or item.fase_item == FASE_ITEM_ADJUDICADO:
+        return EtapaDoItem("finalizadas")
+
+    recurso_aberto = item.fase_item in FASES_ITEM_EM_RECURSO or (
+        item.situacao_proposta == FORNECEDOR_HABILITADO and item.recurso_ate is not None and item.recurso_ate >= hoje
+    )
+    if recurso_aberto:
+        # Recurso é vermelho (pedido da operação, 08/11/2026).
+        etiqueta = (
+            Etiqueta("alerta", f"recurso até {item.recurso_ate:%d/%m}")
+            if item.recurso_ate
+            else Etiqueta("alerta", "em fase de recurso")
         )
-        if recurso_aberto:
-            # Recurso é vermelho (pedido da operação, 08/11/2026).
-            etiqueta = (
-                Etiqueta("alerta", f"recurso até {item.recurso_ate:%d/%m}")
-                if item.recurso_ate
-                else Etiqueta("alerta", "em fase de recurso")
-            )
-            return EtapaDoItem("julgado_habilitado", etiquetas=(etiqueta,))
+        return EtapaDoItem("recursos", etiquetas=(etiqueta,))
+    if item.situacao_proposta == FORNECEDOR_HABILITADO:
         return EtapaDoItem("aguardando_adjudicacao")
     if item.situacao_proposta == PROPOSTA_ACEITA:
-        return EtapaDoItem("julgado_habilitado")
+        return EtapaDoItem("propostas_aceitas")
 
     perdendo = bool(item.classificacao and item.classificacao > 1)
+    if item.fase_item == FASE_ITEM_ABERTURA_SUSPENSA:
+        return EtapaDoItem("aguardando_sessao", perdendo=perdendo)
     if item.fase_item in FASES_ITEM_EM_DISPUTA:
         return EtapaDoItem("disputa", perdendo=perdendo)
     if item.fase_item in FASES_ITEM_DEPOIS_DA_DISPUTA or item.classificacao:
@@ -271,6 +297,10 @@ def chamado_de_volta(item) -> bool:
     item volta para a Torre, em vermelho, de onde estiver."""
 
     if item.anexo_solicitado == "S" or (item.negociacao and item.negociacao != "E"):
+        return True
+    if item.diligencias_abertas:
+        # Diligência é pedido à empresa, como a convocação (14/11/2026): o
+        # item perdido por julgamento encerrado não pode esconder o alerta.
         return True
     if getattr(item, "recursos", None):
         if item.decisao_recurso in RECURSO_PROCEDENTE:
@@ -515,7 +545,7 @@ def avaliar(salva: OportunidadeSalva, hoje: dt.date) -> tuple[dict | None, Saida
             "descartadas", "Sem proposta cadastrada", "sem_proposta", _data(participacao.atualizada_em)
         )
     elif participacao and participacao.proposta_cadastrada:
-        etapa = "disputa" if participacao.fase_compra == FASE_COMPRA_EM_DISPUTA else "cadastro_proposta"
+        etapa = "disputa" if participacao.fase_compra in FASES_COMPRA_EM_DISPUTA else "cadastro_proposta"
     elif suspensa or sem_prazo:
         # Suspensa ou sem data (09/11/2026): fica em Preparar esperando a data
         # nova; nunca sai sozinha por prazo.
@@ -530,7 +560,7 @@ def avaliar(salva: OportunidadeSalva, hoje: dt.date) -> tuple[dict | None, Saida
     elif participacao and participacao.fase_compra not in FASES_COMPRA_ANTES_DA_SESSAO:
         # Com cotação, já depois da sessão, sem os itens lidos: não dá para
         # saber se há proposta. Fica no quadro pedindo a leitura.
-        etapa = "disputa" if participacao.fase_compra == FASE_COMPRA_EM_DISPUTA else "aguardando_julgamento"
+        etapa = "disputa" if participacao.fase_compra in FASES_COMPRA_EM_DISPUTA else "aguardando_julgamento"
         etiquetas.append(Etiqueta("aviso", "abrir a compra no Compras.gov"))
     elif prazo_vencido:
         if not cotacao:

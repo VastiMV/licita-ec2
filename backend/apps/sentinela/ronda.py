@@ -187,8 +187,11 @@ def _da_empresa() -> list[str]:
         .order_by("oportunidade_id", "numero_item")
     )
     for item in itens:
-        if etapa_do_item(item, [], [], hoje).etapa is None:
-            continue  # perdido (ex.: 1º já habilitado): vigia diária
+        if etapa_do_item(item, [], [], hoje).etapa is None and item.fase_item != "JE":
+            # Perdido (ex.: 1º já habilitado): vigia diária. O julgamento
+            # encerrado sem a Inside (JE) continua a cada ronda: o 2º colocado
+            # pode ser convocado com prazo de horas (GEN-78, 14/11/2026).
+            continue
         codigo, n = _codigo(item.oportunidade), item.numero_item
         if not codigo or not NUMERO_SEGURO.fullmatch(n):
             continue

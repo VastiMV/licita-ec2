@@ -35,8 +35,10 @@ describe('EstagioPage', () => {
       'Aguardando sessão',
       'Disputa',
       'Aguardando julgamento',
-      'Aceita e habilitada',
+      'Propostas aceitas',
       'Habilitada (aguardando adjudicação)',
+      'Recursos',
+      'Finalizadas',
     ]);
     const coluna = el.querySelectorAll('.coluna')[2];
     expect(coluna.querySelectorAll('app-torre-cartao').length).toBe(1);
