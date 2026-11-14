@@ -82,26 +82,41 @@ class SuspensaESemPrazoTests(_Base):
 
 class SessaoSemDataTests(_Base):
     """GEN-72 (14/11/2026): o Licita guarda quando o Compras.gov **disse** que
-    a sessão não tem data — diferente de data ainda não lida."""
+    a sessão não tem data ("Sem prazo definido") — fase 99, Disputa agendada,
+    sem data de abertura. Diferente de data ainda não lida."""
 
-    def test_campo_vazio_marca_sem_data_e_data_desmarca(self):
-        s = salva(prazo_dias=-19)
-        compra = {"numeroUasg": "986371", "modalidade": "5", "numero": "55", "ano": "2026",
-                  "faseCompraFaseExterna": "99"}  # fmt: skip
+    def participacao(self, codigo):
+        return ParticipacaoCompra.objects.get(oportunidade__link_plataforma__contains=f"compra={codigo}")
 
-        receber(f"{BASE}/{CUBATAO}/participacao", {**compra, "dataHoraPrevisaoAbertura": None})
-        self.assertIs(ParticipacaoCompra.objects.get(oportunidade=s).sessao_sem_data, True)
+    def test_exemplo_real_de_minhas_participacoes(self):
+        # Na lista real, o Butantan (fase 99) vem sem o campo da data; o 142
+        # (fase 1) vem com a data.
+        receber(**exemplo("participacoes"))
 
-        receber(f"{BASE}/{CUBATAO}/participacao", {**compra, "dataHoraPrevisaoAbertura": "2026-11-20T09:00:00"})
-        self.assertIs(ParticipacaoCompra.objects.get(oportunidade=s).sessao_sem_data, False)
+        self.assertIs(self.participacao("99004505000092026").sessao_sem_data, True)
+        self.assertIs(self.participacao("20010905001422026").sessao_sem_data, False)
 
-    def test_sem_o_campo_na_resposta_nao_muda(self):
+    def test_campo_vazio_na_fase_99_tambem_e_sem_data(self):
+        salva(prazo_dias=-19)
+        receber(f"{BASE}/{CUBATAO}/participacao", {"numeroUasg": "986371", "faseCompraFaseExterna": "99",
+                                                   "dataHoraPrevisaoAbertura": None})  # fmt: skip
+
+        self.assertIs(self.participacao(CUBATAO).sessao_sem_data, True)
+
+    def test_data_nao_lida_em_outra_fase_nao_marca(self):
+        salva(prazo_dias=-19)
+        receber(f"{BASE}/{CUBATAO}/participacao", {"numeroUasg": "986371", "faseCompraFaseExterna": "1"})
+
+        self.assertIs(self.participacao(CUBATAO).sessao_sem_data, False)
+
+    def test_saiu_a_data_desmarca(self):
         s = salva(prazo_dias=-19)
         ParticipacaoCompra.objects.create(oportunidade=s, fase_compra="99", sessao_sem_data=True)
 
-        receber(f"{BASE}/{CUBATAO}/participacao", {"numeroUasg": "986371", "faseCompraFaseExterna": "99"})
+        receber(f"{BASE}/{CUBATAO}/participacao", {"numeroUasg": "986371", "faseCompraFaseExterna": "1",
+                                                   "dataHoraPrevisaoAbertura": "2026-11-20T09:00:00"})  # fmt: skip
 
-        self.assertIs(ParticipacaoCompra.objects.get(oportunidade=s).sessao_sem_data, True)
+        self.assertIs(self.participacao(CUBATAO).sessao_sem_data, False)
 
 
 class DataAlteradaTests(_Base):

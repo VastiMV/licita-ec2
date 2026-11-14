@@ -431,7 +431,7 @@ consulta, e o menu dizia 3 descartadas enquanto a lista mostrava 4.
 | Caso | Onde fica | Aviso |
 |---|---|---|
 | Compra **suspensa** (Compras.gov `SU` ou PNCP), **antes da sessão** | Preparar: **Cotação** se há cotação no Licita **ou** preço lançado no Compras.gov; senão **Oportunidade** | "Compra suspensa" (+ "preço lançado no Compras.gov, sem cotação no Licita") |
-| Disputa agendada **sem data** que o **Compras.gov disse** (campo vazio), prazo vencido, antes da sessão | a mesma regra | "Sem prazo definido" (+ a do preço) |
+| Disputa agendada **sem data** que o **Compras.gov disse** (fase 99 sem data de abertura), prazo vencido, antes da sessão | a mesma regra | "Sem prazo definido" (+ a do preço) |
 | Compra suspensa **depois** que a disputa começou | na etapa do item (Disputa, Julgamento, Recursos…) | "Compra suspensa" |
 
 **Regra da suspensa antes da sessão (14/11/2026, GEN-72).** Caso real: Pregão
@@ -445,9 +445,12 @@ Disputar › Aguardando sessão. Decisões da operação:
   sessão). A lei e o Compras.gov permitem suspender depois da disputa
   (recurso, tribunal de contas, sessão suspensa pelo pregoeiro). Aí o cartão
   fica na etapa do item, para não esconder uma disputa viva;
-- "sem data" só conta quando o **Compras.gov disse** (campo
-  `dataHoraPrevisaoAbertura` vazio → `ParticipacaoCompra.sessao_sem_data`).
-  Data que a Sentinela só não leu não tira a compra de Disputar;
+- "sem data" só conta quando o **Compras.gov disse**: fase **99 (Disputa
+  agendada)** sem data de abertura → `ParticipacaoCompra.sessao_sem_data`. Em
+  "Minhas participações" o campo `dataHoraPrevisaoAbertura` **nem vem** nesse
+  caso (exemplo real do Butantan; corrigido em 14/11/2026 — a 1ª versão
+  esperava o campo vazio e não marcava). Data que a Sentinela só não leu, em
+  outra fase, não tira a compra de Disputar;
 - o cartão em Cotação sem cotação no Licita abre o visualizador da
   oportunidade (com "Iniciar cotação").
 | Em "Minhas participações", prazo vencido, **sem cotação** | Encerradas · "Acompanhando o resultado" (relatório para "xeretar") | — |
