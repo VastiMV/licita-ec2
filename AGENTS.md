@@ -21,6 +21,11 @@ pasta [`docs/`](docs/).
   no código.
 - O que não estiver no código nem nos documentos fica marcado como
   **"a confirmar"**. Nunca preencher no chute.
+- **Só abra PR com o assunto fechado.** Todas as decisões respondidas e
+  nenhum "a confirmar" pendente. Se aparecer dúvida durante o trabalho
+  (ex.: um teste que muda de comportamento), **pare e pergunte antes** de
+  abrir o PR. Nunca abra o PR com perguntas para responder depois. Regra da
+  operação de 14/11/2026, depois do PR #57.
 
 ## 2. Documentação junto com o código
 
