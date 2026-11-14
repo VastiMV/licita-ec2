@@ -194,7 +194,7 @@ Licita trata "tudo que não é `E`" como em andamento.
 
 Ordenadas por impacto. Cada uma tem a recomendação de quem levantou, mas
 **a decisão é da operação** (`AGENTS.md`, regra 1). Ao decidir, anote aqui a
-data, quem decidiu e o porquê, e abra o cartão GEN.
+data, quem decidiu e o porquê no cartão da decisão (GEN-75 a GEN-82) e aqui.
 
 ### D1 — Item cancelado, deserto ou fracassado fica preso na Torre {#d1}
 
@@ -209,7 +209,7 @@ data, quem decidiu e o porquê, e abra o cartão GEN.
 - **Recomendação:** (a), com os motivos "Item cancelado", "Item deserto",
   "Item fracassado". A situação do item no PNCP (`3 4 5`) pode servir de
   segunda fonte.
-- **Status:** a confirmar.
+- **Status:** a confirmar. Cartão: GEN-75.
 
 ### D2 — Diligência cancelada aparece como aberta {#d2}
 
@@ -221,7 +221,7 @@ data, quem decidiu e o porquê, e abra o cartão GEN.
 - **Opções:** (a) contar como aberta só `A`; (b) descartar também `C`.
 - **Recomendação:** (a): segue a lista oficial e não depende de adivinhar
   outros valores.
-- **Status:** a confirmar.
+- **Status:** a confirmar. Cartão: GEN-76.
 
 ### D3 — Nomes de etapa adiantados {#d3}
 
@@ -236,7 +236,7 @@ data, quem decidiu e o porquê, e abra o cartão GEN.
 - **Opções:** (a) manter; (b) renomear etapas ("Aceita / habilitada",
   "Adjudicado / homologado"); (c) etiqueta "adjudicado, falta homologar".
 - **Recomendação:** (c): não mexe no quadro e deixa claro o que falta.
-- **Status:** a confirmar.
+- **Status:** a confirmar. Cartão: GEN-77.
 
 ### D4 — Julgamento e habilitação já encerrados aparecem como "Aguardando julgamento" {#d4}
 
@@ -249,7 +249,7 @@ data, quem decidiu e o porquê, e abra o cartão GEN.
   encerrado", "Aberto para recursos"…) em qualquer posição.
 - **Recomendação:** (b): a etiqueta já existe como mecanismo; usa o nome
   oficial e não muda etapa.
-- **Status:** a confirmar.
+- **Status:** a confirmar. Cartão: GEN-78.
 
 ### D5 — Convocação de anexo parcialmente encerrada não avisa {#d5}
 
@@ -258,7 +258,7 @@ data, quem decidiu e o porquê, e abra o cartão GEN.
 - **Opções:** (a) avisar também em `P`; (b) manter.
 - **Recomendação:** confirmar com a operação se `P` ainda pede algum envio
   da empresa. Sem esse caso real, manter.
-- **Status:** a confirmar.
+- **Status:** a confirmar. Cartão: GEN-79.
 
 ### D6 — Revogada, anulada, fracassada, deserta: regras diferentes conforme a fonte {#d6}
 
@@ -273,7 +273,7 @@ data, quem decidiu e o porquê, e abra o cartão GEN.
 - **Recomendação:** (a) para o sino em `FR`/`DE`; para o PNCP, decidir se
   ele basta sozinho para encerrar (hoje é a única fonte das licitações fora
   do Compras.gov.br).
-- **Status:** a confirmar.
+- **Status:** a confirmar. Cartão: GEN-80.
 
 ### D7 — Itens de cota sem regra {#d7}
 
@@ -283,7 +283,7 @@ data, quem decidiu e o porquê, e abra o cartão GEN.
 - **Opções:** (a) `7` → alerta vermelho "assumir cota · item N"; `8` →
   perdido "recusou assumir cota"; (b) manter.
 - **Recomendação:** (a).
-- **Status:** a confirmar.
+- **Status:** a confirmar. Cartão: GEN-81.
 
 ### D8 — Fases sem grupo na Torre {#d8}
 
@@ -293,7 +293,7 @@ data, quem decidiu e o porquê, e abra o cartão GEN.
 - **Opções:** (a) `AP`/`F` → "Disputa" ou etiqueta "sessão aberta";
   `LS` → etiqueta "lances suspensos"; (b) manter.
 - **Recomendação:** (a), só com etiquetas.
-- **Status:** a confirmar.
+- **Status:** a confirmar. Cartão: GEN-82.
 
 ### Oportunidade (não é defeito)
 
