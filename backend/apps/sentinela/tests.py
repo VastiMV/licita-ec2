@@ -133,7 +133,8 @@ class IngestaoTests(TestCase):
 
         cartao = cartao_na_torre(pmdf)
 
-        self.assertEqual(cartao["etapa"], "aguardando_julgamento")
+        # Compra em seleção de fornecedores (4) sem itens lidos: Disputa (GEN-86).
+        self.assertEqual(cartao["etapa"], "disputa")
         self.assertIn("abrir a compra no Compras.gov", [e["texto"] for e in cartao["etiquetas"]])
 
     def test_participacao_de_uma_compra(self):
@@ -169,8 +170,9 @@ class IngestaoTests(TestCase):
         cartao = cartao_na_torre(pmdf)
 
         self.assertEqual(cartao["etapa"], "aguardando_adjudicacao")
-        perdendo = [i["numero"] for i in cartao["itens"] if i["perdendo"]]
-        self.assertEqual(sorted(perdendo), ["6", "9"])
+        # Habilitação encerrada (HE) e a Inside não ganhou: perdidos (GEN-78).
+        perdidos = [i["numero"] for i in cartao["itens"] if i["perdido"]]
+        self.assertEqual(sorted(perdidos), ["6", "9"])
         item22 = pmdf.itens_participados.get(numero_item="22")
         self.assertEqual(item22.negociacao_texto, "Solicito um desconto para o Item 22")
 

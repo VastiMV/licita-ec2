@@ -92,8 +92,10 @@ class TorreTests(APITestCase):
                 "aguardando_sessao",
                 "disputa",
                 "aguardando_julgamento",
-                "julgado_habilitado",
+                "propostas_aceitas",
                 "aguardando_adjudicacao",
+                "recursos",
+                "finalizadas",
                 "homologado",
                 "contrato",
                 "empenho",
@@ -332,11 +334,13 @@ class TorreTests(APITestCase):
         por_numero = {i["numero"]: i for i in cartao["itens"]}
         self.assertEqual(por_numero["22"]["etapa"], "aguardando_adjudicacao")
         self.assertEqual(por_numero["22"]["valor_unitario"], Decimal("15500"))
-        self.assertTrue(por_numero["6"]["perdendo"])
-        self.assertTrue(por_numero["9"]["perdendo"])
+        # Habilitação encerrada e a Inside não ganhou: item perdido (GEN-78).
+        self.assertIsNone(por_numero["6"]["etapa"])
+        self.assertEqual(por_numero["6"]["perdido"], "habilitação encerrada sem a Inside")
+        self.assertIsNone(por_numero["9"]["etapa"])
         self.assertEqual(cartao["valor_ganho"], Decimal("15500"))
 
-    def test_habilitado_com_recurso_aberto_fica_em_julgado_e_habilitado(self):
+    def test_habilitado_com_recurso_aberto_fica_em_recursos(self):
         salva = self.salva(prazo_em_dias=-10)
         self.item(
             salva,
@@ -348,14 +352,73 @@ class TorreTests(APITestCase):
 
         cartao = self.cartao(self.torre(), salva)
 
-        self.assertEqual(cartao["etapa"], "julgado_habilitado")
+        self.assertEqual(cartao["etapa"], "recursos")
         self.assertTrue(any(e["texto"].startswith("recurso até") for e in cartao["etiquetas"]))
 
-    def test_proposta_aceita_e_julgado_e_habilitado(self):
+    def test_proposta_aceita_e_propostas_aceitas(self):
         salva = self.salva(prazo_em_dias=-10)
         self.item(salva, classificacao=1, situacao_proposta="3", fase_item="JE")
 
-        self.assertEqual(self.etapa(salva), "julgado_habilitado")
+        self.assertEqual(self.etapa(salva), "propostas_aceitas")
+
+    # -- fases novas de Disputar (GEN-83, GEN-82, GEN-86, GEN-78; 14/11/2026) --
+
+    def test_analise_de_propostas_ap_e_disputa(self):
+        salva = self.salva(prazo_em_dias=-1)
+        self.item(salva, fase_item="AP", valor_proposta_inicial=Decimal("100"))
+
+        self.assertEqual(self.etapa(salva), "disputa")
+
+    def test_abertura_suspensa_ls_e_aguardando_sessao(self):
+        salva = self.salva(prazo_em_dias=-1)
+        self.item(salva, fase_item="LS", valor_proposta_inicial=Decimal("100"))
+
+        self.assertEqual(self.etapa(salva), "aguardando_sessao")
+
+    def test_compra_em_analise_ou_em_selecao_sem_itens_lidos_e_disputa(self):
+        for fase in ("2", "3", "4"):
+            with self.subTest(fase=fase):
+                salva = self.salva(prazo_em_dias=-1)
+                ParticipacaoCompra.objects.create(oportunidade=salva, fase_compra=fase, proposta_cadastrada=True)
+
+                self.assertEqual(self.etapa(salva), "disputa")
+
+    def test_julgamento_encerrado_sem_a_inside_e_encerrada(self):
+        salva = self.salva(prazo_em_dias=-5)
+        ParticipacaoCompra.objects.create(oportunidade=salva, fase_compra="4", proposta_cadastrada=True)
+        self.item(salva, classificacao=2, fase_item="JE")
+
+        self.assertIsNone(self.etapa(salva))
+        from .encerradas import classificar
+
+        tela, motivo, _ = classificar(self.hoje)[salva.pk]
+        self.assertEqual((tela, motivo), ("encerradas", "perdida"))
+
+    def test_julgamento_encerrado_com_convocacao_volta_para_a_torre(self):
+        salva = self.salva(prazo_em_dias=-5)
+        self.item(salva, classificacao=2, fase_item="JE", anexo_solicitado="S")
+
+        self.assertEqual(self.etapa(salva), "aguardando_julgamento")
+
+    def test_recurso_e_contrarrazoes_vao_para_recursos(self):
+        for fase in ("AR", "AC", "D1", "D2"):
+            with self.subTest(fase=fase):
+                salva = self.salva(prazo_em_dias=-10)
+                self.item(salva, classificacao=1, situacao_proposta="3", fase_item=fase)
+
+                self.assertEqual(self.etapa(salva), "recursos")
+
+    def test_adjudicacao_encerrada_ae_e_finalizadas(self):
+        salva = self.salva(prazo_em_dias=-10)
+        self.item(salva, classificacao=1, situacao_proposta="4", fase_item="AE")
+
+        self.assertEqual(self.etapa(salva), "finalizadas")
+
+    def test_proposta_adjudicada_e_finalizadas(self):
+        salva = self.salva(prazo_em_dias=-10)
+        self.item(salva, classificacao=1, situacao_proposta="6", fase_item="HE")
+
+        self.assertEqual(self.etapa(salva), "finalizadas")
 
     def test_pregoes_112_e_201_homologados_no_pncp(self):
         ibama = self.salva(prazo_em_dias=-38, uasg="193099")
@@ -455,7 +518,15 @@ class TorreTests(APITestCase):
 
         self.assertEqual(
             etapas["disputar"],
-            ["aguardando_sessao", "disputa", "aguardando_julgamento", "julgado_habilitado", "aguardando_adjudicacao"],
+            [
+                "aguardando_sessao",
+                "disputa",
+                "aguardando_julgamento",
+                "propostas_aceitas",
+                "aguardando_adjudicacao",
+                "recursos",
+                "finalizadas",
+            ],
         )
         self.assertEqual(etapas["contratar"], ["homologado", "contrato", "empenho"])
 
