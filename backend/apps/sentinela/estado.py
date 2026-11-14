@@ -6,6 +6,7 @@
 | `ok` | verde | falou há pouco, tudo certo |
 | `precisa_de_voce` | âmbar | a última notícia foi sessão caída, aba sem sessão, captcha pedido ou nenhuma aba aberta |
 | `parada` | vermelho | em horário de trabalho, sem notícia há mais de `MINUTOS_PARADA` |
+| `precisa_de_voce` | âmbar | em horário de trabalho, **ligada mas sem ler** há 30 min ou mais (GEN-73) |
 
 Fora do horário de trabalho (noite, fim de semana) o silêncio é normal:
 continua `ok`, com a hora da última notícia.
@@ -48,4 +49,12 @@ def estado_atual(agora: dt.datetime | None = None) -> dict:
     parada = agora - ultimo.recebido_em > dt.timedelta(minutes=MINUTOS_PARADA)
     if parada and em_horario_de_trabalho(agora):
         return {"estado": "parada", **base}
+    # Ligada mas cega (GEN-73, 11–14/11/2026): pulsos "ok" a cada 3 min e
+    # nenhuma leitura. Verde aqui escondia o problema.
+    from .silencio import MINUTOS_SEM_LEITURA, minutos_sem_leitura
+
+    sem_ler = minutos_sem_leitura(agora)
+    if sem_ler is not None and sem_ler >= MINUTOS_SEM_LEITURA:
+        detalhe = f"Ligada, mas sem ler o Compras.gov há {sem_ler} min (dê F5 na aba do Compras.gov)"
+        return {"estado": "precisa_de_voce", **base, "detalhe": detalhe}
     return {"estado": "ok", **base}

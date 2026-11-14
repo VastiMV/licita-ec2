@@ -23,6 +23,8 @@ class Notificacao(models.Model):
         RELATORIO = "relatorio", "Relatório completo"
         # A caixa de mensagens do fornecedor no Compras.gov.br (09/11/2026).
         MENSAGEM = "mensagem", "Mensagem do Compras.gov"
+        # A própria Sentinela parada ou sem ler (GEN-73, 14/11/2026).
+        SENTINELA = "sentinela", "Sentinela sem ler"
 
     class Nivel(models.TextChoices):
         ALERTA = "alerta", "Alerta"

@@ -252,7 +252,7 @@ e sem poder mudar nada**, de dois jeitos:
 
 1. **Botão "Consultar EC2"** (GitHub → Actions → Consultar EC2 → Run
    workflow): roda `python manage.py diagnostico` no servidor —
-   `itens-suspeitos`, `compra <código>`, `torre`, `sentinela`,
+   `itens-suspeitos`, `compra <código>`, `torre`, `sentinela [dias]` (inclui leituras dia a dia — GEN-73),
    `quedas [dias]` (as "sessão caiu" por motivo, dia e hora — GEN-45),
    `telegram`. Só lê. O
    resultado fica no registro do job (visível para quem acessa o

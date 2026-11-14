@@ -9,7 +9,9 @@ export type TipoNotificacao =
   | 'favorito'
   | 'resultado'
   | 'relatorio'
-  | 'mensagem';
+  | 'mensagem'
+  /** A própria Sentinela parada ou sem ler (GEN-73, 14/11/2026). */
+  | 'sentinela';
 
 export interface Notificacao {
   readonly id: number;
