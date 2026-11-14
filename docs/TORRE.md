@@ -370,6 +370,23 @@ Frontend em `frontend/src/app/pages/torre/`.
 Para mudar uma regra: escreva o teste com o caso real primeiro, veja falhar,
 mude `torre.py` (a saída também mora lá), rode tudo.
 
+## 10b. Códigos oficiais e decisões pendentes (14/11/2026)
+
+Cada código de fase e situação do Compras.gov.br e do PNCP, a etapa da Torre
+em que ele cai e o nome na tela, estão em
+[Status oficiais × Licita](STATUS_OFICIAIS.md). O levantamento achou **8
+pontos a decidir** (D1 a D8), por exemplo item cancelado/deserto/fracassado
+que fica preso na Torre e diligência cancelada contada como aberta. Nada foi
+mudado no código; todos estão **a confirmar** pela operação.
+
+Em 14/11/2026 o Carlinhos decidiu 16 mudanças na Torre: 3 fases novas em
+Disputar (Propostas aceitas, Finalizadas, Recursos), para onde vai cada fase
+oficial, nomes iguais aos do Compras.gov.br, card com linha do tempo à parte
+e avisos no Telegram. Estão em
+[Status oficiais × Licita, seção 5](STATUS_OFICIAIS.md#5-decisoes-do-carlinhos-14112026),
+cada uma com o seu cartão GEN. **Ainda não foram feitas no código**: as
+etapas descritas acima continuam valendo até cada PR mudar.
+
 ## 11. O que ainda não existe
 
 Em ordem de prioridade (combinado com a operação):
