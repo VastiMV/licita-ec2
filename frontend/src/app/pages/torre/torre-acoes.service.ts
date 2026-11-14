@@ -89,7 +89,12 @@ export class TorreAcoesService {
     // no Compras.gov primeiro e cotar no Licita depois — a Sentinela já põe
     // a compra aqui. Sem este caminho a Torre só abria o Compras.gov e não
     // havia como chegar ao Cotador.
-    const semCotacao = cartao.etapa === 'cadastro_proposta' && cartao.cotacao_id === null;
+    // Cotação só com preço no Compras.gov (compra suspensa ou sem data, GEN-72,
+    // 14/11/2026 — Butantan 9/2026): também abre o visualizador, que tem
+    // "Iniciar cotação".
+    const semCotacao =
+      (cartao.etapa === 'cadastro_proposta' || cartao.etapa === 'cotacao') &&
+      cartao.cotacao_id === null;
     if ((cartao.etapa === 'oportunidade' || semCotacao) && cartao.salva) {
       const salva = cartao.salva;
       return this.modal

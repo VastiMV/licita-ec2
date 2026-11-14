@@ -692,6 +692,7 @@ def _gravar_participacao(salva: OportunidadeSalva, compra: dict, registro: dict)
     if "dataHoraPrevisaoAbertura" in compra:
         # Vazia = "sem prazo definido" (Butantan, 9/2026): também é notícia.
         valores["sessao_abre_em"] = _data_hora(compra.get("dataHoraPrevisaoAbertura"))
+        valores["sessao_sem_data"] = not compra.get("dataHoraPrevisaoAbertura")
     ParticipacaoCompra.objects.update_or_create(oportunidade=salva, defaults=valores)
 
     if antes and "sessao_abre_em" in valores and antes.sessao_abre_em and valores["sessao_abre_em"]:

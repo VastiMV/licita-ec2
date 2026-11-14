@@ -65,7 +65,8 @@ Coisas que **não** são etapa:
 - **Recurso** de outra empresa num item em que a Inside não está na fase de
   recurso: é etiqueta ("recurso de X · contrarrazões até…"). O item em
   recurso tem a etapa **Recursos** (14/11/2026).
-- **Suspensa** — é etiqueta. A licitação continua onde estava.
+- **Suspensa** — é etiqueta. A licitação continua onde estava, **exceto antes
+  da sessão** (regra abaixo, GEN-72).
 
 ## 2. A etapa é do item
 
@@ -185,14 +186,14 @@ flowchart TD
     situacao -- "sim" --> eSituacao["Encerradas<br/>Revogada / Anulada / Fracassada / Deserta"]
     situacao -- "não" --> itens{"A Sentinela leu<br/>itens da empresa?"}
     itens -- "sim" --> vivos{"Algum item<br/>não perdido?"}
-    vivos -- "sim" --> etapaItem["Quadro: a etapa do item<br/>mais adiante (seção 2)"]
+    vivos -- "sim" --> etapaItem["Quadro: a etapa do item<br/>mais adiante (seção 2)<br/>(suspensa/sem data antes da sessão: Preparar)"]
     vivos -- "não" --> retirados{"Todos com a<br/>proposta retirada?"}
     retirados -- "sim" --> dRetirada["Descartadas<br/>Proposta retirada"]
     retirados -- "não" --> ePerdida["Encerradas<br/>Perdida"]
     itens -- "não" --> semProposta{"Participação sem proposta<br/>cadastrada, e sessão já aberta<br/>ou prazo vencido?"}
     semProposta -- "sim" --> dSem["Descartadas<br/>Sem proposta cadastrada"]
     semProposta -- "não" --> comProposta{"Participação com<br/>proposta cadastrada?"}
-    comProposta -- "sim" --> qCadastro["Quadro: Disputa (lances)<br/>ou Cadastro de proposta"]
+    comProposta -- "sim" --> qCadastro["Quadro: Disputa (lances)<br/>ou Cadastro de proposta<br/>(suspensa/sem data antes da sessão: Cotação)"]
     comProposta -- "não" --> suspensa{"Suspensa ou<br/>sem data da sessão?"}
     suspensa -- "sim" --> qEspera["Quadro: Cotação ou Oportunidade<br/>(nunca sai por prazo)"]
     suspensa -- "não" --> acompanha{"Participação, sem cotação,<br/>e prazo vencido ou sessão já aberta?"}
@@ -429,8 +430,26 @@ consulta, e o menu dizia 3 descartadas enquanto a lista mostrava 4.
 
 | Caso | Onde fica | Aviso |
 |---|---|---|
-| Compra **suspensa** (Compras.gov `SU` ou PNCP) | Preparar (Oportunidade/Cotação) | "Compra suspensa" |
-| Disputa agendada **sem data**, prazo vencido | Preparar | "Sem prazo definido" |
+| Compra **suspensa** (Compras.gov `SU` ou PNCP), **antes da sessão** | Preparar: **Cotação** se há cotação no Licita **ou** preço lançado no Compras.gov; senão **Oportunidade** | "Compra suspensa" (+ "preço lançado no Compras.gov, sem cotação no Licita") |
+| Disputa agendada **sem data** que o **Compras.gov disse** (campo vazio), prazo vencido, antes da sessão | a mesma regra | "Sem prazo definido" (+ a do preço) |
+| Compra suspensa **depois** que a disputa começou | na etapa do item (Disputa, Julgamento, Recursos…) | "Compra suspensa" |
+
+**Regra da suspensa antes da sessão (14/11/2026, GEN-72).** Caso real: Pregão
+9/2026 do Butantan, "Disputa agendada · Sem prazo definido" no Compras.gov,
+preço lançado (R$ 170,00 nos itens 1 e 2) e sem cotação no Licita. Aparecia em
+Disputar › Aguardando sessão. Decisões da operação:
+- a suspensa (e a sem data) segue a lógica da suspensa: fica em **Preparar**
+  esperando a data nova. **Cotação** se há cotação no Licita **ou** no
+  Compras.gov (preço lançado); se não há em nenhum dos dois, **Oportunidade**;
+- vale **só antes da sessão** (itens em Cadastro de proposta ou Aguardando
+  sessão). A lei e o Compras.gov permitem suspender depois da disputa
+  (recurso, tribunal de contas, sessão suspensa pelo pregoeiro). Aí o cartão
+  fica na etapa do item, para não esconder uma disputa viva;
+- "sem data" só conta quando o **Compras.gov disse** (campo
+  `dataHoraPrevisaoAbertura` vazio → `ParticipacaoCompra.sessao_sem_data`).
+  Data que a Sentinela só não leu não tira a compra de Disputar;
+- o cartão em Cotação sem cotação no Licita abre o visualizador da
+  oportunidade (com "Iniciar cotação").
 | Em "Minhas participações", prazo vencido, **sem cotação** | Encerradas · "Acompanhando o resultado" (relatório para "xeretar") | — |
 | Item com o **1º já habilitado** (outra empresa) | item perdido; todos assim → Encerradas | 👎 "1º já habilitado" |
 | Item perdido com **convocação**, pedido de desconto ou **recurso** pendente/procedente | volta para a Torre, de onde estiver | vermelho |

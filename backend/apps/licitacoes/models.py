@@ -441,6 +441,11 @@ class ParticipacaoCompra(models.Model):
     diligencia_em_andamento = models.BooleanField("diligência em andamento", default=False)
     convocacao_em_andamento = models.BooleanField("convocação em andamento", default=False)
     sessao_abre_em = models.DateTimeField("sessão abre em", null=True, blank=True)
+    # O Compras.gov **disse** que a sessão não tem data ("Sem prazo definido":
+    # o campo veio vazio). Diferente de `sessao_abre_em` nulo porque a
+    # Sentinela ainda não leu. Só com isto a compra segue a regra da suspensa
+    # (GEN-72, 14/11/2026 — Butantan 9/2026; decisão da operação).
+    sessao_sem_data = models.BooleanField("sessão sem data (dito pelo Compras.gov)", default=False)
     fonte = models.CharField("fonte", max_length=16, choices=Fonte.choices, default=Fonte.SENTINELA)
     atualizada_em = models.DateTimeField("atualizada em", auto_now=True)
 

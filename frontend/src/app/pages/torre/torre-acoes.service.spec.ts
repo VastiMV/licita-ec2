@@ -54,6 +54,16 @@ describe('TorreAcoesService', () => {
     expect(modal.abrir).toHaveBeenNthCalledWith(2, CotadorModalComponent, expect.anything());
   });
 
+  it('Cotação sem cotação no Licita (suspensa com preço no Compras.gov) abre o visualizador', () => {
+    // Butantan 9/2026 (GEN-72, 14/11/2026).
+    const { acoes, modal } = servico();
+    const suspensa = { ...COTADA, cotacao_id: null };
+
+    acoes.abrir(suspensa).subscribe();
+
+    expect(modal.abrir).toHaveBeenCalledWith(OportunidadeModalComponent, suspensa.salva);
+  });
+
   describe('depois de Preparar (GEN-53/64)', () => {
     const SALVA = {
       id: 61,
