@@ -379,6 +379,14 @@ pontos a decidir** (D1 a D8), por exemplo item cancelado/deserto/fracassado
 que fica preso na Torre e diligência cancelada contada como aberta. Nada foi
 mudado no código; todos estão **a confirmar** pela operação.
 
+Em 14/11/2026 o Carlinhos decidiu 16 mudanças na Torre: 3 fases novas em
+Disputar (Propostas aceitas, Finalizadas, Recursos), para onde vai cada fase
+oficial, nomes iguais aos do Compras.gov.br, card com linha do tempo à parte
+e avisos no Telegram. Estão em
+[Status oficiais × Licita, seção 5](STATUS_OFICIAIS.md#5-decisoes-do-carlinhos-14112026),
+cada uma com o seu cartão GEN. **Ainda não foram feitas no código**: as
+etapas descritas acima continuam valendo até cada PR mudar.
+
 ## 11. O que ainda não existe
 
 Em ordem de prioridade (combinado com a operação):

@@ -196,6 +196,14 @@ Ordenadas por impacto. Cada uma tem a recomendação de quem levantou, mas
 **a decisão é da operação** (`AGENTS.md`, regra 1). Ao decidir, anote aqui a
 data, quem decidiu e o porquê no cartão da decisão (GEN-75 a GEN-82) e aqui.
 
+| Decisão | Situação em 14/11/2026 |
+|---|---|
+| D1 · D2 · D5 · D7 | a confirmar (sem decisão) |
+| D3 · D4 · D6 · D8 | decididas em parte pelo Carlinhos; o que falta está em cada uma |
+
+As decisões de 14/11 descrevem como **deve ficar**. As tabelas das seções
+2 e 3 continuam descrevendo como o código **está hoje**, até cada PR mudar.
+
 ### D1 — Item cancelado, deserto ou fracassado fica preso na Torre {#d1}
 
 - **O que acontece:** a compra continua ativa, mas um item morre (cancelado,
@@ -236,7 +244,13 @@ data, quem decidiu e o porquê no cartão da decisão (GEN-75 a GEN-82) e aqui.
 - **Opções:** (a) manter; (b) renomear etapas ("Aceita / habilitada",
   "Adjudicado / homologado"); (c) etiqueta "adjudicado, falta homologar".
 - **Recomendação:** (c): não mexe no quadro e deixa claro o que falta.
-- **Status:** a confirmar. Cartão: GEN-77.
+- **Status:** decidido em parte (Carlinhos, 14/11/2026). Cartão: GEN-77.
+    - **Decisão:** os nomes do Licita devem **bater com os do Compras.gov.br**
+      (lista oficial em [`referencia/`](referencia/README.md)). A fase `AE`
+      sai de "Homologado" e vai para a nova fase **Recursos** (ver D4).
+    - **A confirmar:** a fase da Torre agrupa vários status. Fica com nome
+      curto e a etiqueta do item mostra o nome oficial? Para onde vai a
+      proposta `6` (adjudicada)?
 
 ### D4 — Julgamento e habilitação já encerrados aparecem como "Aguardando julgamento" {#d4}
 
@@ -249,7 +263,14 @@ data, quem decidiu e o porquê no cartão da decisão (GEN-75 a GEN-82) e aqui.
   encerrado", "Aberto para recursos"…) em qualquer posição.
 - **Recomendação:** (b): a etiqueta já existe como mecanismo; usa o nome
   oficial e não muda etapa.
-- **Status:** a confirmar. Cartão: GEN-78.
+- **Status:** decidido em parte (Carlinhos, 14/11/2026). Cartão: GEN-78.
+    - **Decisão:** `JE` e `HE`: se algum item da Inside **ganhou** → nova
+      fase **Propostas aceitas**; se nenhum ganhou → **Encerradas**.
+      `AR`, `AC`, `D1`, `D2` e `AE` → nova fase **Recursos**, com aviso no
+      **Telegram** a cada mudança de status. As fases novas estão no GEN-83.
+    - **A confirmar:** o que conta como "ganhou" (proposta `3`/`4`/`6` ou 1º
+      lugar de verdade); `AE` não é recurso no Compras.gov, confirmar;
+      para onde vão `PE` e `PR`.
 
 ### D5 — Convocação de anexo parcialmente encerrada não avisa {#d5}
 
@@ -273,7 +294,17 @@ data, quem decidiu e o porquê no cartão da decisão (GEN-75 a GEN-82) e aqui.
 - **Recomendação:** (a) para o sino em `FR`/`DE`; para o PNCP, decidir se
   ele basta sozinho para encerrar (hoje é a única fonte das licitações fora
   do Compras.gov.br).
-- **Status:** a confirmar. Cartão: GEN-80.
+- **Status:** decidido em parte (Carlinhos, 14/11/2026). Cartão: GEN-80.
+    - **Decisão:** a regra passa a ser **a mesma para as duas fontes**.
+      Revogada/anulada **com cotação** (Licita ou Compras.gov) →
+      **Encerradas, em observação**; se for **reaberta**, volta para
+      **Cadastro de proposta** com a nova data. **Fracassada** com cotação →
+      Encerradas **com aviso**. **Deserta** → vira o relatório de
+      oportunidade (GEN-85).
+    - **⚠️ Conflito a resolver:** outro pedido do mesmo dia diz que
+      revogada/anulada **no PNCP** com preço vai para **Cadastro de
+      proposta**, e sem preço (ou com preço em só um dos dois) vai para
+      **Oportunidades**. As duas regras não cabem juntas.
 
 ### D7 — Itens de cota sem regra {#d7}
 
@@ -293,10 +324,59 @@ data, quem decidiu e o porquê no cartão da decisão (GEN-75 a GEN-82) e aqui.
 - **Opções:** (a) `AP`/`F` → "Disputa" ou etiqueta "sessão aberta";
   `LS` → etiqueta "lances suspensos"; (b) manter.
 - **Recomendação:** (a), só com etiquetas.
-- **Status:** a confirmar. Cartão: GEN-82.
+- **Status:** decidido em parte (Carlinhos, 14/11/2026). Cartão: GEN-82.
+    - **Decisão:** `AP` → **Aguardando julgamento**. `LS` → **Aguardando
+      sessão**.
+    - **A confirmar:** `AP` acontece **antes** dos lances, e "Aguardando
+      julgamento" fica depois de "Disputa" na Torre: confirmar. `F`
+      continua sem decisão.
 
 ### Oportunidade (não é defeito)
 
 `SituacaoEnvioResultadoEnum` diz quando o resultado foi enviado ao PNCP
 (`SP`) ou deu erro (`EP`). Lendo isso, o Licita saberia **no mesmo dia** que
 o item foi homologado, sem esperar a sincronia diária do PNCP.
+
+## 5. Decisões do Carlinhos (14/11/2026)
+
+Dezesseis pedidos, cada um ligado a um cartão GEN (rótulo
+`decisao-carlinhos-14-11`). O que ainda precisa de resposta está em
+"A confirmar" no próprio cartão. **Nenhum foi feito no código ainda.**
+
+| # | Decisão | Cartão |
+|---|---|---|
+| 1 | Disputar ganha 3 fases: **Propostas aceitas**, **Finalizadas** e **Recursos** | GEN-83 |
+| 2 | `AP` (pendente da análise de propostas) → **Aguardando julgamento** | GEN-82 ([D8](#d8)) |
+| 3 | `LS` (abertura suspensa) → **Aguardando sessão** | GEN-82 ([D8](#d8)) |
+| 4 | `JE` (julgamento encerrado): item da Inside ganhou → **Propostas aceitas**; não ganhou → **Encerradas** | GEN-78 ([D4](#d4)) |
+| 5 | `HE` (habilitação encerrada): mesma regra do `JE` | GEN-78 ([D4](#d4)) |
+| 6 | PNCP `2`/`3` (revogada/anulada): com preço → **Cadastro de proposta**; sem preço → **Oportunidades**, mantendo as etiquetas | GEN-80 ([D6](#d6)) |
+| 7 | Card da Torre: **linha do tempo à parte** (botão ou janela) e resumo da participação: cotação, itens, preço, ganhou/perdeu e por quanto | GEN-84 |
+| 8 | Revogada/anulada: **mesma regra para Compras.gov e PNCP**; com cotação → Encerradas **em observação**; reaberta → volta para Cadastro de proposta com a nova data | GEN-80 ([D6](#d6)) |
+| 9 | Fracassada com cotação → Encerradas **com aviso**. Deserta → **relatório** de oportunidade (a Inside não fez proposta) | GEN-80 ([D6](#d6)) · GEN-85 |
+| 10 | Compra `2` (em análise de propostas) → **Aguardando julgamento** | GEN-86 |
+| 11 | Compra `4` (seleção de fornecedores iniciada) → **Disputa** | GEN-86 |
+| 12 | `AR`, `AC`, `D1`, `D2`, `AE` → nova fase **Recursos**, com **Telegram** a cada mudança | GEN-78 ([D4](#d4)) · GEN-83 |
+| 13 | Toda licitação de cada tela tem que aparecer na Torre (Preparar mostrava 4, Oportunidades 13) | GEN-87 |
+| 14 | Suspensa ou sem prazo: sem cotação → **Oportunidades**; com cotação → **Cadastro de proposta**; avança quando recebe data; **Telegram**; vigiar a data nova mesmo quando a compra some do Compras.gov | GEN-72 |
+| 15 | Os nomes no Licita têm que **bater com os do Compras.gov.br** | GEN-77 ([D3](#d3)) |
+| 16 | Para teste: **todas** as notificações vão para o Telegram | GEN-88 |
+
+### Pontos que ainda travam o código
+
+1. **Itens 6 e 8 se contradizem** para revogada/anulada no PNCP com preço
+   (Cadastro de proposta × Encerradas em observação).
+2. **Fase "Finalizadas":** o que entra nela e qual a diferença para Encerradas.
+3. **Item 11:** a compra `4` vem **depois** dos lances. Ir para "Disputa"
+   (fase dos lances) ou para o estágio "Disputar"?
+4. **Item 12:** `AE` é "adjudicação encerrada", não recurso.
+5. **Itens 4 e 5:** o que conta como "ganhou".
+6. **Item 9** citou "(RE, AN, SU)". Os códigos oficiais de fracassada e
+   deserta são `FR` e `DE`; foram considerados esses.
+
+### Fato que muda o item 16
+
+Desde 10/11/2026, **toda notificação do sino já vai para o Telegram**
+(`notificacoes/servico.py`, `avisar`), para a Vasti e o Carlinhos. O que
+falta é que muitas mudanças de status **não geram notificação nenhuma**. O
+GEN-88 cria o tipo "Mudança de status" para cobrir isso.
