@@ -8,7 +8,9 @@ pelo botão "Consultar EC2" do GitHub Actions, `.github/workflows/consultar-ec2.
 - `compra <código de 17 dígitos ou id>` — a compra, os itens, a etapa e o
   sinal de cada item, e as propostas lidas;
 - `torre` — quantas licitações em cada etapa e quantas saíram;
-- `sentinela` — o que a Sentinela fez nas últimas 24 horas;
+- `sentinela [dias]` — o que a Sentinela fez nas últimas 24 horas e, dia a
+  dia (padrão 7), sinais de vida × leituras: dia com sinal de vida e sem
+  leitura = ligada mas cega (GEN-73, 11–14/11/2026);
 - `quedas [dias]` — as "sessão caiu" e "sem aba" dos últimos dias (padrão 7):
   por motivo, por dia, por hora e por versão, e os episódios (quedas a menos
   de 15 minutos uma da outra contam como um). Para o GEN-45 (12/11/2026):
@@ -63,6 +65,39 @@ def motivo_da_queda(detalhe: str) -> str:
     if "401" in texto or "login de novo" in texto:
         return "401 numa consulta da Sentinela"
     return f"outro: {texto or '—'}"
+
+
+def leituras_por_dia(dias: int) -> list[str]:
+    """Uma linha por dia: sinais de vida × leituras. "⚠ sem leitura" marca o
+    dia em que ela estava ligada e não leu nada (GEN-73)."""
+
+    from apps.sentinela.models import Pulso
+
+    desde = timezone.now() - dt.timedelta(days=dias)
+    por_dia: dict[str, dict] = {}
+    for p in Pulso.objects.filter(recebido_em__gte=desde).order_by("recebido_em"):
+        local = timezone.localtime(p.recebido_em)
+        d = por_dia.setdefault(
+            f"{local:%d/%m %a}", {"ok": 0, "sem_aba": 0, "sessao": 0, "leituras": 0, "primeira": None, "ultima": None}
+        )
+        if p.captura:
+            d["leituras"] += 1
+            d["primeira"] = d["primeira"] or local
+            d["ultima"] = local
+        elif p.estado == "ok":
+            d["ok"] += 1
+        elif p.estado == "sem_aba":
+            d["sem_aba"] += 1
+        elif p.estado in ("sessao_caiu", "sem_sessao"):
+            d["sessao"] += 1
+    linhas = []
+    for dia, d in por_dia.items():
+        faixa = f"{d['primeira']:%H:%M}–{d['ultima']:%H:%M}" if d["leituras"] else "—"
+        alerta = "  ⚠ ligada e sem leitura" if d["ok"] and not d["leituras"] else ""
+        linhas.append(
+            f"{dia} · {d['ok']:4} · {d['sem_aba']:4} · {d['sessao']:4} · {d['leituras']:4} · {faixa}{alerta}"
+        )
+    return linhas
 
 
 def episodios_de_queda(quedas, intervalo=dt.timedelta(minutes=15)):
@@ -158,8 +193,9 @@ class Command(BaseCommand):
                 )
         self.linha(f"Saíram: {torre['saidas']}")
 
-    def sentinela(self, _):
+    def sentinela(self, argumento):
         from apps.sentinela.models import Pulso
+        from apps.sentinela.silencio import minutos_sem_leitura
 
         desde = timezone.now() - dt.timedelta(hours=24)
         pulsos = list(Pulso.objects.filter(recebido_em__gte=desde).order_by("recebido_em"))
@@ -169,6 +205,16 @@ class Command(BaseCommand):
         self.linha(f"Versões: {sorted({p.versao for p in pulsos if p.versao})}")
         for p in pulsos[-8:]:
             self.linha(f"  {timezone.localtime(p.recebido_em):%d/%m %H:%M} · {p.estado} · {p.captura or '—'} · {p.detalhe}")
+        dias = int(argumento) if argumento.isdigit() and int(argumento) > 0 else 7
+        self.linha(f"Dia a dia (últimos {dias}): sinais de vida ok · sem aba · sessão · leituras · 1ª–última leitura")
+        for linha in leituras_por_dia(dias):
+            self.linha("  " + linha)
+        sem_ler = minutos_sem_leitura()
+        self.linha(
+            "Agora: fora do horário de trabalho"
+            if sem_ler is None
+            else f"Agora: {sem_ler} min sem leitura (alarme a partir de 30)"
+        )
         self.linha(
             f"Itens com propostas lidas: {ItemParticipado.objects.filter(propostas_lidas_em__isnull=False).count()}"
             f" de {ItemParticipado.objects.filter(classificacao__isnull=False).count()} com posição"
