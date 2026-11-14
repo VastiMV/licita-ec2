@@ -25,7 +25,11 @@ from django.utils import timezone
 from .models import Pulso
 
 MINUTOS_PARADA = 15
-HORARIO = (8, 18)  # das 8h às 18h, de segunda a sexta
+# Das 8h às 19h, de segunda a sexta: o mesmo horário da ronda da extensão
+# (`emHorarioDeTrabalho` em sentinela/fundo.js). Era 8h–18h até 14/11/2026;
+# igualado no GEN-73 (decisão da operação) para o topo e o alarme de silêncio
+# baterem com a ronda.
+HORARIO = (8, 19)
 
 
 def em_horario_de_trabalho(agora: dt.datetime) -> bool:

@@ -83,6 +83,12 @@ class AlarmeDeSilencioTests(_Base):
         self.assertIsNone(minutos_sem_leitura(quando(11, 20, 0)))  # quarta, 20h
         self.assertFalse(conferir_silencio(quando(14, 11, 0)))
 
+    def test_horario_vai_ate_as_19h_como_a_ronda(self):
+        self.pulso(quando(11, 17, 0), captura="mensagens")
+
+        self.assertEqual(minutos_sem_leitura(quando(11, 18, 30)), 90)
+        self.assertIsNone(minutos_sem_leitura(quando(11, 19, 0)))
+
     def test_segunda_cedo_o_fim_de_semana_nao_conta(self):
         self.pulso(quando(13, 17, 0), captura="mensagens")  # sexta
 

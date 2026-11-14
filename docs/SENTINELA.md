@@ -177,14 +177,21 @@ cada 401 era avisado 2 vezes; e ~200 "sem aba" à noite e no fim de semana.
 **14/11/2026 — ligada, mas cega (GEN-73).** De 11/11 às 22h42 a 14/11 às
 10h50 a Sentinela **não leu nada**, mas mandou "ok" a cada 3 minutos (havia
 uma aba do Compras.gov aberta) e o topo ficou **verde**. As mensagens do
-pregoeiro só chegaram dois dias depois. Causa provável (a confirmar): a aba
-existia mas não estava viva (restaurada sem carregar, descartada pela
-economia de memória do Chrome, ou sem F5 depois de atualizar a extensão), e a
-ronda falha **calada** (só anota em "Último erro"). Correção no **servidor**:
-alarme de silêncio (30 min sem leitura → sino, Telegram e topo âmbar) e a
-consulta `sentinela` dia a dia ("⚠ ligada e sem leitura"). A parte da
-extensão (avisar a falha da ronda, impedir o descarte da aba) fica para a
-0.2.7.
+pregoeiro só chegaram dois dias depois. O defeito no código: a ronda falha
+**calada** (só anota em "Último erro", na tela de opções) e o sinal de vida
+diz "ok" só porque existe uma aba do Compras.gov, viva ou não. Correção no
+**servidor**, decidida com a operação:
+
+- alarme de silêncio: em horário de trabalho (seg–sex, **8h–19h**, o mesmo
+  da ronda), **30 min sem leitura** → sino + Telegram + topo âmbar;
+- conta da última leitura, mas nunca antes das 8h do dia (o fim de semana
+  não dispara aviso na segunda);
+- avisa também quando não há **nenhum** sinal de vida ("parada");
+- um aviso por episódio;
+- consulta `sentinela` dia a dia ("⚠ ligada e sem leitura").
+
+A parte da extensão (avisar a falha da ronda, impedir o descarte da aba)
+fica para a 0.2.7.
 
 **10/11/2026 — compra trazida pela Sentinela fica completa:** a compra
 que a Sentinela cria no Licita (a empresa já participa no Compras.gov) vinha
@@ -226,7 +233,7 @@ as listas (participações e itens) e o chat.
 | **Tarefas** | a cada 1 min pergunta `GET tarefas/` (hoje: tirar favorito pedido pela lixeira) e responde `POST tarefas/<id>/` |
 | **Ronda** | a cada 10 min (dias úteis, 8h–19h) pega `GET ronda/` e consulta, uma por vez com pausa, proposta/recurso/diligências de cada item com proposta; manda as respostas para `captura/`. Botão "Fazer a ronda agora" nas opções. Desde 12/11/2026 (GEN-71) entram também as compras ainda gravadas **antes da sessão** cuja sessão (ou, sem data, o prazo) já passou — antes elas só mudavam se ele abrisse a tela. Item com **proposta retirada** sai da ronda e da vigia diária. Só o servidor mudou: a Sentinela continua a mesma (0.2.5) |
 | **Sessão caiu** | 401 ou sessão ainda não vista → estado "precisa de você" no topo do Licita ("abra ou atualize a aba do Compras.gov") |
-| **Ligada, mas sem ler** (GEN-73, 14/11/2026) | em horário de trabalho, **30 min sem nenhuma leitura** (contando do início do expediente) → topo âmbar ("Ligada, mas sem ler o Compras.gov há X min") e **aviso no sino e no Telegram**, um por episódio (tarefa `sentinela.conferir_silencio`, a cada 10 min). Sem sinal de vida também, o aviso é "parada". É do **servidor**: pega qualquer falha da extensão, até as que ninguém previu |
+| **Ligada, mas sem ler** (GEN-73, 14/11/2026) | em horário de trabalho (seg–sex, 8h–19h), **30 min sem nenhuma leitura** (contando do início do expediente) → topo âmbar ("Ligada, mas sem ler o Compras.gov há X min") e **aviso no sino e no Telegram**, um por episódio (tarefa `sentinela.conferir_silencio`, a cada 10 min). Sem sinal de vida também, o aviso é "parada". É do **servidor**: pega qualquer falha da extensão, até as que ninguém previu |
 
 Testes de ponta a ponta: `sentinela/testes/teste-extensao.js` e
 `sentinela/testes/teste-ronda.js` (Chromium real, Compras.gov simulado com as
