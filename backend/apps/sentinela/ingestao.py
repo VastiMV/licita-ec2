@@ -678,6 +678,9 @@ def _pedir_completar(salva: OportunidadeSalva) -> None:
     transaction.on_commit(enfileirar)
 
 
+FASE_DISPUTA_AGENDADA = "99"
+
+
 def _gravar_participacao(salva: OportunidadeSalva, compra: dict, registro: dict) -> None:
     valores = {"fonte": Fonte.SENTINELA}
     if fase := compra.get("faseCompraFaseExterna"):
@@ -689,10 +692,15 @@ def _gravar_participacao(salva: OportunidadeSalva, compra: dict, registro: dict)
     if "possuiConvRemanescentesEmAndamento" in registro:
         valores["convocacao_em_andamento"] = bool(registro["possuiConvRemanescentesEmAndamento"])
     antes = ParticipacaoCompra.objects.filter(oportunidade=salva).first()
+    data_abertura = compra.get("dataHoraPrevisaoAbertura")
     if "dataHoraPrevisaoAbertura" in compra:
         # Vazia = "sem prazo definido" (Butantan, 9/2026): também é notícia.
-        valores["sessao_abre_em"] = _data_hora(compra.get("dataHoraPrevisaoAbertura"))
-        valores["sessao_sem_data"] = not compra.get("dataHoraPrevisaoAbertura")
+        valores["sessao_abre_em"] = _data_hora(data_abertura)
+    if fase:
+        # "Sem prazo definido" dito pelo Compras.gov = fase 99 (Disputa
+        # agendada) sem data de abertura. Em "Minhas participações" o campo
+        # nem vem (exemplo real, Butantan 9/2026) — 14/11/2026, GEN-72.
+        valores["sessao_sem_data"] = str(fase) == FASE_DISPUTA_AGENDADA and not data_abertura
     ParticipacaoCompra.objects.update_or_create(oportunidade=salva, defaults=valores)
 
     if antes and "sessao_abre_em" in valores and antes.sessao_abre_em and valores["sessao_abre_em"]:
