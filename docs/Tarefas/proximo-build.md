@@ -23,6 +23,6 @@ Descartadas sem esperar a Sentinela (Geriatria 34/2026); a chave do robô do
 Telegram nunca aparece em erros.
 
 **Falta:** 12 (contratos no PNCP).
-Na máquina do Carlinhos: instalar a Sentinela **0.2.6** (menos alarme falso de
-sessão caída, GEN-45; ícone do Licita).
+Na máquina do Carlinhos: instalar a Sentinela **0.2.7** (ronda que falha vira
+aviso e a aba do Compras.gov não é descartada, GEN-73).
 

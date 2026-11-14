@@ -79,8 +79,76 @@ async function vigiar() {
       await pulso("sem_aba", "Nenhuma aba do Compras.gov aberta");
     return;
   }
+  const logada = abas.find((a) => (a.url || "").includes("/seguro/"));
+  if (logada) await protegerAba(logada);
   if ((await sessaoAtual()) !== "ok") return;
+  if ((await leituraAtual()) !== "ok") return; // 0.2.7: idem com a ronda falhando
   await pulso("ok");
+}
+
+// ---- a leitura: ronda que falha vira aviso (0.2.7, GEN-73) -----------------
+//
+// De 11/11 22h42 a 14/11 10h50 a ronda falhou calada (só anotava em "Último
+// erro") e o topo ficou verde. Agora: na 2ª falha seguida (decisão da
+// operação, 14/11/2026) vai um aviso com o motivo; um só, até voltar a ler.
+// Sessão caída não conta aqui: tem aviso próprio (marcarSessao).
+
+const FALHAS_PARA_AVISAR = 2;
+
+async function leituraAtual() {
+  const { leitura } = await chrome.storage.local.get({ leitura: "ok" });
+  return leitura;
+}
+
+async function rondaFalhou(motivo) {
+  await guardarUltimo("ultimoErro", motivo);
+  const { falhasSeguidas } = await chrome.storage.local.get({
+    falhasSeguidas: 0,
+  });
+  const falhas = falhasSeguidas + 1;
+  await chrome.storage.local.set({ falhasSeguidas: falhas });
+  if (falhas < FALHAS_PARA_AVISAR || (await leituraAtual()) === "erro") return;
+  await chrome.storage.local.set({ leitura: "erro" });
+  await pulso("erro", `Ligada, mas não consegue ler: ${motivo}`);
+}
+
+async function rondaLeu() {
+  await chrome.storage.local.set({ falhasSeguidas: 0 });
+  if ((await leituraAtual()) === "ok") return;
+  await chrome.storage.local.set({ leitura: "ok" });
+  await pulso("ok", "A Sentinela voltou a ler o Compras.gov");
+}
+
+// ---- a aba logada: sempre carregada (0.2.7, GEN-73) ------------------------
+//
+// O Chrome restaura abas sem carregar e a "Economia de memória" descarta aba
+// parada: a aba existe, mas a Sentinela não fala com ela. Decisões da
+// operação (14/11/2026): pedir ao Chrome para nunca descartar a aba da área
+// do fornecedor e, se ela estiver descarregada, recarregá-la antes da ronda
+// (só abre a página; não escreve nada no Compras.gov).
+
+const pausa = (ms) => new Promise((r) => setTimeout(r, ms));
+
+async function protegerAba(aba) {
+  if (aba.autoDiscardable === false) return;
+  await chrome.tabs.update(aba.id, { autoDiscardable: false }).catch(() => {});
+}
+
+async function acordarAba(aba) {
+  await protegerAba(aba);
+  if (!aba.discarded && aba.status !== "unloaded") return;
+  await guardarUltimo(
+    "ultimaRonda",
+    "a aba do Compras.gov estava descarregada: recarregando",
+  );
+  await chrome.tabs.reload(aba.id);
+  for (let i = 0; i < 30; i++) {
+    const atual = await chrome.tabs.get(aba.id).catch(() => null);
+    if (!atual || atual.status === "complete") break;
+    await pausa(1000);
+  }
+  // A página pede os dados dela logo ao abrir: é aí que a Sentinela vê a sessão.
+  await pausa(5000);
 }
 
 // ---- a sessão do Compras.gov: uma queda, um aviso (GEN-45) -----------------
@@ -122,14 +190,14 @@ async function executarNaAba(pedidos) {
       );
     return null;
   }
+  await acordarAba(aba);
   try {
     return await chrome.tabs.sendMessage(aba.id, { tipo: "executar", pedidos });
   } catch (erro) {
-    await guardarUltimo(
-      "ultimoErro",
-      `Aba do Compras.gov não respondeu (aperte F5 nela): ${erro.message || erro}`,
-    );
-    return null;
+    // A aba existe mas não responde (ex.: extensão atualizada sem F5 nela).
+    return {
+      falha: `a aba do Compras.gov não respondeu (dê F5 nela): ${erro.message || erro}`,
+    };
   }
 }
 
@@ -173,7 +241,7 @@ async function fazerTarefas() {
       caminho: `/comprasnet-oportunidade/v1/compras/${t.compra}/favorita`,
     }));
   const resposta = await executarNaAba(pedidos);
-  if (!resposta) return; // sem aba: a tarefa espera
+  if (!resposta || resposta.falha) return; // sem aba ou aba muda: a tarefa espera
   if (await conferirSessao(resposta.resultados)) return;
   for (const r of resposta.resultados) {
     const ok = r.status >= 200 && r.status < 300;
@@ -208,7 +276,9 @@ async function fazerRonda(forcar = false) {
   try {
     lista = await licita("ronda/");
   } catch (erro) {
-    await guardarUltimo("ultimoErro", String(erro.message || erro));
+    await rondaFalhou(
+      `o Licita não mandou a lista da ronda (${erro.message || erro})`,
+    );
     return;
   }
   const pedidos = (lista.consultas || []).map((caminho) => ({
@@ -221,7 +291,12 @@ async function fazerRonda(forcar = false) {
   }
   const resposta = await executarNaAba(pedidos);
   if (!resposta) {
+    // Sem aba: o vigia avisa "sem aba"; só aba pública: "sem sessão".
     await guardarUltimo("ultimaRonda", "sem aba do Compras.gov aberta");
+    return;
+  }
+  if (resposta.falha) {
+    await rondaFalhou(resposta.falha);
     return;
   }
   if (await conferirSessao(resposta.resultados)) return;
@@ -244,6 +319,18 @@ async function fazerRonda(forcar = false) {
   await guardarUltimo(
     "ultimaRonda",
     `${enviadas} de ${pedidos.length} consultas`,
+  );
+  if (enviadas) {
+    await rondaLeu();
+    return;
+  }
+  const lidas = resposta.resultados.filter(
+    (r) => (r.status === 200 || r.status === 206) && r.dados !== null,
+  );
+  await rondaFalhou(
+    lidas.length
+      ? "o Licita recusou as leituras"
+      : `o Compras.gov respondeu ${[...new Set(resposta.resultados.map((r) => r.status || r.erro))].join(", ")}`,
   );
 }
 

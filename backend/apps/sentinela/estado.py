@@ -46,7 +46,13 @@ def estado_atual(agora: dt.datetime | None = None) -> dict:
     base = {
         "ultimo_pulso": ultimo.recebido_em,
         "ultima_captura": captura.recebido_em if captura else None,
-        "detalhe": ultimo.get_estado_display() if ultimo.estado != Pulso.Estado.OK else ultimo.detalhe,
+        # "erro" mostra o motivo que a Sentinela mandou (0.2.7, GEN-73: "Ligada,
+        # mas não consegue ler: a aba do Compras.gov não respondeu…").
+        "detalhe": (
+            ultimo.detalhe
+            if ultimo.estado == Pulso.Estado.OK or (ultimo.estado == Pulso.Estado.ERRO and ultimo.detalhe)
+            else ultimo.get_estado_display()
+        ),
     }
     if ultimo.estado != Pulso.Estado.OK:
         return {"estado": "precisa_de_voce", **base}

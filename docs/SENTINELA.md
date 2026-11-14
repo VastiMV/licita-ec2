@@ -1,4 +1,4 @@
-# Sentinela — plano e o que já existe (0.2.6, 12/11/2026)
+# Sentinela — plano e o que já existe (0.2.7, 14/11/2026)
 
 A Sentinela é uma **extensão do Chrome** no computador do Carlinhos. Ela é a
 ponte entre o Compras.gov.br (a sessão **dele**, já logada) e o Licita. Sem
@@ -190,8 +190,23 @@ diz "ok" só porque existe uma aba do Compras.gov, viva ou não. Correção no
 - um aviso por episódio;
 - consulta `sentinela` dia a dia ("⚠ ligada e sem leitura").
 
-A parte da extensão (avisar a falha da ronda, impedir o descarte da aba)
-fica para a 0.2.7.
+A parte da extensão veio na 0.2.7 (abaixo).
+
+**0.2.7 (14/11/2026, GEN-73):** a ronda não falha mais calada. Decisões da
+operação de 14/11/2026:
+- **Ronda que falha vira aviso** (estado `erro`, topo âmbar com o motivo):
+  "Ligada, mas não consegue ler: a aba do Compras.gov não respondeu (dê F5
+  nela)" / "o Licita não mandou a lista da ronda" / "o Compras.gov respondeu
+  500". Avisa na **2ª falha seguida** (não por um soluço) e só uma vez; quando
+  volta a ler: "A Sentinela voltou a ler o Compras.gov". Enquanto isso o sinal
+  de vida fica quieto. Sessão caída não conta aqui (tem aviso próprio).
+- **A aba da área do fornecedor nunca é descartada** pela economia de memória
+  do Chrome (`autoDiscardable: false`, posto pelo vigia e pela ronda).
+- **Aba descarregada** (restaurada sem abrir ou descartada): a ronda
+  **recarrega a aba sozinha** antes de ler. Só abre a página; não escreve nada
+  no Compras.gov. Se a sessão tiver caído, vale o aviso de sessão.
+- Fora: o "ok só se leu" na extensão — o alarme de silêncio do servidor já
+  cobre (decisão da operação).
 
 **10/11/2026 — compra trazida pela Sentinela fica completa:** a compra
 que a Sentinela cria no Licita (a empresa já participa no Compras.gov) vinha
