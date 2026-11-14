@@ -25,6 +25,13 @@ import { InputTextComponent } from '../../../shared/ui/input-text/input-text.com
 import { ItemMenu, MenuComponent } from '../../../shared/ui/menu/menu.component';
 import { SelectComponent } from '../../../shared/ui/select/select.component';
 import {
+  JANELA_PADRAO_DIAS,
+  PADRAO,
+  PERSONALIZADO,
+  limitesDoMes,
+  opcoesDePeriodo,
+} from '../periodo.utils';
+import {
   CotadorModalComponent,
   CotadorModalData,
   CotadorModalResultado,
@@ -40,58 +47,10 @@ import {
   ProcessoModalResultado,
 } from '../encerradas/processo-modal/processo-modal.component';
 
-/** Período que a tela abre consultando — o usuário muda antes de pesquisar. */
-const JANELA_PADRAO_DIAS = 90;
-
-/** Valores especiais do campo Período (os outros são meses `aaaa-mm`). */
-const PADRAO = 'ultimos';
-const PERSONALIZADO = 'datas';
-
 export const ROTULO_ETAPA: Record<EtapaDescarte, string> = {
   oportunidade: 'Oportunidade',
   cotacao: 'Cotação',
 };
-
-const NOMES_MES = [
-  'janeiro',
-  'fevereiro',
-  'março',
-  'abril',
-  'maio',
-  'junho',
-  'julho',
-  'agosto',
-  'setembro',
-  'outubro',
-  'novembro',
-  'dezembro',
-];
-
-/** Os últimos 12 meses, do atual para trás — `value` é `aaaa-mm`. */
-export function ultimosMeses(hoje: string, quantos = 12): { value: string; label: string }[] {
-  let [ano, mes] = hoje.split('-').map(Number);
-  const meses: { value: string; label: string }[] = [];
-  for (let i = 0; i < quantos; i++) {
-    meses.push({
-      value: `${ano}-${String(mes).padStart(2, '0')}`,
-      label: `${NOMES_MES[mes - 1]} de ${ano}`,
-    });
-    mes -= 1;
-    if (mes === 0) {
-      mes = 12;
-      ano -= 1;
-    }
-  }
-  return meses;
-}
-
-/** Primeiro e último dia do mês `aaaa-mm`, em `aaaa-mm-dd`. */
-export function limitesDoMes(mes: string): { inicio: string; fim: string } {
-  const [ano, m] = mes.split('-').map(Number);
-  const ultimoDia = new Date(Date.UTC(ano, m, 0)).getUTCDate();
-  const mm = String(m).padStart(2, '0');
-  return { inicio: `${ano}-${mm}-01`, fim: `${ano}-${mm}-${String(ultimoDia).padStart(2, '0')}` };
-}
 
 /** As chaves das colunas são contrato com `ORDENACOES_DESCARTADAS` em
  * `apps/licitacoes/views.py`. */
@@ -187,11 +146,7 @@ export class DescartadasPage implements OnInit {
   protected readonly motivos = MOTIVOS_DESCARTE;
   /** Um campo só para o período — mantém os filtros numa linha. "Escolher
    * datas…" é o único que mostra o "de"/"até". */
-  protected readonly periodos = [
-    { value: PADRAO, label: `Últimos ${JANELA_PADRAO_DIAS} dias` },
-    ...ultimosMeses(hojeIso()),
-    { value: PERSONALIZADO, label: 'Escolher datas…' },
-  ];
+  protected readonly periodos = opcoesDePeriodo(hojeIso());
   protected readonly escolhendoDatas = signal(false);
   protected readonly ufs = UFS;
 

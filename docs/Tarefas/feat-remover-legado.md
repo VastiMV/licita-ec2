@@ -81,7 +81,7 @@ dentro do processo.
   (sem `oportunidade_id`) é recusado com 400; o card da Pesquisar mostra só
   "Salvar"; o Cotador continua abrindo das salvas.
 
-- [ ] **7. O quadro antigo do Ciclo de Licitação**
+- [x] **7. O quadro antigo do Ciclo de Licitação** — feito em 14/11/2026 (GEN-47). O selo da cotação foi para `apps/cotador/situacao.py`; os testes dele estão em `test_em_cotacao.py`.
   A Torre de Controle o substituiu em 08/11/2026 (`docs/TORRE.md`). Hoje
   `/ciclo` e `/ciclo/visao-geral` já redirecionam para `/torre`; o código
   continua no repositório sem tela. Saem: `pages/ciclo/quadro/`,

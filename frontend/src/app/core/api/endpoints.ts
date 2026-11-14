@@ -25,8 +25,6 @@ export const ENDPOINTS = {
     oportunidades: 'licitacoes/oportunidades/',
     compraDetalhe: (cnpj: string, ano: string | number, sequencial: string | number) =>
       `licitacoes/compras/${cnpj}/${ano}/${sequencial}/detalhe/`,
-    /** O quadro do Ciclo de Licitação, com a etapa já calculada. */
-    ciclo: 'licitacoes/ciclo/',
     /** A Torre de Controle: 4 estágios, a etapa calculada por item. */
     torre: 'licitacoes/torre/',
     salvas: 'licitacoes/salvas/',

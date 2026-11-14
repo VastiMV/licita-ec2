@@ -1,4 +1,5 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 
 import {
@@ -20,8 +21,16 @@ import {
 import { TabelaAcoesDirective } from '../../../shared/ui/data-table/tabela-acoes.directive';
 import { DatePickerComponent } from '../../../shared/ui/date-picker/date-picker.component';
 import { hojeIso, somarDias } from '../../../shared/ui/date-picker/date-picker.utils';
+import { InputTextComponent } from '../../../shared/ui/input-text/input-text.component';
 import { ItemMenu, MenuComponent } from '../../../shared/ui/menu/menu.component';
 import { SelectComponent } from '../../../shared/ui/select/select.component';
+import {
+  JANELA_PADRAO_DIAS,
+  PADRAO,
+  PERSONALIZADO,
+  limitesDoMes,
+  opcoesDePeriodo,
+} from '../periodo.utils';
 import {
   CotadorModalComponent,
   CotadorModalData,
@@ -39,8 +48,6 @@ import {
   ProcessoModalResultado,
 } from './processo-modal/processo-modal.component';
 
-/** Período que a tela abre consultando — o usuário muda antes de pesquisar. */
-const JANELA_PADRAO_DIAS = 90;
 
 const TOM_DO_MOTIVO: Partial<Record<EncerradaResponse['motivo'], TomCelula>> = {
   perdida: 'perigo',
@@ -117,6 +124,7 @@ const COLUNAS: readonly ColunaTabela<EncerradaResponse>[] = [
     MenuComponent,
     DatePickerComponent,
     SelectComponent,
+    InputTextComponent,
     ButtonComponent,
   ],
   templateUrl: './encerradas.page.html',
@@ -130,14 +138,35 @@ export class EncerradasPage implements OnInit {
 
   protected readonly colunas = COLUNAS;
   protected readonly motivos = MOTIVOS_ENCERRAMENTO;
+  /** Os mesmos filtros de Descartadas (GEN-55, 14/11/2026). */
+  protected readonly periodos = opcoesDePeriodo(hojeIso());
+  protected readonly escolhendoDatas = signal(false);
   protected readonly ufs = UFS;
 
   protected readonly filtros = this.fb.nonNullable.group({
+    /** Escolha da tela que preenche "de" e "até". Não vai para a API. */
+    periodo: PADRAO,
     data_inicial: somarDias(hojeIso(), -JANELA_PADRAO_DIAS),
     data_final: hojeIso(),
     motivo: '',
+    uasg: '',
     uf: '',
   });
+
+  constructor() {
+    this.filtros.controls.periodo.valueChanges.pipe(takeUntilDestroyed()).subscribe((periodo) => {
+      this.escolhendoDatas.set(periodo === PERSONALIZADO);
+      if (periodo === PADRAO) {
+        this.filtros.patchValue({
+          data_inicial: somarDias(hojeIso(), -JANELA_PADRAO_DIAS),
+          data_final: hojeIso(),
+        });
+      } else if (periodo !== PERSONALIZADO) {
+        const { inicio, fim } = limitesDoMes(periodo);
+        this.filtros.patchValue({ data_inicial: inicio, data_final: fim });
+      }
+    });
+  }
 
   protected readonly estado = signal<EstadoTabela>(
     estadoInicialTabela({ ordenarPor: 'encerrada_em', direcao: 'desc' }),
@@ -208,7 +237,7 @@ export class EncerradasPage implements OnInit {
 
   private carregar(): void {
     const estado = this.estado();
-    const filtros = this.filtros.getRawValue();
+    const { periodo: _periodo, ...filtros } = this.filtros.getRawValue();
     this.carregando.set(true);
     this.erro.set(false);
 

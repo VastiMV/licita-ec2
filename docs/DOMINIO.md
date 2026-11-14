@@ -317,8 +317,9 @@ Resumo para quem está só passando:
   saiu antes de participar. Uma licitação nunca está em dois lugares
   (`encerradas.py` + `test_saidas.py`).
 - O quadro antigo (`ciclo.py`, `GET ciclo/`, colunas Oportunidade, Cotação,
-  Proposta, Disputa, Empenho) foi substituído pela Torre em 08/11/2026. O
-  código ainda está no repositório, sem tela, até `feat-remover-legado`.
+  Proposta, Disputa, Empenho) foi substituído pela Torre em 08/11/2026 e
+  **saiu do código em 14/11/2026** (GEN-47). O selo da cotação, que a lista
+  do Cotador usa, mudou para `apps/cotador/situacao.py`.
 
 Telas de saída: **Encerradas** e **Encerradas › Descartadas** — filtros
 Período (últimos 90 dias, um dos últimos 12 meses, ou datas livres), Motivo,
@@ -762,5 +763,6 @@ acima parecer estranha, a razão costuma estar aqui.
 | 10/11/2026 | Etapa nova **Aguardando sessão** (Disputar): preço lançado no Compras.gov e sessão fechada; com a data da sessão; sem cotação no Licita avança com aviso. 14 etapas |
 | 10/11/2026 | Prazo vencido com cotação no Compras.gov **sem nenhuma participação** → Descartadas no dia seguinte, mesmo nos favoritos (Guarulhos 461/2026). Fim do "confirmar com a Sentinela" |
 | 10/11/2026 | `AGENTS.md`: decisões só com confirmação; documentação no mesmo PR para toda mudança; código GEN no ramo e no PR |
+| 14/11/2026 | **Encerradas com os mesmos filtros de Descartadas** (GEN-55): Período (últimos 90 dias, mês ou datas) e UASG, que faltavam. **Quadro antigo do Ciclo removido** (GEN-47) |
 | 14/11/2026 | **Disputar com 7 etapas** (GEN-83): Propostas aceitas (substitui "Aceita e habilitada"), Recursos e Finalizadas (adjudicado). `AP` e compra `2`/`3`/`4` → Disputa; `LS` → Aguardando sessão; `JE`/`HE` sem a Inside → Encerradas, e `JE` lido a cada ronda; diligência aberta traz o item de volta. 16 etapas |
 

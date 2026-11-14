@@ -549,11 +549,7 @@ class TorreTests(APITestCase):
 
         self.assertIsNone(self.cartao(self.torre(), salva))
 
-    def test_a_tela_atual_do_ciclo_continua_igual(self):
-        resposta = self.client.get("/api/licitacoes/ciclo/")
+    def test_o_quadro_antigo_do_ciclo_saiu(self):
+        """A Torre substituiu o quadro do Ciclo de Licitação (GEN-47)."""
 
-        self.assertEqual(resposta.status_code, 200)
-        self.assertEqual(
-            [c["etapa"] for c in resposta.data["colunas"]],
-            ["oportunidade", "cotacao", "proposta", "disputa", "empenho"],
-        )
+        self.assertEqual(self.client.get("/api/licitacoes/ciclo/").status_code, 404)

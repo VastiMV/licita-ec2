@@ -64,6 +64,8 @@ export interface EncerradasParams {
   readonly data_inicial?: string;
   readonly data_final?: string;
   readonly motivo?: string;
+  /** Parte do código da UASG basta (GEN-55). */
+  readonly uasg?: string;
   readonly uf?: string;
 }
 

@@ -217,7 +217,7 @@ class EncerradaSerializer(OportunidadeSalvaSerializer):
 
 class EmCotacaoSerializer(OportunidadeSalvaSerializer):
     """Uma linha do Cotador: a salva mais a cotação dela e a situação — o
-    mesmo selo e as mesmas faltas do cartão do quadro (`ciclo.py`)."""
+    selo e as faltas da cotação (`apps/cotador/situacao.py`)."""
 
     cotacao_id = serializers.IntegerField(source="cotacao.pk", read_only=True)
     valor_cotado = serializers.SerializerMethodField()
@@ -243,7 +243,7 @@ class EmCotacaoSerializer(OportunidadeSalvaSerializer):
         return obj.cotacao.totais().pendencias
 
     def get_selo(self, obj: OportunidadeSalva) -> dict:
-        from .ciclo import situacao_da_cotacao
+        from apps.cotador.situacao import situacao_da_cotacao
 
         return situacao_da_cotacao(obj)
 

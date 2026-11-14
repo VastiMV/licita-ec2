@@ -7,7 +7,8 @@ import { EncerradasService } from '../../../services/licitacoes/encerradas.servi
 import { ModalService } from '../../../shared/overlay/modal.service';
 import { CotadorModalComponent } from '../../oportunidades/cotador-modal/cotador-modal.component';
 import { ProcessoModalComponent } from '../encerradas/processo-modal/processo-modal.component';
-import { DescartadasPage, limitesDoMes, ultimosMeses } from './descartadas.page';
+import { limitesDoMes, ultimosMeses } from '../periodo.utils';
+import { DescartadasPage } from './descartadas.page';
 
 const COTADA: DescartadaResponse = {
   id: 4,

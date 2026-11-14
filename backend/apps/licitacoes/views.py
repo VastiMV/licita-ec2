@@ -29,7 +29,6 @@ from apps.integracoes.clients.compras_gov import ComprasGovClientError
 from apps.integracoes.clients.pncp import PncpClient, PncpClientError
 from apps.integracoes.plataformas import identificar_plataforma, plataforma_padrao
 
-from .ciclo import montar_quadro
 from .encerradas import MOTIVOS, MOTIVOS_DESCARTE, descartadas, encerradas, montar_processo
 from .models import (
     DocumentoFinanceiro,
@@ -372,14 +371,6 @@ class TorreView(APIView):
         return Response(montar_torre())
 
 
-class CicloView(APIView):
-    """`GET /api/licitacoes/ciclo/` — o quadro do Ciclo de Licitação: uma
-    coluna por etapa, com a etapa calculada (ver `ciclo.py`)."""
-
-    def get(self, request: Request) -> Response:
-        return Response(montar_quadro())
-
-
 ORDENACOES_ENCERRADAS = {
     "uasg": "uasg",
     "cidade": "municipio",
@@ -399,7 +390,8 @@ def _data(valor: str | None) -> dt.date | None:
 class EncerradasView(APIView):
     """`GET /api/licitacoes/encerradas/` — as licitações que saíram do ciclo
     (ver `encerradas.py`), com os filtros da tela: período de encerramento
-    (`data_inicial`/`data_final`), `motivo`, `uf` e `busca` textual."""
+    (`data_inicial`/`data_final`), `motivo`, `uasg` (parte do código basta),
+    `uf` e `busca` textual — os mesmos de Descartadas (GEN-55)."""
 
     def get(self, request: Request) -> Response:
         registrar_prazos_vencidos()
@@ -412,6 +404,8 @@ class EncerradasView(APIView):
             lista = lista.filter(encerrada_em__lte=fim)
         if (motivo := params.get("motivo")) in MOTIVOS:
             lista = lista.filter(motivo=motivo)
+        if uasg := (params.get("uasg") or "").strip():
+            lista = lista.filter(uasg__icontains=uasg)
         if uf := (params.get("uf") or "").strip().upper():
             lista = lista.filter(uf=uf)
 

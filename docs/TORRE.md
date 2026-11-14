@@ -322,7 +322,6 @@ Todas em `/api/licitacoes/`, exigem login.
 | `POST documentos-financeiros/<id>/ligar/` | liga a uma licitação (e item, opcional) |
 | `GET encerradas/`, `GET descartadas/` | as listas de saída, com filtros |
 | `GET/POST salvas/<id>/descartar/` | a lixeira: a pergunta (preço lançado) / descartar |
-| `GET ciclo/` | **legado**: o quadro antigo. Nenhuma tela usa mais; sai em `feat-remover-legado` |
 
 O cartão (`montar_torre` → `_cartao`) já vem pronto para a tela: etapa,
 rótulo, `compra` ("Pregão 112/2026", tirado do código da compra no link do
