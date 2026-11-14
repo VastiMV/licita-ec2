@@ -12,6 +12,9 @@ licitações públicas (Lei 14.133), integrando com o PNCP e o Compras.gov.br.
 3. [Sentinela](SENTINELA.md) — a extensão do Chrome que lê o Compras.gov.br.
 4. [Arquitetura](ARQUITETURA.md) — como o código se organiza e onde roda.
 5. [Tarefas](Tarefas/README.md) — onde paramos e o que vem depois.
+6. [Status oficiais × Licita](STATUS_OFICIAIS.md) — o que significa cada
+   código do Compras.gov.br e do PNCP, como o Licita trata e o que falta
+   decidir.
 
 ## Como esta documentação é mantida
 

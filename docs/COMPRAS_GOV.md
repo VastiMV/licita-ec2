@@ -43,8 +43,8 @@ da sessão de julgamento (`numeroSessaoJulgHab`, quase sempre `1`).
 
 | Ação na tela | Endereço | Acesso | Captcha | Sentinela |
 |---|---|---|---|---|
-| Lista de códigos (fases, situações…) | `/comprasnet-fase-externa/v1/enums` | 🌐 | não | — (consulta manual; tabelas em `torre.py`) |
-| Lista de códigos da disputa | `/comprasnet-disputa/v1/enums` | 🌐 | não | — |
+| Lista de códigos (fases, situações…) | `/comprasnet-fase-externa/v1/enums` | 🌐 | não | — (consulta manual; tabelas em `torre.py`; cópia de 14/11/2026 em [`referencia/`](referencia/README.md); significado para o Licita em [STATUS_OFICIAIS.md](STATUS_OFICIAIS.md)) |
+| Lista de códigos da disputa | `/comprasnet-disputa/v1/enums` | 🌐 | não | — (cópia em [`referencia/`](referencia/README.md)) |
 | Configuração de captcha | `/comprasnet-fase-externa/v1/captcha/configuracao` | 🌐 | não | — (diz `recaptchaHabilitado: false`; o captcha em uso é o **hCaptcha**) |
 | Hora oficial de Brasília | `/comprasnet-disputa/v1/datahorabrasilia` | 🔐 | não | — |
 | Quem está logado | `/comprasnet-usuario/v1/usuario` | 🔐 | não | — |

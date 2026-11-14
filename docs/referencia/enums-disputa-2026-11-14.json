@@ -1,0 +1,177 @@
+[
+ {
+  "name": "FiltroDisputaItemEnum",
+  "values": [
+   {
+    "enumName": "TODOS_ITENS",
+    "value": "1",
+    "label": "Todos os Itens"
+   },
+   {
+    "enumName": "FORNECEDOR_SOMENTE_ITENS_GANHANDO_OU_EMPATADO",
+    "value": "2",
+    "label": "Itens em que estou ganhando"
+   },
+   {
+    "enumName": "FORNECEDOR_SOMENTE_ITENS_PERDENDO",
+    "value": "3",
+    "label": "Itens em que estou perdendo"
+   },
+   {
+    "enumName": "FORNECEDOR_SOMENTE_ITENS_ENCERRAMENTO_ALEATORIO",
+    "value": "4",
+    "label": "Itens em encerramento aleatório"
+   },
+   {
+    "enumName": "FORNECEDOR_SOMENTE_ITENS_ATE_2MINUTOS",
+    "value": "5",
+    "label": "Itens nos 2 minutos finais"
+   },
+   {
+    "enumName": "FORNECEDOR_SOMENTE_ITENS_CONVOCADOS",
+    "value": "6",
+    "label": "Itens em que estou convocado"
+   },
+   {
+    "enumName": "FORNECEDOR_SOMENTE_ITENS_COM_PROPOSTA_DESCLASSIFICADA",
+    "value": "7",
+    "label": "Itens em que estou desclassificado"
+   },
+   {
+    "enumName": "FORNECEDOR_SOMENTE_ITENS_ANULADOS_OU_REVOGADOS",
+    "value": "13",
+    "label": "Itens anulados/revogados"
+   },
+   {
+    "enumName": "GOVERNO_SOMENTE_ITENS_ACIMA_CRITERIO_VALOR",
+    "value": "8",
+    "label": "Itens acima do critério de valor"
+   },
+   {
+    "enumName": "GOVERNO_SOMENTE_ITENS_ABAIXO_OU_IGUAL_CRITERIO_VALOR",
+    "value": "9",
+    "label": "Itens abaixo do critério de valor"
+   },
+   {
+    "enumName": "GOVERNO_SOMENTE_ITENS_DISPUTA_ENCERRADA",
+    "value": "10",
+    "label": "Itens com disputa encerrada"
+   },
+   {
+    "enumName": "GOVERNO_SOMENTE_ITENS_DESERTOS",
+    "value": "11",
+    "label": "Itens desertos"
+   },
+   {
+    "enumName": "GOVERNO_SOMENTE_ITENS_FRACASSADOS",
+    "value": "12",
+    "label": "Itens fracassados"
+   },
+   {
+    "enumName": "GOVERNO_SOMENTE_ITENS_ANULADOS_OU_REVOGADOS",
+    "value": "14",
+    "label": "Itens anulados/revogados"
+   }
+  ]
+ },
+ {
+  "name": "SituacaoParticipacaoFaseDisputaEnum",
+  "values": [
+   {
+    "enumName": "CONVOCADO",
+    "value": "1",
+    "label": "Convocado"
+   },
+   {
+    "enumName": "ENVIOU_NOVO_LANCE_FASE_FECHADA",
+    "value": "3",
+    "label": "Lance único registrado"
+   },
+   {
+    "enumName": "PARTICIPOU_FASE_FECHADA",
+    "value": "7",
+    "label": "Lance único registrado"
+   },
+   {
+    "enumName": "IGNOROU_CONVOCACAO_PARTICIPACAO_FASE_FECHADA",
+    "value": "5",
+    "label": "Convocação ignorada"
+   },
+   {
+    "enumName": "ENVIOU_NOVO_LANCE_DESEMPATE",
+    "value": "4",
+    "label": "Lance registrado"
+   },
+   {
+    "enumName": "DESISTIU_DESEMPATE",
+    "value": "6",
+    "label": "Desistiu do lance"
+   },
+   {
+    "enumName": "IGNOROU_CONVOCACAO_PARTICIPACAO_DESEMPATE",
+    "value": "8",
+    "label": "Convocação ignorada"
+   },
+   {
+    "enumName": "PARTICIPANTE_NAO_CONVOCADO",
+    "value": "11",
+    "label": "Não convocado"
+   },
+   {
+    "enumName": "PARTICIPANTE_NAO_CONVOCADO_FASE_DESEMPATE",
+    "value": "9",
+    "label": "Não classificado desempate"
+   },
+   {
+    "enumName": "PARTICIPANTE_CLASSIFICADO_MAS_AINDA_NAO_CONVOCADO_DESEMPATE",
+    "value": "10",
+    "label": "Classificado desempate"
+   },
+   {
+    "enumName": "VENCEDOR_FASE_ABERTA",
+    "value": "12",
+    "label": "Vencedor etapa aberta"
+   },
+   {
+    "enumName": "PARTICIPANTE_NAO_CONVOCADO_FASE_ABERTA",
+    "value": "13",
+    "label": "Não convocado"
+   }
+  ]
+ },
+ {
+  "name": "SituacaoParticipacaoDisputaItemEnum",
+  "values": [
+   {
+    "enumName": "DESCLASSIFICADA_NA_ANALISE_DE_PROPOSTAS",
+    "value": "D",
+    "label": "Desclassificada"
+   },
+   {
+    "enumName": "DESCLASSIFICADA_NA_DISPUTA",
+    "value": "I",
+    "label": "Proposta excluída"
+   },
+   {
+    "enumName": "REAFIRMADA_APOS_DESCLASSIFICACAO_NA_DISPUTA",
+    "value": "C",
+    "label": "Valor reafirmado"
+   },
+   {
+    "enumName": "DESCLASSIFICADA_NA_DISPUTA_ABERTA_MODO_FA",
+    "value": "A",
+    "label": "Desclassificada"
+   },
+   {
+    "enumName": "DESCLASSIFICADA_NA_DISPUTA_FECHADA_MODO_AF",
+    "value": "F",
+    "label": "Desclassificada"
+   },
+   {
+    "enumName": "RECUSADA_NO_JULGAMENTO_DE_PROPOSTAS",
+    "value": "R",
+    "label": "Recusada"
+   }
+  ]
+ }
+]
