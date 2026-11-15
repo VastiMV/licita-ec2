@@ -135,6 +135,38 @@ describe('CotadorPage', () => {
     expect(service.listar).toHaveBeenCalledTimes(2);
   });
 
+  it('preço só no Compras.gov (sem cotação no Licita): aparece e só deixa abrir a cotação', () => {
+    const semCotacao: EmCotacaoResponse = {
+      ...LINHA,
+      cotacao_id: null,
+      valor_cotado: null,
+      cotacao_atualizada_em: null,
+      pendencias: null,
+      selo: {
+        nivel: 'aviso',
+        texto: 'Sem cotação no Licita',
+        faltas: ['preço lançado no Compras.gov — abra a cotação para registrar'],
+      },
+    };
+    service.listar.mockReturnValue(of({ count: 1, next: null, previous: null, results: [semCotacao] }));
+    montar();
+
+    expect(fixture.nativeElement.textContent).toContain('Sem cotação no Licita');
+    expect(
+      pagina()
+        .acoesDe(semCotacao)
+        .map((a) => a.rotulo),
+    ).toEqual(['Abrir cotação']);
+  });
+
+  it('gerar proposta não diz que muda de etapa (o PDF é o anexo depois de vencer)', () => {
+    montar();
+
+    pagina().acoesDe(LINHA)[1].executar();
+
+    expect(modal.confirmar.mock.calls[0][0].mensagem).not.toContain('etapa');
+  });
+
   it('erro ao carregar mostra a mensagem', () => {
     service.listar.mockReturnValue(throwError(() => new Error('falhou')));
     montar();

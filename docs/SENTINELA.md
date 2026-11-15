@@ -217,7 +217,17 @@ compra está sem órgão ou sem itens, a captura pede ao PNCP em segundo plano
 (`licitacoes.completar_salva`) e preenche **só o que está vazio**: órgão,
 cidade, UF, objeto, valor e os itens no formato da busca
 (`apps/licitacoes/completar.py`). A conferência das 7h45 pega as que
-ficaram para trás. E o **Salvar da busca** com a compra já na lista completa
+ficaram para trás.
+
+**14/11/2026 (GEN-87) — o prazo também:** 9 compras chegaram em 10/11 sem
+`dataHoraFimPropostas` e ficaram sem prazo; sem prazo, nunca saíam de
+Oportunidades. O PNCP tem a data desde a publicação, então o prazo vazio
+entrou na lista do que se completa. Na criação a captura já pede; nas
+capturas seguintes ela **não** pede só pelo prazo (seria uma consulta ao
+PNCP a cada ronda enquanto ele não tiver a data). Quem tenta de novo é a
+conferência das 7h45, uma vez por dia.
+
+E o **Salvar da busca** com a compra já na lista completa
 os campos vazios com os dados da busca e registra quem salvou
 (`salvas._completar_com_a_busca`) — antes devolvia a existente sem mudar
 nada.

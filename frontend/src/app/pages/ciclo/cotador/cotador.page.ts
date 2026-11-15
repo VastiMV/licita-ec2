@@ -99,9 +99,9 @@ const COLUNAS: readonly ColunaTabela<EmCotacaoResponse>[] = [
 ];
 
 /**
- * "Ciclo de Licitação / Cotador" — as salvas que já têm cotação e ainda não
- * viraram proposta. A etapa é calculada no backend: salvar a cotação de uma
- * salva a traz para cá; prazo vencido a leva para Encerradas.
+ * "Ciclo de Licitação / Cotador" — exatamente Torre › Cotação (GEN-87,
+ * 14/11/2026): com cotação no Licita ou preço lançado no Compras.gov. A etapa
+ * é calculada no backend (`torre.avaliar`).
  */
 @Component({
   selector: 'app-cotador-page',
@@ -139,6 +139,11 @@ export class CotadorPage implements OnInit {
   }
 
   protected acoesDe(linha: EmCotacaoResponse): readonly ItemMenu[] {
+    // Sem cotação no Licita (preço só no Compras.gov, GEN-87): só dá para
+    // abrir a cotação — salvar nela cria a cotação.
+    if (linha.cotacao_id === null) {
+      return [{ rotulo: 'Abrir cotação', icone: 'calculadora', executar: () => this.abrirCotacao(linha) }];
+    }
     return [
       { rotulo: 'Abrir cotação', icone: 'calculadora', executar: () => this.abrirCotacao(linha) },
       { rotulo: 'Gerar proposta', icone: 'proposta', executar: () => this.gerarProposta(linha) },
@@ -163,9 +168,9 @@ export class CotadorPage implements OnInit {
       });
   }
 
-  /** Gerar a proposta leva a licitação para a etapa Proposta: sai daqui e
-   * aparece na coluna Proposta do quadro. O sistema avisa o que falta na
-   * cotação, mas não trava. */
+  /** Gera o PDF da proposta (o anexo enviado depois de vencer a disputa).
+   * Não muda a etapa: a licitação continua onde a Torre a põe (GEN-87). O
+   * sistema avisa o que falta na cotação, mas não trava. */
   protected gerarProposta(linha: EmCotacaoResponse): void {
     const aviso =
       linha.selo.nivel === 'ok' ? '' : ` Atenção: ${linha.selo.faltas[0] ?? linha.selo.texto}.`;
@@ -174,7 +179,7 @@ export class CotadorPage implements OnInit {
         titulo: 'Gerar proposta',
         mensagem:
           `A proposta de "${this.resumo(linha)}" será gerada com o valor cotado de ` +
-          `${formatarMoeda(linha.valor_cotado)}, e a licitação passa para a etapa Proposta.` +
+          `${formatarMoeda(linha.valor_cotado)}.` +
           aviso,
         confirmarLabel: 'Gerar proposta',
       })
@@ -183,8 +188,7 @@ export class CotadorPage implements OnInit {
 
         this.propostas.gerar(linha.id).subscribe({
           next: () => {
-            this.toast.sucesso('Proposta gerada — a licitação passou para Proposta.');
-            this.voltarPaginaSeEsvaziou();
+            this.toast.sucesso('Proposta gerada.');
             this.carregar();
           },
           error: () => this.toast.erro('Não foi possível gerar a proposta agora.'),
@@ -207,6 +211,7 @@ export class CotadorPage implements OnInit {
       .subscribe((confirmou) => {
         if (!confirmou) return;
 
+        if (linha.cotacao_id === null) return;
         this.cotador.remover(linha.cotacao_id).subscribe({
           next: () => {
             this.toast.sucesso('Cotação excluída — voltou para Oportunidade.');

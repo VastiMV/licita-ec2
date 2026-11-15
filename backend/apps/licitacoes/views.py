@@ -57,7 +57,7 @@ from .services import (
 from .relatorio import relatorio_da_compra
 from .mercado import relatorio_de_mercado
 from .relatorio_mensal import relatorio_mensal
-from .torre import montar_torre
+from .torre import ids_na_etapa, montar_torre
 
 # Mesma janela padrão do protótipo (`app/routers/licitacoes.py`) para o modo
 # interativo — diferente do lookback de 2 dias usado pelo scanner de
@@ -243,12 +243,11 @@ class OportunidadesSalvasView(APIView):
         # não haver task periódica.
         registrar_prazos_vencidos()
 
-        # Só a etapa Oportunidade: com cotação, a licitação está no Cotador;
-        # com o prazo vencido, está em Encerradas.
+        # Só a etapa Oportunidade, pela regra da Torre (GEN-87, 14/11/2026):
+        # prazo aberto, mais as suspensas e sem data que voltaram a Preparar.
         salvas = (
             OportunidadeSalva.objects.ativas()
-            .sem_cotacao()
-            .no_prazo()
+            .filter(pk__in=ids_na_etapa("oportunidade"))
             .buscar(request.query_params.get("busca", ""))
             .order_by(_ordenacao(request.query_params.get("ordering")))
         )
@@ -334,10 +333,10 @@ ORDENACOES_COTADOR = {
 
 
 class EmCotacaoView(APIView):
-    """`GET /api/licitacoes/cotacoes/` — a lista do Cotador: as salvas na
-    etapa Cotação (com cotação, sem proposta, prazo aberto). Gerou proposta,
-    sai daqui;
-    prazo vencido, vai para Encerradas."""
+    """`GET /api/licitacoes/cotacoes/` — a lista do Cotador: as salvas que a
+    Torre põe em Preparar › Cotação (GEN-87, 14/11/2026). Inclui a compra
+    com preço só no Compras.gov e sem cotação no Licita (`cotacao_id` nulo):
+    "Abrir cotação" cria a cotação."""
 
     def get(self, request: Request) -> Response:
         registrar_prazos_vencidos()
@@ -349,9 +348,7 @@ class EmCotacaoView(APIView):
 
         lista = (
             OportunidadeSalva.objects.ativas()
-            .filter(cotacao__isnull=False)
-            .sem_proposta()
-            .no_prazo()
+            .filter(pk__in=ids_na_etapa("cotacao"))
             .buscar(params.get("busca", ""))
             .select_related("cotacao")
             .prefetch_related("cotacao__itens__ofertas")

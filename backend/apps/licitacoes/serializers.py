@@ -217,13 +217,14 @@ class EncerradaSerializer(OportunidadeSalvaSerializer):
 
 class EmCotacaoSerializer(OportunidadeSalvaSerializer):
     """Uma linha do Cotador: a salva mais a cotação dela e a situação — o
-    selo e as faltas da cotação (`apps/cotador/situacao.py`)."""
+    selo e as faltas da cotação (`apps/cotador/situacao.py`).
 
-    cotacao_id = serializers.IntegerField(source="cotacao.pk", read_only=True)
+    Sem cotação no Licita (preço lançado só no Compras.gov, GEN-87): os
+    campos da cotação vêm nulos e o selo diz isso."""
+
+    cotacao_id = serializers.SerializerMethodField()
     valor_cotado = serializers.SerializerMethodField()
-    cotacao_atualizada_em = serializers.DateTimeField(
-        source="cotacao.atualizada_em", read_only=True
-    )
+    cotacao_atualizada_em = serializers.SerializerMethodField()
     pendencias = serializers.SerializerMethodField()
     selo = serializers.SerializerMethodField()
 
@@ -236,15 +237,35 @@ class EmCotacaoSerializer(OportunidadeSalvaSerializer):
             "selo",
         ]
 
-    def get_valor_cotado(self, obj: OportunidadeSalva) -> float:
-        return float(obj.cotacao.valor_cotado)
+    @staticmethod
+    def _cotacao(obj: OportunidadeSalva):
+        return getattr(obj, "cotacao", None)
 
-    def get_pendencias(self, obj: OportunidadeSalva) -> int:
-        return obj.cotacao.totais().pendencias
+    def get_cotacao_id(self, obj: OportunidadeSalva) -> int | None:
+        cotacao = self._cotacao(obj)
+        return cotacao.pk if cotacao else None
+
+    def get_valor_cotado(self, obj: OportunidadeSalva) -> float | None:
+        cotacao = self._cotacao(obj)
+        return float(cotacao.valor_cotado) if cotacao else None
+
+    def get_cotacao_atualizada_em(self, obj: OportunidadeSalva):
+        cotacao = self._cotacao(obj)
+        return serializers.DateTimeField().to_representation(cotacao.atualizada_em) if cotacao else None
+
+    def get_pendencias(self, obj: OportunidadeSalva) -> int | None:
+        cotacao = self._cotacao(obj)
+        return cotacao.totais().pendencias if cotacao else None
 
     def get_selo(self, obj: OportunidadeSalva) -> dict:
         from apps.cotador.situacao import situacao_da_cotacao
 
+        if self._cotacao(obj) is None:
+            return {
+                "nivel": "aviso",
+                "texto": "Sem cotação no Licita",
+                "faltas": ["preço lançado no Compras.gov — abra a cotação para registrar"],
+            }
         return situacao_da_cotacao(obj)
 
 

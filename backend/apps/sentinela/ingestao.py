@@ -625,7 +625,7 @@ def _salva_da_compra(compra: dict, codigo: str | None = None) -> tuple[Oportunid
             # próximas capturas (itens, propostas) a ela.
             salva.link_plataforma = montar_link_compras_gov({"id_compra": codigo}) or salva.link_plataforma
             salva.save(update_fields=["link_plataforma"])
-        _pedir_completar(salva)
+        _pedir_completar(salva, com_prazo=False)
         return salva, False
     if not (chave and codigo):
         return None, False
@@ -657,15 +657,17 @@ def _salva_da_compra(compra: dict, codigo: str | None = None) -> tuple[Oportunid
     return salva, True
 
 
-def _pedir_completar(salva: OportunidadeSalva) -> None:
+def _pedir_completar(salva: OportunidadeSalva, com_prazo: bool = True) -> None:
     """Sem órgão ou sem itens (o Compras.gov não manda os itens; às vezes nem
     o nome do órgão): pede ao PNCP, em segundo plano, o que a busca teria
     gravado. Sem isso o Cotador abre vazio (10/11/2026, ver
-    `apps.licitacoes.completar`). Repete a cada captura até completar."""
+    `apps.licitacoes.completar`). Repete a cada captura até completar.
+    Sem prazo (GEN-87, 14/11/2026) pede só quando cria a salva; depois, a
+    conferência diária tenta de novo."""
 
     from apps.licitacoes.completar import falta_dados
 
-    if not falta_dados(salva):
+    if not falta_dados(salva, com_prazo=com_prazo):
         return
     from apps.licitacoes.tasks import completar_salva
 
