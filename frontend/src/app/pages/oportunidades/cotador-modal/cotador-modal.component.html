@@ -121,7 +121,11 @@
               }
             }
           </div>
-          <div class="marca-reserva" [style.left.%]="posicaoReserva()">
+          <div
+            class="marca-reserva"
+            [class.legenda-esquerda]="posicaoReserva() > 60"
+            [style.left.%]="posicaoReserva()"
+          >
             <span>Reserva {{ moeda(totais().precoReserva) }}</span>
           </div>
         </div>

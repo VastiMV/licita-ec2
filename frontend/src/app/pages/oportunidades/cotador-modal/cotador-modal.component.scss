@@ -166,6 +166,10 @@
 .barra-area {
   position: relative;
   margin: var(--space-6) 0 var(--space-5);
+  // Nada da barra vaza para os lados (14/11/2026: a legenda da reserva perto
+  // do fim criava uma barra de rolagem horizontal no modal).
+  overflow-x: clip;
+  overflow-y: visible;
 }
 
 // A chave por cima das fatias que são "capital": custo, transporte, garantia.
@@ -225,6 +229,12 @@
     font-size: var(--font-size-xs);
     font-weight: var(--font-weight-semibold);
     white-space: nowrap;
+  }
+
+  // Reserva na parte final da barra: a legenda fica à esquerda da linha.
+  &.legenda-esquerda span {
+    left: auto;
+    right: 0.35rem;
   }
 }
 
