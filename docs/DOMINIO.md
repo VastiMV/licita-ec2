@@ -385,6 +385,25 @@ Regras da conta (as mesmas da planilha de origem):
   35% = R$158,89, lucro líquido R$35), então divergência entre elas quebra
   um teste dos dois lados.
 
+Tela do Cotador e totais (14/11/2026, GEN-24, GEN-26, GEN-29, GEN-66 —
+decisões da operação):
+
+- **Capital necessário = tudo o que sai do bolso:** produto + frete + outros
+  do fornecedor + transporte + garantia. Antes era só produto + frete +
+  outros, e ficava **igual** ao "Custo dos produtos" quando o fornecedor não
+  tinha frete nem outros (GEN-29).
+- **Markup médio continua sobre o custo** (produto + frete + outros), não
+  sobre o capital: assim bate com o markup configurado nos itens. Na tela e
+  na planilha aparece "sobre o custo".
+- **Todos os totais ficam em cima** (GEN-66): Valor cotado e Lucro abrem a
+  faixa em destaque, seguidos de Preço de reserva e Folga para negociar; o
+  rodapé fica só com os botões.
+- **Salvar fica na tela** (GEN-26): "Salvar" grava e continua editando;
+  "Salvar e fechar" grava e sai. Fechar pelo X depois de salvar não pergunta
+  nada e a lista de quem abriu o Cotador recarrega.
+- O campo do custo do produto, em cada fornecedor, chama-se **"Valor do
+  produto"** (GEN-24; antes era só "Produto").
+
 ### `Fornecedor`, produtos e preços
 
 Implementado em `apps/fornecedores` e `apps/produtos` — as docstrings dos
