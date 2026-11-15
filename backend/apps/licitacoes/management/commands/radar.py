@@ -10,7 +10,8 @@ from __future__ import annotations
 from django.core.management.base import BaseCommand
 
 from apps.licitacoes.models import SugestaoRadar
-from apps.licitacoes.radar import rodar, termos_da_base
+from apps.licitacoes.completar import sem_itens
+from apps.licitacoes.radar import rodar, termos_da_base, visiveis
 
 
 class Command(BaseCommand):
@@ -28,7 +29,10 @@ class Command(BaseCommand):
         self.stdout.write(f"\nResumo: {resumo}")
         novas = SugestaoRadar.objects.exclude(pk__in=antes).order_by("-por_ganho", "uf")
         com_itens = sum(1 for s in novas if any((i or {}).get("descricao_resumida") for i in s.itens))
-        self.stdout.write(f"Novas: {novas.count()} · com itens do PNCP: {com_itens}\n")
+        self.stdout.write(f"Novas: {novas.count()} · com itens do PNCP: {com_itens}")
+        todas = list(visiveis())
+        todas_com_itens = sum(1 for s in todas if not sem_itens(s.itens))
+        self.stdout.write(f"No Radar agora: {len(todas)} · com itens do PNCP: {todas_com_itens}\n")
         for s in novas[:30]:
             itens = [i for i in s.itens if (i or {}).get("descricao_resumida")]
             self.stdout.write(

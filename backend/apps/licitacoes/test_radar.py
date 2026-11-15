@@ -251,3 +251,60 @@ class ComandoRadarTests(APITestCase):
         texto = saida.getvalue()
         self.assertIn("Base: 1 termos", texto)
         self.assertIn("Novas: 1 · com itens do PNCP: 1", texto)
+
+
+
+class ItensQueFaltaramTests(APITestCase):
+    """Teste no servidor (15/11/2026): o serviço de itens do PNCP fora do ar,
+    67 sugestões entraram sem itens."""
+
+    def setUp(self):
+        cache.clear()
+
+    def test_rodada_seguinte_completa_os_itens(self):
+        salva("1", "Ração para aves")
+        fora = FakePncp({"racao": [edital("10")]})
+        fora.listar_itens = lambda **_: (_ for _ in ()).throw(__import__("apps.integracoes.clients.pncp", fromlist=["x"]).PncpClientError("503"))
+        rodar(HOJE, fora)
+        self.assertIsNone(SugestaoRadar.objects.get().itens[0]["descricao_resumida"])
+
+        resumo = rodar(HOJE, FakePncp({"racao": []}))
+
+        sugestao = SugestaoRadar.objects.get()
+        self.assertEqual(resumo["itens_completados"], 1)
+        self.assertEqual(sugestao.itens[0]["descricao_resumida"], "Ração para aves")
+        self.assertEqual(sugestao.itens[0]["contratacao_sequencial_compra"], "10")  # os dados da compra ficam
+        self.assertEqual(sugestao.valor_total_estimado, 100)
+
+    def test_salva_so_com_o_item_vazio_conta_como_sem_itens(self):
+        from .completar import falta_dados, sem_itens
+
+        s = salva("1", "")
+        s.itens = [{"descricao_resumida": None, "contratacao_objeto": "x"}]
+        s.orgao_nome = "Órgão"
+        s.data_encerramento_proposta = HOJE
+        s.save()
+
+        self.assertTrue(sem_itens(s.itens))
+        self.assertTrue(falta_dados(s))
+        self.assertIn(s, OportunidadeSalva.objects.filter(__import__("apps.licitacoes.completar", fromlist=["x"])._sem_dados()))
+
+
+
+class NomeDoItemTests(APITestCase):
+    """Teste no servidor (15/11/2026): termos fracos ("... tipo") puxavam
+    compras sem relação."""
+
+    def test_nome_antes_do_primeiro_atributo(self):
+        from .radar import _nome_do_item
+
+        casos = {
+            "Tonômetro modelo: goldman, tipo base: móvel, tipo": "Tonômetro",
+            "Lâmpada Fenda aplicação: serviço de oftalmologia,": "Lâmpada Fenda",
+            "Facoemulsificador composição: vitrectomia anterior": "Facoemulsificador",
+            "Equipamento - Uso Oftalmológico tipo: tomógrafo ót": "Equipamento - Uso Oftalmológico",
+            "Ração para aves": "Ração para aves",
+            "Seringa descartável": "Seringa descartável",
+        }
+        for descricao, nome in casos.items():
+            self.assertEqual(_nome_do_item(descricao), nome, descricao)

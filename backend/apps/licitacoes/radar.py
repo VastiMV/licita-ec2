@@ -80,13 +80,34 @@ class PncpPaciente(PncpClient):
         raise AssertionError("inalcançável")  # pragma: no cover
 
 
+def _nome_do_item(descricao: str) -> str:
+    """O nome do item numa descrição do catálogo, que segue o padrão
+    `<nome> <atributo>: <valor>, <atributo>: <valor>` — o que vem antes do
+    primeiro ":", sem a última palavra (o nome do atributo).
+
+    Teste no servidor (15/11/2026): "Tonômetro modelo: goldman, tipo base:
+    móvel" virava o termo "tonometro modelo goldman tipo" (as 4 primeiras
+    palavras), e "tipo", "serviço", "aplicação" puxavam compras sem relação.
+    Agora vira "Tonômetro". Sem ":", as primeiras palavras."""
+
+    if ":" in descricao:
+        antes = descricao.split(":", 1)[0].strip()
+        if " " in antes:
+            nome = antes.rsplit(" ", 1)[0].strip(" -,")
+            if nome:
+                return nome
+    return " ".join(descricao.split()[:PALAVRAS_SEM_PDM])
+
+
 def _termo(descricao: str) -> str:
-    """O que se procura no PNCP para uma descrição de item."""
+    """O que se procura no PNCP para uma descrição de item: o tipo do
+    catálogo (PDM) ou, sem ele, o nome do item (`_nome_do_item`)."""
 
     pdm = achar_pdm(descricao)
     if pdm:
         return pdm.nome_pdm
-    return " ".join(normalizar(descricao).lower().split()[:PALAVRAS_SEM_PDM])
+    # Sem acento, como nas rodadas reais que funcionaram (14 e 15/11/2026).
+    return normalizar(_nome_do_item(descricao)).lower()
 
 
 def termos_da_base(hoje: dt.date | None = None) -> list[tuple[str, str, bool]]:
@@ -163,14 +184,17 @@ def rodar(hoje: dt.date | None = None, pncp: PncpClient | None = None) -> dict[s
     from .services import _buscar_no_pncp
 
     hoje = hoje or timezone.localdate()
-    resumo = {"termos": 0, "novas": 0, "removidas": limpar(hoje), "falhas": 0}
+    resumo = {"termos": 0, "novas": 0, "removidas": limpar(hoje), "falhas": 0, "itens_completados": 0}
     termos = termos_da_base(hoje)
     resumo["termos"] = len(termos)
-    if not termos:
-        return resumo
 
     proprio = pncp is None
     cliente = pncp or PncpPaciente()
+    resumo["itens_completados"] = completar_itens(cliente, hoje)
+    if not termos:
+        if proprio:
+            cliente.close()
+        return resumo
     conhecidas = _ja_conhecidas()
     try:
         for n, (termo, origem, por_ganho) in enumerate(termos):
@@ -241,6 +265,54 @@ def _expira_em(hoje: dt.date, prazo: dt.date | None) -> dt.date:
 
     sete_dias = hoje + dt.timedelta(days=DIAS_NO_RADAR)
     return min(sete_dias, prazo + dt.timedelta(days=1)) if prazo else sete_dias
+
+
+CAMPOS_DO_ITEM = (
+    "numero_item",
+    "descricao_resumida",
+    "descricao_detalhada",
+    "material_ou_servico",
+    "quantidade",
+    "unidade_medida",
+    "valor_unitario_estimado",
+    "valor_total",
+    "criterio_julgamento",
+    "tipo_beneficio",
+)
+
+
+def completar_itens(cliente, hoje: dt.date) -> int:
+    """Sugestões que entraram sem itens (o PNCP não devolveu): tenta de novo
+    a cada rodada. Achado do teste de 15/11/2026: o serviço de itens do PNCP
+    ficou fora do ar e as 67 sugestões entraram sem itens."""
+
+    from .completar import sem_itens
+
+    completadas = 0
+    for sugestao in visiveis(hoje):
+        if not sem_itens(sugestao.itens):
+            continue
+        try:
+            itens = cliente.listar_itens(
+                cnpj=sugestao.cnpj_orgao, ano=sugestao.ano_compra, sequencial=sugestao.sequencial_compra
+            )
+        except PncpClientError:
+            continue
+        if not itens:
+            continue
+        base = sugestao.itens[0] if sugestao.itens else {}
+        novos = []
+        for item in itens:
+            linha = dict(base)
+            linha.update({campo: item.get(campo) for campo in CAMPOS_DO_ITEM})
+            linha["situacao_item"] = item.get("situacao")
+            novos.append(linha)
+        sugestao.itens = novos
+        sugestao.valor_total_estimado = _valor_total(novos)
+        sugestao.texto_busca = montar_texto_busca(sugestao.objeto, novos)
+        sugestao.save(update_fields=["itens", "valor_total_estimado", "texto_busca"])
+        completadas += 1
+    return completadas
 
 
 def limpar(hoje: dt.date | None = None) -> int:

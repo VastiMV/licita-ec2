@@ -463,6 +463,21 @@ aparecem quando o card é aberto (o card pede o detalhe). O Radar ainda
 espera e tenta de novo no 429 (`PncpPaciente`), faz 3 pedidos por vez e
 pausa 2 s entre termos.
 
+**Teste no servidor (ambiente de teste, 15/11/2026):** 8 termos → 67
+compras novas, 0 falhas; regra "7 dias ou abertura" conferida. Dois achados,
+corrigidos no mesmo PR:
+
+1. **Itens:** o serviço de itens do PNCP (`/api/pncp/v1`) estava fora do ar
+   para todos (503 daqui e do servidor) — as 67 entraram sem itens. Agora
+   cada rodada tenta de novo os itens das sugestões que ficaram sem; e o
+   "completar pelo PNCP" trata o item vazio (sem descrição) como "sem itens"
+   — antes, a compra salva assim parecia completa.
+2. **Termo fraco:** sem tipo no catálogo, o termo eram as 4 primeiras
+   palavras ("tonometro modelo goldman tipo"), e "tipo", "serviço"
+   puxavam compras sem relação. Agora é o nome do item: o que vem antes do
+   primeiro ":" sem a última palavra (padrão do catálogo `<nome> <atributo>:
+   <valor>`) — "Tonômetro".
+
 **Rodar na mão:** `python manage.py radar` roda uma rodada agora e mostra a
 base, o resumo e, de cada sugestão nova, quantos itens vieram do PNCP. Serve
 para o ambiente de teste (que não tem o agendamento) e para produção.
