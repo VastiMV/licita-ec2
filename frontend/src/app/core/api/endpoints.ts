@@ -27,6 +27,9 @@ export const ENDPOINTS = {
       `licitacoes/compras/${cnpj}/${ano}/${sequencial}/detalhe/`,
     /** A Torre de Controle: 4 estágios, a etapa calculada por item. */
     torre: 'licitacoes/torre/',
+    /** O Radar (GEN-68): compras parecidas, achadas às 8h e às 18h. */
+    radar: 'licitacoes/radar/',
+    radarTotal: 'licitacoes/radar/total/',
     salvas: 'licitacoes/salvas/',
     salvasChaves: 'licitacoes/salvas/chaves/',
     /** A lista do Cotador: as salvas na etapa Cotação. */

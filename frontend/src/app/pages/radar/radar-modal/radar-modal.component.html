@@ -1,0 +1,15 @@
+<app-modal-shell titulo="Sugestão do Radar" largura="larga" (fechar)="fechar()">
+  <p class="modal-meta">
+    Parecida com: {{ sugestao.parecido_com }}{{ sugestao.por_ganho ? ' (a Inside ganhou)' : '' }}
+  </p>
+
+  <app-edital-card
+    [card]="card"
+    [detalhe]="detalhe()"
+    [salvando]="salvando()"
+    (salvar)="salvar()"
+    (baixarEdital)="baixarEdital()"
+  />
+
+  <app-button modalFooter variant="ghost" (click)="fechar()">Fechar</app-button>
+</app-modal-shell>

@@ -788,3 +788,63 @@ class MercadoDoItem(models.Model):
     def __str__(self) -> str:
         return self.nome_pdm or self.descricao[:60]
 
+
+
+class SugestaoRadar(models.Model):
+    """Uma compra que o Radar achou (GEN-68, 14/11/2026).
+
+    O Radar procura, às 8h e às 18h, compras **abertas** em todos os portais
+    (busca textual do PNCP) com itens parecidos com a base: os itens das
+    oportunidades salvas nos últimos 30 dias e os itens que a Inside ganhou.
+    A sugestão fica **7 dias ou até a abertura da disputa** (o que vier
+    primeiro) e some sozinha. Salvar pelo card a leva para
+    Oportunidades (e ela sai do Radar).
+
+    `itens` está no mesmo formato da busca — é o que o card de oportunidade e
+    o "Salvar" (`POST salvas/`) leem. O resumo (órgão, UF, prazo…) sai dos
+    itens, como em `OportunidadeSalvaCriacaoSerializer`.
+    """
+
+    cnpj_orgao = models.CharField("CNPJ do órgão", max_length=20)
+    ano_compra = models.CharField("ano da compra", max_length=8)
+    sequencial_compra = models.CharField("sequencial da compra", max_length=20)
+    objeto = models.TextField("objeto", blank=True)
+    orgao_nome = models.CharField("órgão", max_length=255, blank=True)
+    uasg = models.CharField("UASG", max_length=20, blank=True)
+    uf = models.CharField("UF", max_length=2, blank=True)
+    municipio = models.CharField("município", max_length=255, blank=True)
+    modalidade = models.CharField("modalidade", max_length=120, blank=True)
+    data_publicacao = models.DateField("publicada em", null=True, blank=True)
+    data_encerramento_proposta = models.DateField("prazo da proposta", null=True, blank=True)
+    valor_total_estimado = models.DecimalField(
+        "valor estimado", max_digits=18, decimal_places=2, null=True, blank=True
+    )
+    plataforma_id = models.CharField("plataforma", max_length=40, blank=True)
+    link_plataforma = models.TextField("link na plataforma", blank=True)
+    link_pncp = models.TextField("link no PNCP", blank=True)
+    itens = models.JSONField("itens (formato da busca)", default=list)
+    texto_busca = models.TextField("texto de busca", blank=True)
+    parecido_com = models.CharField(
+        "parecido com", max_length=255, blank=True, help_text="O item da base que puxou a sugestão."
+    )
+    por_ganho = models.BooleanField(
+        "puxada por item ganho", default=False, help_text="Ganho aparece antes de salvo."
+    )
+    encontrada_em = models.DateTimeField("encontrada em", auto_now_add=True)
+    expira_em = models.DateField("some em")
+
+    class Meta:
+        verbose_name = "sugestão do Radar"
+        verbose_name_plural = "sugestões do Radar"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["cnpj_orgao", "ano_compra", "sequencial_compra"], name="radar_compra_unica"
+            )
+        ]
+
+    def __str__(self) -> str:
+        return f"Radar {self.chave}"
+
+    @property
+    def chave(self) -> str:
+        return f"{self.cnpj_orgao}-{self.ano_compra}-{self.sequencial_compra}"

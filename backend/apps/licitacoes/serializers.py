@@ -25,6 +25,7 @@ from .models import (
     EventoOportunidadeSalva,
     ItemParticipado,
     OportunidadeSalva,
+    SugestaoRadar,
     montar_texto_busca,
 )
 
@@ -512,3 +513,39 @@ class EntregaSerializer(_LancamentoComItemSerializer):
         fields = ["id", "data", "nota_fiscal", "observacao", "item_numero", "criada_em"]
         read_only_fields = ["criada_em"]
 
+
+
+class SugestaoRadarSerializer(serializers.ModelSerializer):
+    """Uma linha do Radar (GEN-68). Os campos do resumo têm os mesmos nomes
+    da linha de Salvas, para a tela reaproveitar as colunas; `itens` está no
+    formato da busca (o card e o "Salvar" leem isso)."""
+
+    chave = serializers.CharField(read_only=True)
+    valor_total_estimado = serializers.FloatField(allow_null=True)
+
+    class Meta:
+        model = SugestaoRadar
+        fields = [
+            "id",
+            "chave",
+            "cnpj_orgao",
+            "ano_compra",
+            "sequencial_compra",
+            "objeto",
+            "orgao_nome",
+            "uasg",
+            "uf",
+            "municipio",
+            "modalidade",
+            "data_publicacao",
+            "data_encerramento_proposta",
+            "valor_total_estimado",
+            "plataforma_id",
+            "link_plataforma",
+            "link_pncp",
+            "itens",
+            "parecido_com",
+            "por_ganho",
+            "encontrada_em",
+            "expira_em",
+        ]

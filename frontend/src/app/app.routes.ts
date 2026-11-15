@@ -53,6 +53,11 @@ export const routes: Routes = [
           },
         ],
       },
+      // O Radar (GEN-68): compras parecidas, achadas às 8h e às 18h.
+      {
+        path: 'radar',
+        loadComponent: () => import('./pages/radar/radar.page').then((m) => m.RadarPage),
+      },
       // A Torre de Controle: os 4 estágios, um estágio aberto e a lista de
       // cada etapa (ver apps/licitacoes/torre.py). Fica ao lado do Ciclo de
       // Licitação, que continua no ar até a Torre ser aprovada.
