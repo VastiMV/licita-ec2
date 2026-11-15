@@ -15,9 +15,11 @@
   }
 
   // O Cotador é uma tela dentro do modal: itens e fornecedores lado a lado
-  // não cabem em 1000px sem virar rolagem horizontal.
+  // não cabem em 1000px sem virar rolagem horizontal. 1440px desde
+  // 14/11/2026 (era 1280px): mais espaço para a barra e a tabela dos totais
+  // (pedido da operação, GEN-66).
   &.cheia {
-    width: min(98vw, 1280px);
+    width: min(98vw, 1440px);
     max-height: 94vh;
   }
 }

@@ -269,6 +269,16 @@ describe('CotadorModalComponent', () => {
       expect(el.querySelector('.tabela-fatias tfoot')?.textContent).toContain('Valor cotado');
     });
 
+    it('reserva perto do fim da barra: a legenda fica à esquerda (sem rolagem lateral)', () => {
+      const { fixture } = montar(DADOS);
+      precificar(fixture);
+      fixture.detectChanges();
+      const c = fixture.componentInstance as never as { posicaoReserva: () => number };
+      const marca = (fixture.nativeElement as HTMLElement).querySelector('.marca-reserva');
+
+      expect(marca?.classList.contains('legenda-esquerda')).toBe(c.posicaoReserva() > 60);
+    });
+
     // GEN-26 (14/11/2026): "Salvar" fica na tela; "Salvar e fechar" sai.
     it('Salvar avisa e continua na mesma tela', () => {
       const { fixture, toast, dialogRef } = montar(DADOS);
