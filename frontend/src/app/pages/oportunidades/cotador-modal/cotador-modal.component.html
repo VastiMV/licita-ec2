@@ -65,12 +65,34 @@
       </section>
     }
 
-    <!-- Todos os totais em cima (GEN-66, 14/11/2026): o resultado da
-         negociação abre a faixa, em destaque; o rodapé fica só com os botões. -->
-    <div class="painel-totais">
-      <div class="cartao-total destaque">
-        <span class="cartao-rotulo">Valor cotado</span>
-        <span class="cartao-valor grande">{{ moeda(totais().valorCotado) }}</span>
+    <!-- Totais (GEN-66, 14/11/2026 — opção A escolhida pela operação): os 3
+         números que decidem o lance em cima; a barra mostra para onde vai cada
+         real do valor cotado; a tabela tem todos os valores. -->
+    <section class="resumo" aria-label="Totais da cotação">
+      <div class="resumo-heroi">
+        <div class="heroi">
+          <span class="heroi-rotulo">Valor cotado</span>
+          <span class="heroi-valor">{{ moeda(totais().valorCotado) }}</span>
+          <span class="heroi-apoio">
+            <strong>{{ totais().itens }} {{ totais().itens === 1 ? 'item' : 'itens' }}</strong>
+            · {{ quantidade(totais().unidades) }} unidades
+          </span>
+        </div>
+        <div class="heroi">
+          <span class="heroi-rotulo">Lucro total</span>
+          <span class="heroi-valor sucesso">{{ moeda(totais().lucroTotal) }}</span>
+          <span class="heroi-apoio">
+            <strong>{{ percentual(totais().margemMedia) }}</strong> da venda · markup
+            <strong>{{ percentual(totais().markupMedio) }}</strong> sobre o custo
+          </span>
+        </div>
+        <div class="heroi">
+          <span class="heroi-rotulo">Preço de reserva</span>
+          <span class="heroi-valor alerta">{{ moeda(totais().precoReserva) }}</span>
+          <span class="heroi-apoio">
+            folga p/ negociar <strong>{{ moeda(totais().folga) }}</strong>
+          </span>
+        </div>
         @if (totais().pendencias > 0) {
           <span class="chip chip-pendencia">
             {{ totais().pendencias }}
@@ -78,59 +100,81 @@
           </span>
         }
       </div>
-      <div class="cartao-total destaque">
-        <span class="cartao-rotulo">Lucro</span>
-        <span class="cartao-valor grande sucesso">{{ moeda(totais().lucroTotal) }}</span>
-        <span class="cartao-apoio">{{ percentual(totais().lucroPercentual) }} da venda</span>
+
+      @if (totais().valorCotado > 0) {
+        <div class="barra-area">
+          <div class="chave-capital" [style.width.%]="larguraCapital()">
+            <span>Capital necessário · {{ moeda(totais().capital) }}</span>
+          </div>
+          <div
+            class="barra"
+            role="img"
+            [attr.aria-label]="'Divisão do valor cotado: veja a tabela abaixo'"
+          >
+            @for (f of fatias(); track f.chave) {
+              @if (f.valor > 0) {
+                <span
+                  class="fatia fatia-{{ f.chave }}"
+                  [style.width.%]="f.pct"
+                  [title]="f.rotulo + ': ' + moeda(f.valor) + ' (' + percentual(f.pct) + ')'"
+                ></span>
+              }
+            }
+          </div>
+          <div class="marca-reserva" [style.left.%]="posicaoReserva()">
+            <span>Reserva {{ moeda(totais().precoReserva) }}</span>
+          </div>
+        </div>
+      } @else {
+        <p class="barra-vazia">A barra aparece quando os itens tiverem preço.</p>
+      }
+
+      <div class="resumo-detalhe">
+        <table class="tabela-fatias">
+          <thead>
+            <tr>
+              <th>Para onde vai cada real do valor cotado</th>
+              <th class="num">Valor</th>
+              <th class="num">% da venda</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (f of fatias(); track f.chave) {
+              <tr>
+                <td>
+                  <span class="amostra fatia-{{ f.chave }}"></span>
+                  {{ f.rotulo }}
+                  @if (f.nota) {
+                    <span class="fatia-nota">— {{ f.nota }}</span>
+                  }
+                </td>
+                <td class="num">{{ moeda(f.valor) }}</td>
+                <td class="num">{{ percentual(f.pct) }}</td>
+              </tr>
+            }
+          </tbody>
+          <tfoot>
+            <tr>
+              <td>Valor cotado</td>
+              <td class="num">{{ moeda(totais().valorCotado) }}</td>
+              <td class="num">100%</td>
+            </tr>
+          </tfoot>
+        </table>
+        <div class="resumo-lado">
+          <div>
+            <span class="heroi-rotulo">Capital necessário</span>
+            <span class="lado-valor">{{ moeda(totais().capital) }}</span>
+            <span class="heroi-apoio">tudo o que sai do bolso: custo + transporte + garantia</span>
+          </div>
+          <div>
+            <span class="heroi-rotulo">Folga p/ negociar</span>
+            <span class="lado-valor">{{ moeda(totais().folga) }}</span>
+            <span class="heroi-apoio">valor cotado − reserva</span>
+          </div>
+        </div>
       </div>
-      <div class="cartao-total">
-        <span class="cartao-rotulo">Preço de reserva</span>
-        <span class="cartao-valor alerta">{{ moeda(totais().precoReserva) }}</span>
-        <span class="cartao-apoio">o mínimo aceitável</span>
-      </div>
-      <div class="cartao-total">
-        <span class="cartao-rotulo">Folga p/ negociar</span>
-        <span class="cartao-valor">{{ moeda(totais().folga) }}</span>
-        <span class="cartao-apoio">valor cotado − reserva</span>
-      </div>
-      <div class="cartao-total">
-        <span class="cartao-rotulo">Itens</span>
-        <span class="cartao-valor">{{ totais().itens }}</span>
-        <span class="cartao-apoio">{{ quantidade(totais().unidades) }} unidades</span>
-      </div>
-      <div class="cartao-total">
-        <span class="cartao-rotulo">Custo dos produtos</span>
-        <span class="cartao-valor">{{ moeda(totais().custoProdutos) }}</span>
-        <span class="cartao-apoio">sem frete e extras</span>
-      </div>
-      <div class="cartao-total">
-        <span class="cartao-rotulo">Capital necessário</span>
-        <span class="cartao-valor">{{ moeda(totais().capital) }}</span>
-        <span class="cartao-apoio">com frete, extras, transporte e garantia</span>
-      </div>
-      <div class="cartao-total">
-        <span class="cartao-rotulo">Transporte</span>
-        <span class="cartao-valor">{{ moeda(totais().transporte) }}</span>
-        <span class="cartao-apoio">
-          {{ percentual(padroes().transporte) }} do custo
-          @if (totais().garantia > 0) {
-            · garantia {{ moeda(totais().garantia) }}
-          }
-        </span>
-      </div>
-      <div class="cartao-total">
-        <span class="cartao-rotulo">Impostos embutidos</span>
-        <span class="cartao-valor">{{ moeda(totais().impostos) }}</span>
-        <span class="cartao-apoio">{{ percentual(impostosPercentual()) }} da venda</span>
-      </div>
-      <div class="cartao-total">
-        <span class="cartao-rotulo sucesso">Margem média</span>
-        <span class="cartao-valor sucesso">{{ percentual(totais().margemMedia) }}</span>
-        <span class="cartao-apoio"
-          >markup médio {{ percentual(totais().markupMedio) }} sobre o custo</span
-        >
-      </div>
-    </div>
+    </section>
 
     <!-- ---------- Lista de itens ---------- -->
     @if (carregando()) {
@@ -702,8 +746,10 @@
     <app-icon name="spreadsheet" />
     {{ exportando() ? 'Gerando…' : 'Exportar' }}
   </app-button>
+  <!-- Salvar fica na tela; "Salvar e fechar" sai (GEN-26). Um @if por botão:
+       com mais de um elemento no mesmo bloco, o rodapé do modal não encaixa
+       os botões e eles somem (defeito de 14/11/2026). -->
   @if (!dados.somenteLeitura) {
-    <!-- Salvar fica na tela; "Salvar e fechar" sai (GEN-26, 14/11/2026). -->
     <app-button
       modalFooter
       variant="ghost"
@@ -712,6 +758,8 @@
     >
       Salvar e fechar
     </app-button>
+  }
+  @if (!dados.somenteLeitura) {
     <app-button modalFooter [disabled]="salvando() || carregando()" (click)="salvar()">
       {{ salvando() ? 'Salvando…' : 'Salvar' }}
     </app-button>

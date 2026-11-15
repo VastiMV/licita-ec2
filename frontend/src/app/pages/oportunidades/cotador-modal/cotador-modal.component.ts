@@ -169,6 +169,66 @@ export class CotadorModalComponent implements OnInit {
     return valorCotado === 0 ? 0 : (impostos / valorCotado) * 100;
   });
 
+  /**
+   * "Para onde vai cada real do valor cotado" (GEN-66, 14/11/2026 — opção A
+   * escolhida pela operação): custo + transporte + garantia + impostos +
+   * lucro = valor cotado. Alimenta a barra dividida e a tabela ao lado.
+   */
+  protected readonly fatias = computed(() => {
+    const t = this.totais();
+    const p = this.padroes();
+    const pct = (valor: number) => (t.valorCotado === 0 ? 0 : (valor / t.valorCotado) * 100);
+    const freteOutros = t.custo - t.custoProdutos;
+    return [
+      {
+        chave: 'custo',
+        rotulo: 'Custo',
+        nota: `produtos ${formatarMoeda(t.custoProdutos)} + frete e outros ${formatarMoeda(freteOutros)}`,
+        valor: t.custo,
+        pct: pct(t.custo),
+      },
+      {
+        chave: 'transporte',
+        rotulo: 'Transporte',
+        nota: `${formatarPercentual(p.transporte)} do custo`,
+        valor: t.transporte,
+        pct: pct(t.transporte),
+      },
+      {
+        chave: 'garantia',
+        rotulo: 'Garantia',
+        nota: `${formatarPercentual(p.garantia)} do custo`,
+        valor: t.garantia,
+        pct: pct(t.garantia),
+      },
+      {
+        chave: 'impostos',
+        rotulo: 'Impostos embutidos',
+        nota: '',
+        valor: t.impostos,
+        pct: pct(t.impostos),
+      },
+      {
+        chave: 'lucro',
+        rotulo: 'Lucro total',
+        nota: `markup ${formatarPercentual(t.markupMedio)} sobre o custo`,
+        valor: t.lucroTotal,
+        pct: pct(t.lucroTotal),
+      },
+    ];
+  });
+
+  /** Onde a chave do capital termina e onde fica a reserva, em % da barra. */
+  protected readonly larguraCapital = computed(() => {
+    const t = this.totais();
+    return t.valorCotado === 0 ? 0 : Math.min((t.capital / t.valorCotado) * 100, 100);
+  });
+
+  protected readonly posicaoReserva = computed(() => {
+    const t = this.totais();
+    return t.valorCotado === 0 ? 0 : Math.min((t.precoReserva / t.valorCotado) * 100, 100);
+  });
+
   protected readonly resumoPadroes = computed(() => {
     const p = this.padroes();
     return (

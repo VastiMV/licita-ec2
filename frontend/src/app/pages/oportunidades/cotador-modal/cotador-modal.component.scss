@@ -2,9 +2,9 @@
 
 // O Cotador é uma tela dentro do modal. O layout segue o handoff
 // (docs/Mockups/cotador) — itens no meio — mas **todos os totais ficam no
-// topo**, com o resultado da negociação em destaque (GEN-66, 14/11/2026:
-// antes metade ficava no rodapé); o rodapé só tem os botões. A paleta é a
-// do produto (navy/azul), não o roxo do
+// topo**: heróis, barra "para onde vai o dinheiro" e tabela (GEN-66, opção A
+// de 14/11/2026); o rodapé só tem os botões. A paleta é a do produto
+// (navy/azul), não o roxo do
 // protótipo: o modal abre por cima da tela de oportunidades e não pode
 // parecer outro aplicativo.
 
@@ -117,51 +117,211 @@
 
 // ---------- Painel de totais (composição do custo) ----------
 
-.painel-totais {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(134px, 1fr));
-  gap: var(--space-2);
-}
+// ---------- Totais: heróis, barra e tabela (GEN-66, opção A) ----------
 
-.cartao-total {
+.resumo {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
-  padding: var(--space-3);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-bg);
+  gap: var(--space-3);
 }
 
-.cartao-rotulo {
-  // Altura fixa mantém os seis cartões alinhados mesmo com rótulo de duas
-  // linhas ("Custo dos produtos") — sem isto a fileira fica serrilhada.
-  min-height: 2.1em;
+.resumo-heroi {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-3) var(--space-6);
+}
+
+.heroi {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.heroi-rotulo {
   @include uppercase-label;
   font-size: 0.62rem;
 }
 
-.cartao-valor {
+.heroi-valor {
+  font-size: 1.75rem;
+  font-weight: var(--font-weight-bold);
+  line-height: 1.15;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
-  font-size: var(--font-size-md);
-  font-weight: var(--font-weight-semibold);
   color: var(--color-navy);
 }
 
-.cartao-apoio {
+.heroi-apoio {
   font-size: var(--font-size-xs);
+  color: var(--color-muted);
+
+  strong {
+    color: var(--color-navy);
+    font-weight: var(--font-weight-semibold);
+    white-space: nowrap;
+  }
+}
+
+.barra-area {
+  position: relative;
+  margin: var(--space-6) 0 var(--space-5);
+}
+
+// A chave por cima das fatias que são "capital": custo, transporte, garantia.
+.chave-capital {
+  position: absolute;
+  top: -1.4rem;
+  left: 0;
+  height: 0.8rem;
+  border: 2px solid var(--color-navy);
+  border-bottom: none;
+  border-radius: 4px 4px 0 0;
+  text-align: center;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-navy);
+
+  span {
+    position: relative;
+    top: -0.75rem;
+    padding: 0 var(--space-2);
+    background: var(--color-surface);
+    white-space: nowrap;
+  }
+}
+
+.barra {
+  display: flex;
+  gap: 2px;
+  height: 2.25rem;
+}
+
+.fatia {
+  height: 100%;
+  border-radius: 2px;
+
+  &:first-child {
+    border-radius: 6px 2px 2px 6px;
+  }
+
+  &:last-child {
+    border-radius: 2px 6px 6px 2px;
+  }
+}
+
+.marca-reserva {
+  position: absolute;
+  top: -0.3rem;
+  bottom: -1.3rem;
+  border-left: 2px dashed var(--color-navy);
+
+  span {
+    position: absolute;
+    bottom: -0.2rem;
+    left: 0.35rem;
+    padding: 0 0.25rem;
+    background: var(--color-surface);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    white-space: nowrap;
+  }
+}
+
+.barra-vazia {
+  margin: 0;
+  font-size: var(--font-size-sm);
   color: var(--color-muted);
 }
 
-// O resultado da negociação abre a faixa (GEN-66).
-.cartao-total.destaque {
-  border-color: var(--color-blue);
-  background: var(--color-blue-soft);
+// As cores das fatias vêm dos tokens (_tokens.scss): a amostra da tabela e a
+// fatia da barra usam a mesma classe.
+.fatia-custo {
+  background: var(--color-fatia-custo);
+}
+.fatia-transporte {
+  background: var(--color-fatia-transporte);
+}
+.fatia-garantia {
+  background: var(--color-fatia-garantia);
+}
+.fatia-impostos {
+  background: var(--color-fatia-impostos);
+}
+.fatia-lucro {
+  background: var(--color-fatia-lucro);
 }
 
-.cartao-valor.grande {
+.resumo-detalhe {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(220px, 1fr);
+  gap: var(--space-5);
+  align-items: start;
+}
+
+.tabela-fatias {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+
+  th,
+  td {
+    padding: 0.35rem var(--space-2);
+    border-bottom: 1px solid var(--color-border);
+    text-align: left;
+  }
+
+  th {
+    @include uppercase-label;
+    font-size: 0.6rem;
+  }
+
+  .num {
+    text-align: right;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  tfoot td {
+    font-weight: var(--font-weight-bold);
+    border-bottom: 2px solid var(--color-navy);
+  }
+}
+
+.amostra {
+  display: inline-block;
+  width: 0.7rem;
+  height: 0.7rem;
+  margin-right: var(--space-2);
+  border-radius: 3px;
+  vertical-align: -1px;
+}
+
+.fatia-nota {
+  color: var(--color-muted);
+  font-size: var(--font-size-xs);
+}
+
+.resumo-lado {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+
+  > div {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+  }
+}
+
+.lado-valor {
   font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-navy);
 }
 
 // ---------- Lista de itens ----------
@@ -1059,6 +1219,10 @@ h4 {
 }
 
 @media (max-width: 900px) {
+  .resumo-detalhe {
+    grid-template-columns: 1fr;
+  }
+
   .padroes-corpo {
     grid-template-columns: 1fr;
     gap: var(--space-4);

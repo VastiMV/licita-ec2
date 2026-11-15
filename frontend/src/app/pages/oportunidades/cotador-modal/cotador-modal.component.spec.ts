@@ -228,6 +228,47 @@ describe('CotadorModalComponent', () => {
       expect(payload['oportunidade']).toBeUndefined();
     });
 
+    it('os botões aparecem no rodapé do modal (defeito de 14/11/2026: sumiam)', () => {
+      const { fixture } = montar(DADOS);
+      fixture.detectChanges();
+
+      const rodape = (fixture.nativeElement as HTMLElement).querySelector('.modal-footer');
+      const textos = [...(rodape?.querySelectorAll('button') ?? [])].map((b) =>
+        b.textContent?.trim(),
+      );
+      expect(textos).toEqual(expect.arrayContaining(['Salvar e fechar', 'Salvar']));
+      expect(textos.some((t) => t?.includes('Exportar'))).toBe(true);
+    });
+
+    it('somente leitura: o rodapé não tem os botões de salvar', () => {
+      const { fixture } = montar({ ...DADOS, somenteLeitura: true });
+      fixture.detectChanges();
+
+      const rodape = (fixture.nativeElement as HTMLElement).querySelector('.modal-footer');
+      const textos = [...(rodape?.querySelectorAll('button') ?? [])].map((b) =>
+        b.textContent?.trim(),
+      );
+      expect(textos).not.toContain('Salvar');
+      expect(textos).not.toContain('Salvar e fechar');
+    });
+
+    it('a barra e a tabela somam o valor cotado (GEN-66)', () => {
+      const { fixture } = montar(DADOS);
+      precificar(fixture);
+      fixture.detectChanges();
+      const c = fixture.componentInstance as never as {
+        fatias: () => { valor: number; pct: number }[];
+        totais: () => { valorCotado: number };
+      };
+
+      const soma = c.fatias().reduce((t, f) => t + f.valor, 0);
+      expect(soma).toBeCloseTo(c.totais().valorCotado, 6);
+      expect(c.fatias().reduce((t, f) => t + f.pct, 0)).toBeCloseTo(100, 6);
+      const el = fixture.nativeElement as HTMLElement;
+      expect(el.querySelectorAll('.barra .fatia').length).toBeGreaterThan(0);
+      expect(el.querySelector('.tabela-fatias tfoot')?.textContent).toContain('Valor cotado');
+    });
+
     // GEN-26 (14/11/2026): "Salvar" fica na tela; "Salvar e fechar" sai.
     it('Salvar avisa e continua na mesma tela', () => {
       const { fixture, toast, dialogRef } = montar(DADOS);

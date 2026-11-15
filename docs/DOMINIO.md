@@ -395,9 +395,16 @@ decisões da operação):
 - **Markup médio continua sobre o custo** (produto + frete + outros), não
   sobre o capital: assim bate com o markup configurado nos itens. Na tela e
   na planilha aparece "sobre o custo".
-- **Todos os totais ficam em cima** (GEN-66): Valor cotado e Lucro abrem a
-  faixa em destaque, seguidos de Preço de reserva e Folga para negociar; o
-  rodapé fica só com os botões.
+- **Todos os totais ficam em cima** (GEN-66). Desenho escolhido pela
+  operação em 14/11/2026 (opção A, depois que a faixa de 11 quadros quebrou
+  em 2 linhas): os 3 números que decidem o lance em destaque (**Valor
+  cotado**, **Lucro total**, **Preço de reserva** com a folga); uma **barra
+  dividida** "para onde vai cada real do valor cotado" (custo, transporte,
+  garantia, impostos, lucro — somam o valor cotado), com a chave do
+  **capital necessário** por cima e a marca da **reserva**; e uma **tabela**
+  com o valor e o % de cada parte, mais capital e folga ao lado. As cores
+  das fatias são tokens (`--color-fatia-*`), validadas para daltonismo. O
+  rodapé fica só com os botões (Exportar, Salvar e fechar, Salvar).
 - **Salvar fica na tela** (GEN-26): "Salvar" grava e continua editando;
   "Salvar e fechar" grava e sai. Fechar pelo X depois de salvar não pergunta
   nada e a lista de quem abriu o Cotador recarrega.
