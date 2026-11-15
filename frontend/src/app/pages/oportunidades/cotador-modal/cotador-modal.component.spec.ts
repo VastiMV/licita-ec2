@@ -171,7 +171,7 @@ function interno(fixture: ComponentFixture<CotadorModalComponent>) {
     alterarMarkupMinimo: (item: unknown, valor: string) => void;
     alterarMarkupAlvo: (item: unknown, valor: string) => void;
     padroes: () => { markupMinimo: number; markupAlvo: number };
-    salvar: () => void;
+    salvar: (fecharDepois?: boolean) => void;
     exportar: () => void;
     fechar: () => void;
   };
@@ -228,14 +228,52 @@ describe('CotadorModalComponent', () => {
       expect(payload['oportunidade']).toBeUndefined();
     });
 
-    it('depois de salvar, avisa e fecha devolvendo a cotação', () => {
+    // GEN-26 (14/11/2026): "Salvar" fica na tela; "Salvar e fechar" sai.
+    it('Salvar avisa e continua na mesma tela', () => {
       const { fixture, toast, dialogRef } = montar(DADOS);
       precificar(fixture);
 
       interno(fixture).salvar();
 
       expect(toast.sucesso).toHaveBeenCalledWith('Cotação salva.');
+      expect(dialogRef.close).not.toHaveBeenCalled();
+    });
+
+    it('Salvar e fechar avisa e fecha devolvendo a cotação', () => {
+      const { fixture, toast, dialogRef } = montar(DADOS);
+      precificar(fixture);
+
+      interno(fixture).salvar(true);
+
+      expect(toast.sucesso).toHaveBeenCalledWith('Cotação salva.');
       expect(dialogRef.close).toHaveBeenCalledWith({ cotacaoId: 15 });
+    });
+
+    it('depois de salvar, fechar pelo X não pergunta e devolve a cotação (a lista recarrega)', () => {
+      const { fixture, modal, dialogRef } = montar(DADOS);
+      precificar(fixture);
+      const c = interno(fixture);
+
+      c.salvar();
+      c.fechar();
+
+      expect(modal.confirmar).not.toHaveBeenCalled();
+      expect(dialogRef.close).toHaveBeenCalledWith({ cotacaoId: 15 });
+    });
+
+    it('mudança depois de salvar volta a pedir confirmação ao fechar', () => {
+      const { fixture, modal, dialogRef } = montar(DADOS);
+      modal.confirmar.mockReturnValue(of(false));
+      precificar(fixture);
+      const c = interno(fixture);
+      c.salvar();
+
+      const item = c.itens()[0];
+      c.alterarCusto(item, item.ofertas[0], 'custoProduto', '99');
+      c.fechar();
+
+      expect(modal.confirmar).toHaveBeenCalled();
+      expect(dialogRef.close).not.toHaveBeenCalled();
     });
 
     it('falha ao salvar não fecha o modal — o trabalho não pode sumir', () => {

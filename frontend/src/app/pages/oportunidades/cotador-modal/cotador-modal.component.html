@@ -65,7 +65,34 @@
       </section>
     }
 
+    <!-- Todos os totais em cima (GEN-66, 14/11/2026): o resultado da
+         negociação abre a faixa, em destaque; o rodapé fica só com os botões. -->
     <div class="painel-totais">
+      <div class="cartao-total destaque">
+        <span class="cartao-rotulo">Valor cotado</span>
+        <span class="cartao-valor grande">{{ moeda(totais().valorCotado) }}</span>
+        @if (totais().pendencias > 0) {
+          <span class="chip chip-pendencia">
+            {{ totais().pendencias }}
+            {{ totais().pendencias === 1 ? 'item incompleto' : 'itens incompletos' }}
+          </span>
+        }
+      </div>
+      <div class="cartao-total destaque">
+        <span class="cartao-rotulo">Lucro</span>
+        <span class="cartao-valor grande sucesso">{{ moeda(totais().lucroTotal) }}</span>
+        <span class="cartao-apoio">{{ percentual(totais().lucroPercentual) }} da venda</span>
+      </div>
+      <div class="cartao-total">
+        <span class="cartao-rotulo">Preço de reserva</span>
+        <span class="cartao-valor alerta">{{ moeda(totais().precoReserva) }}</span>
+        <span class="cartao-apoio">o mínimo aceitável</span>
+      </div>
+      <div class="cartao-total">
+        <span class="cartao-rotulo">Folga p/ negociar</span>
+        <span class="cartao-valor">{{ moeda(totais().folga) }}</span>
+        <span class="cartao-apoio">valor cotado − reserva</span>
+      </div>
       <div class="cartao-total">
         <span class="cartao-rotulo">Itens</span>
         <span class="cartao-valor">{{ totais().itens }}</span>
@@ -79,7 +106,7 @@
       <div class="cartao-total">
         <span class="cartao-rotulo">Capital necessário</span>
         <span class="cartao-valor">{{ moeda(totais().capital) }}</span>
-        <span class="cartao-apoio">com frete e extras</span>
+        <span class="cartao-apoio">com frete, extras, transporte e garantia</span>
       </div>
       <div class="cartao-total">
         <span class="cartao-rotulo">Transporte</span>
@@ -99,7 +126,9 @@
       <div class="cartao-total">
         <span class="cartao-rotulo sucesso">Margem média</span>
         <span class="cartao-valor sucesso">{{ percentual(totais().margemMedia) }}</span>
-        <span class="cartao-apoio">markup médio {{ percentual(totais().markupMedio) }}</span>
+        <span class="cartao-apoio"
+          >markup médio {{ percentual(totais().markupMedio) }} sobre o custo</span
+        >
       </div>
     </div>
 
@@ -323,7 +352,7 @@
 
                       <div class="oferta-custos">
                         <label class="campo-numero">
-                          <span>Produto</span>
+                          <span>Valor do produto</span>
                           <input
                             inputmode="decimal"
                             [value]="texto(oferta.custoProduto)"
@@ -664,35 +693,6 @@
     }
   </div>
 
-  <!-- ---------- Rodapé: resultado da negociação ---------- -->
-  <div modalFooter class="resultado">
-    <div class="resultado-numero">
-      <span class="resultado-rotulo destaque">Valor cotado</span>
-      <strong class="resultado-valor">{{ moeda(totais().valorCotado) }}</strong>
-    </div>
-    <div class="resultado-numero">
-      <span class="resultado-rotulo">Lucro</span>
-      <strong class="resultado-valor sucesso">
-        {{ moeda(totais().lucroTotal) }}
-        <span class="resultado-nota">{{ percentual(totais().lucroPercentual) }} da venda</span>
-      </strong>
-    </div>
-    <div class="resultado-numero somente-largo">
-      <span class="resultado-rotulo">Preço de reserva</span>
-      <strong class="resultado-secundario alerta">{{ moeda(totais().precoReserva) }}</strong>
-    </div>
-    <div class="resultado-numero somente-largo">
-      <span class="resultado-rotulo">Folga p/ negociar</span>
-      <strong class="resultado-secundario">{{ moeda(totais().folga) }}</strong>
-    </div>
-    @if (totais().pendencias > 0) {
-      <span class="chip chip-pendencia">
-        {{ totais().pendencias }}
-        {{ totais().pendencias === 1 ? 'item incompleto' : 'itens incompletos' }}
-      </span>
-    }
-  </div>
-
   <app-button
     modalFooter
     variant="ghost"
@@ -703,8 +703,17 @@
     {{ exportando() ? 'Gerando…' : 'Exportar' }}
   </app-button>
   @if (!dados.somenteLeitura) {
+    <!-- Salvar fica na tela; "Salvar e fechar" sai (GEN-26, 14/11/2026). -->
+    <app-button
+      modalFooter
+      variant="ghost"
+      [disabled]="salvando() || carregando()"
+      (click)="salvar(true)"
+    >
+      Salvar e fechar
+    </app-button>
     <app-button modalFooter [disabled]="salvando() || carregando()" (click)="salvar()">
-      {{ salvando() ? 'Salvando…' : 'Salvar cotação' }}
+      {{ salvando() ? 'Salvando…' : 'Salvar' }}
     </app-button>
   }
 </app-modal-shell>

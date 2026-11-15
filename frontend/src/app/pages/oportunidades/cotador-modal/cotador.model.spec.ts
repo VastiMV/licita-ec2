@@ -326,9 +326,23 @@ describe('totais da cotação', () => {
     expect(totais.margemMedia).toBeCloseTo(totais.lucroPercentual, 8);
   });
 
-  it('markup médio é o lucro sobre o capital — a leitura de quem põe o dinheiro', () => {
+  it('capital é o custo + transporte + garantia (GEN-29)', () => {
     const totais = totalizar(itens, PADROES);
-    expect(totais.markupMedio).toBeCloseTo((totais.lucroTotal / totais.capital) * 100, 8);
+    expect(totais.capital).toBeCloseTo(totais.custo + totais.transporte + totais.garantia, 8);
+  });
+
+  it('sem frete nem outros, o capital ainda passa do custo dos produtos (GEN-29)', () => {
+    const so = [
+      item({ ofertas: [oferta({ id: 'x', nome: 'X', custoProduto: 100, frete: 0, outros: 0 })] }),
+    ];
+    const totais = totalizar(so, PADROES);
+    expect(totais.custo).toBe(totais.custoProdutos);
+    expect(totais.capital).toBeGreaterThan(totais.custoProdutos);
+  });
+
+  it('markup médio é o lucro sobre o custo — bate com o markup dos itens (GEN-29)', () => {
+    const totais = totalizar(itens, PADROES);
+    expect(totais.markupMedio).toBeCloseTo((totais.lucroTotal / totais.custo) * 100, 8);
     // Markup é sempre maior que a margem: mesma conta, denominador menor.
     expect(totais.markupMedio).toBeGreaterThan(totais.margemMedia);
   });

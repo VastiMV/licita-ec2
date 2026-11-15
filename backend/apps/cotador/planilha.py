@@ -567,7 +567,7 @@ def _bloco_resumo(aba: Worksheet, cotacao: Cotacao, itens: list, linha: int) -> 
 
     blocos = [
         ("Custo dos produtos", totais.custo_produtos, MOEDA, "FF16294D", "sem frete e extras"),
-        ("Capital necessário", totais.capital, MOEDA, "FF16294D", "com frete e extras"),
+        ("Capital necessário", totais.capital, MOEDA, "FF16294D", "com frete, extras, transporte e garantia"),
         ("Transporte", totais.transporte, MOEDA, "FF16294D", f"{cotacao.transporte}% do custo"),
         ("Impostos embutidos", totais.impostos, MOEDA, "FF16294D", "sobre a venda"),
         ("Valor cotado", totais.valor_cotado, MOEDA, NAVY, "preço proposto"),
@@ -579,7 +579,7 @@ def _bloco_resumo(aba: Worksheet, cotacao: Cotacao, itens: list, linha: int) -> 
             totais.margem_media / 100,
             "0.0%",
             VERDE,
-            f"markup médio {totais.markup_medio:.1f}% sobre o capital",
+            f"markup médio {totais.markup_medio:.1f}% sobre o custo",
         ),
     ]
 

@@ -1,9 +1,10 @@
 @use 'mixins' as *;
 
 // O Cotador é uma tela dentro do modal. O layout segue o handoff
-// (docs/Mockups/cotador) — composição do custo no topo, itens no meio,
-// resultado da negociação no rodapé, sem repetir número entre as duas
-// pontas — mas a paleta é a do produto (navy/azul), não o roxo do
+// (docs/Mockups/cotador) — itens no meio — mas **todos os totais ficam no
+// topo**, com o resultado da negociação em destaque (GEN-66, 14/11/2026:
+// antes metade ficava no rodapé); o rodapé só tem os botões. A paleta é a
+// do produto (navy/azul), não o roxo do
 // protótipo: o modal abre por cima da tela de oportunidades e não pode
 // parecer outro aplicativo.
 
@@ -151,6 +152,16 @@
 .cartao-apoio {
   font-size: var(--font-size-xs);
   color: var(--color-muted);
+}
+
+// O resultado da negociação abre a faixa (GEN-66).
+.cartao-total.destaque {
+  border-color: var(--color-blue);
+  background: var(--color-blue-soft);
+}
+
+.cartao-valor.grande {
+  font-size: var(--font-size-lg);
 }
 
 // ---------- Lista de itens ----------
@@ -1037,51 +1048,6 @@ h4 {
   height: 18px;
 }
 
-// ---------- Rodapé (resultado da negociação) ----------
-
-.resultado {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-5);
-  margin-right: auto;
-}
-
-.resultado-numero {
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-}
-
-.resultado-rotulo {
-  @include uppercase-label;
-  font-size: 0.58rem;
-
-  &.destaque {
-    color: var(--color-blue);
-  }
-}
-
-.resultado-valor {
-  font-size: var(--font-size-lg);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-  color: var(--color-navy);
-}
-
-.resultado-secundario {
-  font-size: var(--font-size-base);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-  color: var(--color-muted);
-}
-
-.resultado-nota {
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-regular);
-  opacity: 0.8;
-}
-
 // ---------- Tons compartilhados ----------
 
 .sucesso {
@@ -1099,12 +1065,6 @@ h4 {
   }
 
   .padroes-resumo {
-    display: none;
-  }
-
-  // O rodapé em tela estreita mostra só o que decide o lance; reserva e
-  // folga continuam visíveis dentro de cada item.
-  .somente-largo {
     display: none;
   }
 }

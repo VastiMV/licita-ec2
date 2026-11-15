@@ -198,9 +198,23 @@ class TotaisTests(unittest.TestCase):
         self.assertEqual(totais.margem_media, esperado)
         self.assertEqual(totais.margem_media, totais.lucro_percentual)
 
-    def test_markup_medio_e_lucro_sobre_o_capital(self):
+    def test_capital_e_o_custo_mais_transporte_e_garantia(self):
+        # GEN-29 (14/11/2026): "tudo o que sai do bolso".
         totais = totalizar(self.itens, PADROES)
-        esperado = totais.lucro_total / totais.capital * 100
+        self.assertEqual(totais.capital, totais.custo + totais.transporte + totais.garantia)
+
+    def test_sem_frete_nem_outros_o_capital_ainda_e_maior_que_o_custo_dos_produtos(self):
+        # O caso do GEN-29: sem frete e outros no fornecedor, os dois números
+        # ficavam iguais. Com transporte nas configurações, não ficam mais.
+        totais = totalizar([item(ofertas=[oferta("X", "100", escolhida=True)])], PADROES)
+        self.assertEqual(totais.custo, totais.custo_produtos)
+        self.assertGreater(totais.capital, totais.custo_produtos)
+
+    def test_markup_medio_e_lucro_sobre_o_custo(self):
+        # Continua sobre o custo (produto + frete + outros), não sobre o
+        # capital com transporte e garantia — decisão de 14/11/2026, GEN-29.
+        totais = totalizar(self.itens, PADROES)
+        esperado = totais.lucro_total / totais.custo * 100
         self.assertEqual(totais.markup_medio, esperado)
         # Mesma conta, denominador menor: markup é sempre maior que a margem.
         self.assertGreater(totais.markup_medio, totais.margem_media)

@@ -92,7 +92,7 @@ function ofertaVazia(): OfertaCotador {
  *
  * **Nada é persistido enquanto se mexe.** Os itens vêm preenchidos do
  * edital e a cotação vive na memória desta tela; quem abre, olha e desiste
- * não deixa rastro. É o clique em "Salvar cotação" que grava.
+ * não deixa rastro. É o clique em "Salvar" (ou "Salvar e fechar") que grava.
  *
  * **A conta roda aqui, a gravação confere lá.** `cotador.model.ts` recalcula
  * a cada tecla; o backend refaz a mesma conta ao gravar (`formulas.py`),
@@ -750,7 +750,15 @@ export class CotadorModalComponent implements OnInit {
 
   // ---------- gravação ----------
 
-  protected salvar(): void {
+  /** Salvou pelo menos uma vez nesta abertura: ao fechar (até pelo X), quem
+   * abriu o modal recarrega a lista (GEN-26). */
+  private readonly salvouNestaAbertura = signal(false);
+
+  /**
+   * Salvar **fica na tela** (GEN-26, 14/11/2026 — decisão da operação): grava e
+   * continua editando. "Salvar e fechar" grava e sai.
+   */
+  protected salvar(fecharDepois = false): void {
     if (this.salvando()) return;
     if (this.itens().length === 0) {
       this.toast.alerta('Uma cotação precisa de pelo menos um item.');
@@ -762,8 +770,10 @@ export class CotadorModalComponent implements OnInit {
       next: (cotacao) => {
         this.salvando.set(false);
         this.cotacaoId.set(cotacao.id);
+        this.salvouNestaAbertura.set(true);
+        this.marcarSalvo();
         this.toast.sucesso('Cotação salva.');
-        this.dialogRef.close({ cotacaoId: cotacao.id });
+        if (fecharDepois) this.dialogRef.close({ cotacaoId: cotacao.id });
       },
       error: () => {
         this.salvando.set(false);
@@ -799,6 +809,7 @@ export class CotadorModalComponent implements OnInit {
           next: (cotacao) => {
             this.salvando.set(false);
             this.cotacaoId.set(cotacao.id);
+            this.salvouNestaAbertura.set(true);
             this.marcarSalvo();
             this.baixar(cotacao.id);
           },
@@ -833,7 +844,7 @@ export class CotadorModalComponent implements OnInit {
 
   protected fechar(): void {
     if (this.dados.somenteLeitura || !this.temAlteracao()) {
-      this.dialogRef.close();
+      this.dialogRef.close(this.resultado());
       return;
     }
     this.modal
@@ -843,8 +854,14 @@ export class CotadorModalComponent implements OnInit {
         confirmarLabel: 'Descartar',
       })
       .subscribe((confirmou) => {
-        if (confirmou) this.dialogRef.close();
+        if (confirmou) this.dialogRef.close(this.resultado());
       });
+  }
+
+  /** `undefined` se nada foi salvo nesta abertura. */
+  private resultado(): CotadorModalResultado | undefined {
+    const id = this.cotacaoId();
+    return this.salvouNestaAbertura() && id !== null ? { cotacaoId: id } : undefined;
   }
 
   private montarPayload(): CotacaoRequest {

@@ -157,8 +157,14 @@ class Totais:
     unidades: Decimal
     custo_produtos: Decimal
     """Só o que vai para o fornecedor, sem frete nem extras."""
+    custo: Decimal
+    """Produto + frete + outros do fornecedor (o custo sobre o qual incide o
+    markup)."""
     capital: Decimal
-    """O desembolso real para entregar — com frete e extras."""
+    """O desembolso real para entregar: o custo + transporte + garantia
+    (GEN-29, 14/11/2026 — decisão da operação: "tudo o que sai do bolso").
+    Antes era só o custo, e ficava igual ao custo dos produtos quando não
+    havia frete nem outros."""
     transporte: Decimal
     garantia: Decimal
     impostos: Decimal
@@ -191,10 +197,12 @@ class Totais:
 
     @property
     def markup_medio(self) -> Decimal:
-        """Lucro como % do capital — o markup médio, a leitura de quem põe o
-        dinheiro."""
+        """Lucro como % do **custo** (produto + frete + outros) — bate com o
+        markup configurado nos itens. Continua sobre o custo, não sobre o
+        capital com transporte e garantia (decisão da operação, 14/11/2026,
+        GEN-29)."""
 
-        return _dividir(self.lucro_total, self.capital) * CEM
+        return _dividir(self.lucro_total, self.custo) * CEM
 
 
 def _dividir(numerador: Decimal, denominador: Decimal) -> Decimal:
@@ -294,7 +302,10 @@ def totalizar(itens: list[Item], padroes: Padroes) -> Totais:
         custo_produtos=somar(
             lambda c: (c.escolhida.custo_produto if c.escolhida else ZERO) * c.quantidade
         ),
-        capital=somar(lambda c: c.custo_total),
+        custo=somar(lambda c: c.custo_total),
+        capital=somar(lambda c: c.custo_total)
+        + somar(lambda c: c.transporte_unitario * c.quantidade)
+        + somar(lambda c: c.garantia_unitario * c.quantidade),
         transporte=somar(lambda c: c.transporte_unitario * c.quantidade),
         garantia=somar(lambda c: c.garantia_unitario * c.quantidade),
         impostos=somar(lambda c: c.imposto_unitario * c.quantidade),

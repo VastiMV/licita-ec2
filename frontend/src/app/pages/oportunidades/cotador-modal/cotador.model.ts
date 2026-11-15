@@ -172,7 +172,10 @@ export interface TotaisCotador {
   readonly unidades: number;
   /** Só o que vai para o fornecedor, sem frete nem extras. */
   readonly custoProdutos: number;
-  /** O desembolso real para entregar — com frete e extras. */
+  /** Produto + frete + outros do fornecedor: a base do markup. */
+  readonly custo: number;
+  /** O desembolso real para entregar: o custo + transporte + garantia
+   * (GEN-29, 14/11/2026 — "tudo o que sai do bolso"). */
   readonly capital: number;
   readonly transporte: number;
   readonly garantia: number;
@@ -187,8 +190,8 @@ export interface TotaisCotador {
    * `lucroPercentual` por definição — são o mesmo número em dois lugares da
    * tela, um no painel de composição e outro no resultado. */
   readonly margemMedia: number;
-  /** Lucro como % do capital — a leitura de quem põe o dinheiro, e a linha
-   * de apoio do mesmo card da margem média. */
+  /** Lucro como % do **custo** (produto + frete + outros) — bate com o markup
+   * dos itens (GEN-29, 14/11/2026). Linha de apoio do card da margem média. */
   readonly markupMedio: number;
   readonly economia: number;
   readonly pendencias: number;
@@ -340,7 +343,9 @@ export function totalizar(itens: readonly ItemCotador[], padroes: PadroesCotador
   const somar = (extrair: (c: ItemCalculado) => number) =>
     calculados.reduce((total, c) => total + extrair(c), 0);
 
-  const capital = somar((c) => c.custoUnitario * c.quantidade);
+  const custo = somar((c) => c.custoUnitario * c.quantidade);
+  const transporte = somar((c) => (c.custoUnitario * padroes.transporte * c.quantidade) / 100);
+  const garantia = somar((c) => (c.custoUnitario * padroes.garantia * c.quantidade) / 100);
   const valorCotado = somar((c) => c.precoFinalTotal);
   const precoReserva = somar((c) => c.precoReservaTotal);
   const lucroTotal = somar((c) => c.lucroTotal);
@@ -349,9 +354,10 @@ export function totalizar(itens: readonly ItemCotador[], padroes: PadroesCotador
     itens: itens.length,
     unidades: somar((c) => c.quantidade),
     custoProdutos: somar((c) => (c.escolhida?.custoProduto ?? 0) * c.quantidade),
-    capital,
-    transporte: somar((c) => (c.custoUnitario * padroes.transporte * c.quantidade) / 100),
-    garantia: somar((c) => (c.custoUnitario * padroes.garantia * c.quantidade) / 100),
+    custo,
+    capital: custo + transporte + garantia,
+    transporte,
+    garantia,
     impostos: somar((c) => c.impostoUnitario * c.quantidade),
     valorCotado,
     precoReserva,
@@ -359,7 +365,7 @@ export function totalizar(itens: readonly ItemCotador[], padroes: PadroesCotador
     lucroTotal,
     lucroPercentual: dividir(lucroTotal, valorCotado) * 100,
     margemMedia: dividir(lucroTotal, valorCotado) * 100,
-    markupMedio: dividir(lucroTotal, capital) * 100,
+    markupMedio: dividir(lucroTotal, custo) * 100,
     economia: somar((c) => c.economiaUnitaria * c.quantidade),
     pendencias: calculados.filter((c) => c.incompleto).length,
   };
