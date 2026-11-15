@@ -9,6 +9,8 @@ export const JANELA_PADRAO_DIAS = 90;
 /** Valores especiais do campo Período (os outros são meses `aaaa-mm`). */
 export const PADRAO = 'ultimos';
 export const PERSONALIZADO = 'datas';
+/** Sem filtro de data — é o que o "ver todas" usa (GEN-48, 14/11/2026). */
+export const TODO_PERIODO = 'todo';
 
 const NOMES_MES = [
   'janeiro',
@@ -55,6 +57,7 @@ export function limitesDoMes(mes: string): { inicio: string; fim: string } {
 export function opcoesDePeriodo(hoje: string): { value: string; label: string }[] {
   return [
     { value: PADRAO, label: `Últimos ${JANELA_PADRAO_DIAS} dias` },
+    { value: TODO_PERIODO, label: 'Todo o período' },
     ...ultimosMeses(hoje),
     { value: PERSONALIZADO, label: 'Escolher datas…' },
   ];

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 
@@ -28,6 +28,7 @@ import {
   JANELA_PADRAO_DIAS,
   PADRAO,
   PERSONALIZADO,
+  TODO_PERIODO,
   limitesDoMes,
   opcoesDePeriodo,
 } from '../periodo.utils';
@@ -168,6 +169,8 @@ export class DescartadasPage implements OnInit {
           data_inicial: somarDias(hojeIso(), -JANELA_PADRAO_DIAS),
           data_final: hojeIso(),
         });
+      } else if (periodo === TODO_PERIODO) {
+        this.filtros.patchValue({ data_inicial: '', data_final: '' });
       } else if (periodo !== PERSONALIZADO) {
         const { inicio, fim } = limitesDoMes(periodo);
         this.filtros.patchValue({ data_inicial: inicio, data_final: fim });
@@ -180,12 +183,23 @@ export class DescartadasPage implements OnInit {
   );
   protected readonly linhas = signal<readonly DescartadaResponse[]>([]);
   protected readonly total = signal(0);
+  /** O número do menu: todas, sem filtro (GEN-48). */
+  protected readonly totalGeral = signal(0);
+  /** Quantas o filtro esconde — a tela avisa e oferece "ver todas". */
+  protected readonly escondidas = computed(() => Math.max(0, this.totalGeral() - this.total()));
   protected readonly carregando = signal(false);
   protected readonly erro = signal(false);
 
   protected readonly chaveDe = (linha: DescartadaResponse) => linha.id;
 
   ngOnInit(): void {
+    this.carregar();
+  }
+
+  /** Tira todos os filtros: a tela mostra o mesmo número do menu. */
+  protected verTodas(): void {
+    this.filtros.patchValue({ periodo: TODO_PERIODO, motivo: '', uasg: '', uf: '' });
+    this.estado.update((atual) => ({ ...atual, busca: '', pagina: 1 }));
     this.carregar();
   }
 
@@ -250,6 +264,7 @@ export class DescartadasPage implements OnInit {
         next: (pagina) => {
           this.linhas.set(pagina.results);
           this.total.set(pagina.count);
+          this.totalGeral.set(pagina.total_geral ?? pagina.count);
           this.carregando.set(false);
         },
         error: () => {

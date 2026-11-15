@@ -167,6 +167,41 @@ describe('EncerradasPage', () => {
     expect(modal.abrir.mock.calls[1][1]).toEqual(expect.objectContaining({ oportunidadeId: 4 }));
   });
 
+  // GEN-48 (14/11/2026): o menu contava 10 e a tela mostrava 1.
+  it('quando o filtro esconde alguma, avisa "Mostrando X de N" e "Ver todas" tira os filtros', () => {
+    service.listar.mockReturnValue(
+      of({ count: 2, total_geral: 10, next: null, previous: null, results: [COTADA, SEM_COTACAO] }),
+    );
+    montar();
+
+    const aviso = () => fixture.debugElement.query(By.css('.aviso-filtro'));
+    expect(aviso().nativeElement.textContent).toContain('Mostrando 2 de 10');
+
+    aviso().query(By.css('button')).nativeElement.click();
+
+    const params = service.listar.mock.lastCall![0];
+    expect(params.data_inicial).toBe('');
+    expect(params.data_final).toBe('');
+    expect(params.motivo).toBe('');
+    expect(params.page).toBe(1);
+  });
+
+  it('sem nada escondido não mostra o aviso', () => {
+    service.listar.mockReturnValue(
+      of({ count: 2, total_geral: 2, next: null, previous: null, results: [COTADA, SEM_COTACAO] }),
+    );
+    montar();
+
+    expect(fixture.debugElement.query(By.css('.aviso-filtro'))).toBeNull();
+  });
+
+  it('o Período tem "Todo o período"', () => {
+    montar();
+
+    const periodos = (fixture.componentInstance as never as { periodos: { label: string }[] }).periodos;
+    expect(periodos.map((p) => p.label)).toContain('Todo o período');
+  });
+
   it('erro ao carregar mostra a mensagem', () => {
     service.listar.mockReturnValue(throwError(() => new Error('falhou')));
     montar();

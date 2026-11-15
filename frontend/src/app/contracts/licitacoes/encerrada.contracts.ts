@@ -32,7 +32,7 @@ export const MOTIVOS_ENCERRAMENTO: readonly { value: MotivoEncerramento; label: 
 ];
 
 export interface EncerradaResponse extends OportunidadeSalvaResponse {
-  readonly encerrada_em: string;
+  readonly encerrada_em: string | null;
   readonly motivo: MotivoEncerramento;
   readonly motivo_label: string;
   readonly cotacao_id: number | null;
@@ -50,6 +50,8 @@ export type ProcessoCabecalho = OportunidadeSalvaResponse & {
 
 export interface EncerradasPagina {
   readonly count: number;
+  /** Quantas há sem nenhum filtro — o número do menu (GEN-48). */
+  readonly total_geral?: number;
   readonly next: string | null;
   readonly previous: string | null;
   readonly results: readonly EncerradaResponse[];

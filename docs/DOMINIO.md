@@ -327,15 +327,26 @@ Resumo para quem está só passando:
   do Cotador usa, mudou para `apps/cotador/situacao.py`.
 
 Telas de saída: **Encerradas** e **Encerradas › Descartadas** — filtros
-Período (últimos 90 dias, um dos últimos 12 meses, ou datas livres), Motivo,
-UASG (parte do código basta) e UF; colunas UASG, cidade, data, motivo, onde
-estava, valor cotado e estimado.
+Período (últimos 90 dias, todo o período, um dos últimos 12 meses, ou datas
+livres), Motivo, UASG (parte do código basta) e UF; colunas UASG, cidade,
+data, motivo, onde estava, valor cotado e estimado.
+
+**Menu × tela (14/11/2026, GEN-48).** O número do menu conta **todas**; a
+tela abre em "últimos 90 dias". Duas regras para os números não se
+contradizerem:
+
+1. **Linha sem data sempre aparece**, com qualquer período. Antes, 9
+   "acompanhando" sem data (compras trazidas pela Sentinela sem prazo) nunca
+   passavam no filtro: o menu mostrava 10 e a tela 1.
+2. **A tela avisa o que o filtro esconde:** "Mostrando 3 de 11 — o filtro
+   esconde 8. Ver todas". A API manda `total_geral` (o número do menu);
+   "Ver todas" tira todos os filtros (Período vira "Todo o período").
 
 | Rota | O quê |
 |---|---|
 | `GET /api/licitacoes/torre/` | o quadro da Torre, com a etapa já calculada |
 | `GET /api/licitacoes/descartadas/` | `data_inicial`/`data_final`, `motivo`, `uasg`, `uf`, `busca`, `ordering` |
-| `GET /api/licitacoes/encerradas/` | mesmos filtros |
+| `GET /api/licitacoes/encerradas/` | mesmos filtros. As duas devolvem também `total_geral` (GEN-48) |
 
 ### `Cotacao` — a formação de preço de um edital
 
@@ -797,3 +808,4 @@ acima parecer estranha, a razão costuma estar aqui.
 | 14/11/2026 | **Encerradas com os mesmos filtros de Descartadas** (GEN-55): Período (últimos 90 dias, mês ou datas) e UASG, que faltavam. **Quadro antigo do Ciclo removido** (GEN-47) |
 | 14/11/2026 | **Disputar com 7 etapas** (GEN-83): Propostas aceitas (substitui "Aceita e habilitada"), Recursos e Finalizadas (adjudicado). `AP` e compra `2`/`3`/`4` → Disputa; `LS` → Aguardando sessão; `JE`/`HE` sem a Inside → Encerradas, e `JE` lido a cada ronda; diligência aberta traz o item de volta. 16 etapas |
 | 14/11/2026 | **Telas iguais à Torre** (GEN-87): Salvas = Torre › Oportunidade; Cotador = Torre › Cotação, com a linha "Sem cotação no Licita" para preço só no Compras.gov. Gerar o PDF da proposta não tira do Cotador (o PDF é o anexo depois de vencer). Prazo vazio é completado pelo PNCP |
+| 14/11/2026 | **Encerradas e Descartadas: menu = tela** (GEN-48): linha sem data sempre aparece; aviso "Mostrando X de N — ver todas" quando o filtro esconde; Período ganhou "Todo o período" |
