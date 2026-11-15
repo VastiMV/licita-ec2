@@ -24,3 +24,26 @@ h1 {
 .erro {
   color: var(--color-danger);
 }
+
+// "Mostrando X de N — ver todas" (GEN-48): o menu conta todas; o filtro
+// não pode esconder sem avisar.
+.aviso-filtro {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-3);
+  color: var(--color-muted);
+
+  .link {
+    appearance: none;
+    border: 0;
+    background: none;
+    padding: 0;
+    color: var(--color-blue);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    min-height: 32px;
+  }
+}

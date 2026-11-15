@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import datetime as dt
 
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.pagination import PageNumberPagination
@@ -388,17 +389,25 @@ class EncerradasView(APIView):
     """`GET /api/licitacoes/encerradas/` — as licitações que saíram do ciclo
     (ver `encerradas.py`), com os filtros da tela: período de encerramento
     (`data_inicial`/`data_final`), `motivo`, `uasg` (parte do código basta),
-    `uf` e `busca` textual — os mesmos de Descartadas (GEN-55)."""
+    `uf` e `busca` textual — os mesmos de Descartadas (GEN-55).
+
+    GEN-48 (14/11/2026): o menu mostrava 10 e a tela 1 — a tela abre em
+    "últimos 90 dias" e as 9 sem data nunca passavam no filtro. Agora a linha
+    sem data sempre aparece, e `total_geral` (o número do menu) deixa a tela
+    avisar "Mostrando X de N — ver todas"."""
 
     def get(self, request: Request) -> Response:
         registrar_prazos_vencidos()
         params = request.query_params
 
-        lista = encerradas().select_related("cotacao").buscar(params.get("busca", ""))
+        todas = encerradas().select_related("cotacao")
+        lista = todas.buscar(params.get("busca", ""))
+        # Sem data sempre aparece: o filtro de período não pode esconder o
+        # que não tem data (GEN-48, 14/11/2026).
         if inicio := _data(params.get("data_inicial")):
-            lista = lista.filter(encerrada_em__gte=inicio)
+            lista = lista.filter(Q(encerrada_em__gte=inicio) | Q(encerrada_em__isnull=True))
         if fim := _data(params.get("data_final")):
-            lista = lista.filter(encerrada_em__lte=fim)
+            lista = lista.filter(Q(encerrada_em__lte=fim) | Q(encerrada_em__isnull=True))
         if (motivo := params.get("motivo")) in MOTIVOS:
             lista = lista.filter(motivo=motivo)
         if uasg := (params.get("uasg") or "").strip():
@@ -413,7 +422,9 @@ class EncerradasView(APIView):
 
         paginacao = OportunidadesSalvasPaginacao()
         pagina = paginacao.paginate_queryset(lista, request, view=self)
-        return paginacao.get_paginated_response(EncerradaSerializer(pagina, many=True).data)
+        resposta = paginacao.get_paginated_response(EncerradaSerializer(pagina, many=True).data)
+        resposta.data["total_geral"] = todas.count()  # o número do menu
+        return resposta
 
 
 ORDENACOES_DESCARTADAS = {
@@ -429,17 +440,21 @@ class DescartadasView(APIView):
     """`GET /api/licitacoes/descartadas/` — tiradas da lista antes do prazo
     e vencidas sem cotação (ver `encerradas.descartadas`), com os filtros da
     tela: período do descarte (`data_inicial`/`data_final`), `motivo`,
-    `uasg` (parte do código basta), `uf` e `busca` textual."""
+    `uasg` (parte do código basta), `uf` e `busca` textual. Sem data e
+    `total_geral`: como em Encerradas (GEN-48)."""
 
     def get(self, request: Request) -> Response:
         registrar_prazos_vencidos()
         params = request.query_params
 
-        lista = descartadas().select_related("cotacao").buscar(params.get("busca", ""))
+        todas = descartadas().select_related("cotacao")
+        lista = todas.buscar(params.get("busca", ""))
+        # Sem data sempre aparece: o filtro de período não pode esconder o
+        # que não tem data (GEN-48, 14/11/2026).
         if inicio := _data(params.get("data_inicial")):
-            lista = lista.filter(descartada_em__gte=inicio)
+            lista = lista.filter(Q(descartada_em__gte=inicio) | Q(descartada_em__isnull=True))
         if fim := _data(params.get("data_final")):
-            lista = lista.filter(descartada_em__lte=fim)
+            lista = lista.filter(Q(descartada_em__lte=fim) | Q(descartada_em__isnull=True))
         if (motivo := params.get("motivo")) in MOTIVOS_DESCARTE:
             lista = lista.filter(motivo=motivo)
         if uasg := (params.get("uasg") or "").strip():
@@ -454,7 +469,9 @@ class DescartadasView(APIView):
 
         paginacao = OportunidadesSalvasPaginacao()
         pagina = paginacao.paginate_queryset(lista, request, view=self)
-        return paginacao.get_paginated_response(DescartadaSerializer(pagina, many=True).data)
+        resposta = paginacao.get_paginated_response(DescartadaSerializer(pagina, many=True).data)
+        resposta.data["total_geral"] = todas.count()  # o número do menu
+        return resposta
 
 
 class ProcessoView(APIView):

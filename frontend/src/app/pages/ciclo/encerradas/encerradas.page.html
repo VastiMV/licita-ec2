@@ -25,6 +25,13 @@
   <p class="erro">Não foi possível carregar as encerradas agora.</p>
 }
 
+@if (escondidas() > 0 && !carregando()) {
+  <p class="aviso-filtro" role="status">
+    Mostrando {{ total() }} de {{ totalGeral() }} — o filtro esconde {{ escondidas() }}.
+    <button type="button" class="link" (click)="verTodas()">Ver todas</button>
+  </p>
+}
+
 <app-data-table
   [colunas]="colunas"
   [linhas]="linhas()"

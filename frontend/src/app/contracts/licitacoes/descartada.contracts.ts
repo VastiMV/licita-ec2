@@ -32,7 +32,7 @@ export type EtapaDescarte = 'oportunidade' | 'cotacao';
 
 export interface DescartadaResponse extends OportunidadeSalvaResponse {
   /** O dia do descarte (a remoção ou o prazo, o que veio primeiro), `aaaa-mm-dd`. */
-  readonly descartada_em: string;
+  readonly descartada_em: string | null;
   readonly motivo: MotivoDescarte;
   readonly motivo_label: string;
   /** Lixeira: "Descartada manualmente por Carlinhos em 09/11/2026, na etapa
@@ -48,6 +48,8 @@ export interface DescartadaResponse extends OportunidadeSalvaResponse {
 
 export interface DescartadasPagina {
   readonly count: number;
+  /** Quantas há sem nenhum filtro — o número do menu (GEN-48). */
+  readonly total_geral?: number;
   readonly next: string | null;
   readonly previous: string | null;
   readonly results: readonly DescartadaResponse[];
