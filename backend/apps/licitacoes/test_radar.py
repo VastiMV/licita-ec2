@@ -51,7 +51,10 @@ class FakePncp:
                 return [dict(e) for e in editais], len(editais)
         return [], 0
 
+    detalhes = 0
+
     def detalhar_compra(self, *, cnpj, ano, sequencial):
+        self.detalhes += 1
         return {
             "link_plataforma": self.links.get(
                 str(sequencial), "https://cnetmobile.estaleiro.serpro.gov.br/comprasnet-web/public/compras"
@@ -123,12 +126,11 @@ class RodadaTests(APITestCase):
 
         resumo = rodar(HOJE, pncp)
 
-        self.assertEqual(resumo["novas"], 2)
-        outra = SugestaoRadar.objects.get(sequencial_compra="11")
-        self.assertEqual(outra.plataforma_id, "")  # portal não registrado: entra assim mesmo
-        self.assertIn("portaldecompraspublicas", outra.link_plataforma)
+        self.assertEqual(resumo["novas"], 2)  # as duas, sem filtro de portal
+        # O Radar não pede o detalhe da compra (limite por IP do PNCP): o
+        # portal e o link vêm quando o card é aberto.
+        self.assertEqual(pncp.detalhes, 0)
         compras = SugestaoRadar.objects.get(sequencial_compra="10")
-        self.assertEqual(compras.plataforma_id, "compras_gov")
         self.assertEqual(compras.parecido_com, "Ração para aves")
         self.assertEqual(compras.expira_em, HOJE + dt.timedelta(days=DIAS_NO_RADAR))
         self.assertEqual(compras.itens[0]["contratacao_sequencial_compra"], "10")
@@ -194,3 +196,38 @@ class RadarApiTests(APITestCase):
 
         self.assertEqual(resposta.status_code, 201)
         self.assertEqual(self.client.get("/api/licitacoes/radar/total/").data, {"total": 1})
+
+
+class PncpPacienteTests(APITestCase):
+    """Achado da rodada real (14/11/2026): 429 no detalhe fazia o Radar
+    perder a compra calado."""
+
+    def test_429_espera_e_tenta_de_novo(self):
+        from unittest import mock
+
+        from apps.integracoes.clients.pncp import PncpClient, PncpClientError
+
+        from .radar import PncpPaciente
+
+        respostas = [PncpClientError("PNCP respondeu 429 em /x"), PncpClientError("PNCP respondeu 429 em /x"), "ok"]
+
+        def falso(self, caminho, params):
+            r = respostas.pop(0)
+            if isinstance(r, Exception):
+                raise r
+            return r
+
+        with mock.patch.object(PncpClient, "_get_com_repeticao", falso), mock.patch("apps.licitacoes.radar.time.sleep") as dormir:
+            self.assertEqual(PncpPaciente()._get_com_repeticao("/x", {}), "ok")
+        self.assertEqual([c.args[0] for c in dormir.call_args_list], [5, 10])
+
+    def test_outro_erro_nao_repete(self):
+        from unittest import mock
+
+        from apps.integracoes.clients.pncp import PncpClient, PncpClientError
+
+        from .radar import PncpPaciente
+
+        with mock.patch.object(PncpClient, "_get_com_repeticao", side_effect=PncpClientError("PNCP respondeu 404 em /x")):
+            with self.assertRaises(PncpClientError):
+                PncpPaciente()._get_com_repeticao("/x", {})

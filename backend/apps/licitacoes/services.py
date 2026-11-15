@@ -226,6 +226,7 @@ def _buscar_no_pncp(
     codigo_unidade: str | None,
     plataforma: Plataforma | None,
     pncp_client: PncpClient | None = None,
+    workers: int = MAX_WORKERS,
 ) -> list[dict[str, Any]] | None:
     """Busca editais pelo texto no PNCP, fica só com os da plataforma
     escolhida e desdobra cada um em oportunidades. `plataforma=None` = todas
@@ -274,7 +275,14 @@ def _buscar_no_pncp(
         if not editais:
             return []
 
-        editais = _apenas_da_plataforma(cliente, editais, plataforma)
+        if plataforma is None:
+            # Todas as plataformas (Radar): não precisa do detalhe para
+            # filtrar — e o detalhe (`/api/consulta/`) é o endpoint com limite
+            # por IP (rodada real de 14/11/2026: 30 compras perdidas para o
+            # 429 em 4 termos). O card pede o detalhe quando é aberto.
+            editais = editais[:MAX_EDITAIS_PNCP]
+        else:
+            editais = _apenas_da_plataforma(cliente, editais, plataforma, workers)
         if not editais:
             logger.info(
                 'Busca no PNCP achou "%s", mas nenhum edital é de %s; tentando o catálogo.',
@@ -296,7 +304,7 @@ def _buscar_no_pncp(
                 return []
 
         oportunidades: list[dict[str, Any]] = []
-        with ThreadPoolExecutor(max_workers=MAX_WORKERS) as pool:
+        with ThreadPoolExecutor(max_workers=workers) as pool:
             for edital, itens in zip(editais, pool.map(itens_seguros, editais)):
                 oportunidades.extend(_itens_relevantes(edital, itens, termo, plataforma))
         return oportunidades
@@ -306,7 +314,10 @@ def _buscar_no_pncp(
 
 
 def _apenas_da_plataforma(
-    cliente: PncpClient, editais: list[dict[str, Any]], plataforma: Plataforma | None
+    cliente: PncpClient,
+    editais: list[dict[str, Any]],
+    plataforma: Plataforma | None,
+    workers: int = MAX_WORKERS,
 ) -> list[dict[str, Any]]:
     """Detalha cada edital no PNCP e fica só com os da plataforma escolhida,
     gravando neles o `link_plataforma` definitivo (`linkSistemaOrigem`) e os
@@ -339,7 +350,7 @@ def _apenas_da_plataforma(
             return None
 
     selecionados = []
-    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as pool:
+    with ThreadPoolExecutor(max_workers=workers) as pool:
         for edital, detalhe in zip(editais, pool.map(detalhe_seguro, editais)):
             link = (detalhe or {}).get("link_plataforma")
             if not link or (plataforma is not None and not plataforma.pertence(link)):

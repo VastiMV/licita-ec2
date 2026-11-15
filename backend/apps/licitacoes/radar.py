@@ -32,6 +32,7 @@ from __future__ import annotations
 
 import datetime as dt
 import logging
+import time
 from decimal import Decimal
 
 from django.db.models import Exists, OuterRef
@@ -49,6 +50,34 @@ DIAS_NO_RADAR = 7
 JANELA_DIAS = 2  # publicadas de anteontem para cá: as rodadas se sobrepõem
 MAX_TERMOS = 30
 PALAVRAS_SEM_PDM = 4
+
+
+ESPERA_429 = 5  # segundos; dobra a cada tentativa (5, 10, 20)
+TENTATIVAS_429 = 4
+PAUSA_ENTRE_TERMOS = 2  # segundos
+# Pedidos ao mesmo tempo. A busca da tela usa 20 (tem gente esperando); com
+# 20, a rodada real de 14/11 levou 240 respostas 429 em 4 termos.
+WORKERS = 3
+
+
+class PncpPaciente(PncpClient):
+    """O cliente do PNCP para o Radar: espera e tenta de novo quando o PNCP
+    responde **429** ("devagar"). O cliente normal não repete o 429 (a busca
+    da tela tem gente esperando). O Radar roda sozinho, então pode esperar.
+
+    Achado de 14/11/2026, numa rodada real com 4 termos: vários 429 no
+    detalhe da compra, e compra sem detalhe é descartada calada (sem link não
+    há oportunidade). Com 30 termos, perderia muito mais."""
+
+    def _get_com_repeticao(self, caminho, params):
+        for tentativa in range(1, TENTATIVAS_429 + 1):
+            try:
+                return super()._get_com_repeticao(caminho, params)
+            except PncpClientError as exc:
+                if "respondeu 429" not in str(exc) or tentativa == TENTATIVAS_429:
+                    raise
+                time.sleep(ESPERA_429 * 2 ** (tentativa - 1))
+        raise AssertionError("inalcançável")  # pragma: no cover
 
 
 def _termo(descricao: str) -> str:
@@ -141,10 +170,12 @@ def rodar(hoje: dt.date | None = None, pncp: PncpClient | None = None) -> dict[s
         return resumo
 
     proprio = pncp is None
-    cliente = pncp or PncpClient()
+    cliente = pncp or PncpPaciente()
     conhecidas = _ja_conhecidas()
     try:
-        for termo, origem, por_ganho in termos:
+        for n, (termo, origem, por_ganho) in enumerate(termos):
+            if n and proprio:
+                time.sleep(PAUSA_ENTRE_TERMOS)  # gentileza com o limite por IP
             try:
                 achados = _buscar_no_pncp(
                     termo,
@@ -155,6 +186,7 @@ def rodar(hoje: dt.date | None = None, pncp: PncpClient | None = None) -> dict[s
                     codigo_unidade=None,
                     plataforma=None,
                     pncp_client=cliente,
+                    workers=WORKERS,
                 ) or []
             except PncpClientError:
                 resumo["falhas"] += 1

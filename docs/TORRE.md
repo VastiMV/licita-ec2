@@ -449,6 +449,20 @@ Código: `apps/licitacoes/radar.py`, `SugestaoRadar`, `GET licitacoes/radar/`
 aceita `plataforma=None` (todas) só para o Radar; a busca da tela continua
 no Compras.gov. Testes: `test_radar.py`.
 
+**Limite do PNCP (rodadas reais de 14/11/2026, 4 termos):**
+
+| Versão | Achadas | Perdidas (429) | Tempo |
+|---|---|---|---|
+| como a busca da tela (detalhe de cada compra, 20 por vez) | 24 | ~30 | 4 min |
+| + espera no 429, 3 por vez | 39 | 30 | 8 min |
+| **sem o detalhe** (versão no ar) | **58** | **0** | **44 s** |
+
+O detalhe (`/api/consulta/`) é o endpoint com limite por IP; a busca da
+tela precisa dele para filtrar o portal, o Radar não. O portal e o link
+aparecem quando o card é aberto (o card pede o detalhe). O Radar ainda
+espera e tenta de novo no 429 (`PncpPaciente`), faz 3 pedidos por vez e
+pausa 2 s entre termos.
+
 ## Regras de 09/11/2026 (vigia, datas, acompanhadas e o sino)
 
 A regra de "onde está cada licitação" mora **num lugar só**: `torre.avaliar`.
