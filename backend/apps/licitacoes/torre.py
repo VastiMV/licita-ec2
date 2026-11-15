@@ -679,6 +679,30 @@ def _urgencia(cartao: dict) -> tuple:
     return (grau, cartao["data_encerramento_proposta"] or dt.date.max, cartao["id"])
 
 
+def ids_na_etapa(etapa: str, hoje: dt.date | None = None) -> list[int]:
+    """As salvas que a Torre põe nesta etapa (GEN-87, 14/11/2026).
+
+    As telas de Oportunidades e do Cotador listam **exatamente** Torre ›
+    Oportunidade e Torre › Cotação. Antes cada tela tinha o seu filtro
+    (cotação sim/não + prazo) e os números não batiam: Carlinhos via 4 em
+    Preparar e 13 em Oportunidades — as compras que ele só acompanha (já
+    em Encerradas) seguiam na lista, e a suspensa com preço só no
+    Compras.gov não aparecia no Cotador."""
+
+    hoje = hoje or timezone.localdate()
+    salvas = (
+        OportunidadeSalva.objects.ativas()
+        .select_related("cotacao", "participacao", "proposta")
+        .prefetch_related("itens_participados__propostas", "documentos_financeiros", "entregas")
+    )
+    ids = []
+    for salva in salvas:
+        cartao, _ = avaliar(salva, hoje)
+        if cartao and cartao["etapa"] == etapa:
+            ids.append(salva.pk)
+    return ids
+
+
 def montar_torre(hoje: dt.date | None = None) -> dict:
     """Os 4 estágios com as etapas, os cartões e quantas licitações saíram."""
 

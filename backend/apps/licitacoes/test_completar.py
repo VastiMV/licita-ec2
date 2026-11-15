@@ -9,6 +9,7 @@ compra já existia — o servidor devolvia a existente sem completar nada.
 
 from __future__ import annotations
 
+import datetime as dt
 from unittest import mock
 
 from rest_framework.test import APITestCase
@@ -27,6 +28,7 @@ DETALHE = {
     "valor_total_estimado": 64800.0,
     "modalidade": "Dispensa",
     "data_publicacao": "2026-11-03",
+    "data_encerramento_proposta": "2026-11-20",
     "situacao_nome": "Divulgada no PNCP",
 }
 ITENS = [
@@ -101,7 +103,7 @@ class CompletarPeloPncpTests(APITestCase):
         self.assertEqual(len(salva.itens), 2)
 
     def test_completa_nao_pergunta_de_novo(self):
-        salva = da_sentinela(orgao_nome="X", itens=[item()])
+        salva = da_sentinela(orgao_nome="X", itens=[item()], data_encerramento_proposta=dt.date(2026, 11, 20))
         pncp = FakePncp()
 
         self.assertEqual(completar_pelo_pncp(salva, pncp), [])
@@ -195,9 +197,51 @@ class SentinelaPedeCompletarTests(APITestCase):
     def test_salva_completa_nao_pede_nada(self):
         from apps.sentinela.ingestao import _pedir_completar
 
-        salva = da_sentinela(orgao_nome="ICMBIO", itens=[item()])
+        salva = da_sentinela(orgao_nome="ICMBIO", itens=[item()], data_encerramento_proposta=dt.date(2026, 11, 20))
         with mock.patch("apps.licitacoes.tasks.completar_salva.delay") as delay:
             with self.captureOnCommitCallbacks(execute=True):
                 _pedir_completar(salva)
+
+        delay.assert_not_called()
+
+
+class PrazoPeloPncpTests(APITestCase):
+    """GEN-87, 14/11/2026: 9 compras trazidas pela Sentinela em 10/11 sem
+    `dataHoraFimPropostas` ficaram sem prazo — e sem prazo seguiam na tela de
+    Oportunidades. O PNCP tem a data desde a publicação."""
+
+    def test_sem_prazo_falta_dados_e_o_pncp_preenche(self):
+        salva = da_sentinela(orgao_nome="ICMBIO", itens=[item()])
+        self.assertTrue(falta_dados(salva))
+
+        campos = completar_pelo_pncp(salva, FakePncp())
+
+        salva.refresh_from_db()
+        self.assertIn("data_encerramento_proposta", campos)
+        self.assertEqual(salva.data_encerramento_proposta, dt.date(2026, 11, 20))
+        self.assertIn("prazo da proposta", salva.eventos.get(tipo=EventoOportunidadeSalva.Tipo.CORRECAO).descricao)
+
+    def test_prazo_que_ja_existe_nao_e_trocado(self):
+        salva = da_sentinela(data_encerramento_proposta=dt.date(2026, 11, 25))
+
+        completar_pelo_pncp(salva, FakePncp())
+
+        salva.refresh_from_db()
+        self.assertEqual(salva.data_encerramento_proposta, dt.date(2026, 11, 25))
+
+    def test_conferencia_pega_as_sem_prazo(self):
+        salva = da_sentinela(orgao_nome="ICMBIO", itens=[item()])
+
+        self.assertEqual(completar_as_que_faltam(FakePncp())["completadas"], 1)
+        salva.refresh_from_db()
+        self.assertEqual(salva.data_encerramento_proposta, dt.date(2026, 11, 20))
+
+    def test_sentinela_nao_pergunta_so_pelo_prazo_a_cada_captura(self):
+        from apps.sentinela.ingestao import _pedir_completar
+
+        salva = da_sentinela(orgao_nome="ICMBIO", itens=[item()])
+        with mock.patch("apps.licitacoes.tasks.completar_salva.delay") as delay:
+            with self.captureOnCommitCallbacks(execute=True):
+                _pedir_completar(salva, com_prazo=False)
 
         delay.assert_not_called()

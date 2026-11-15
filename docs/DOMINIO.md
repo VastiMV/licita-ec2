@@ -237,8 +237,13 @@ Regras:
   isso, um clique repetido viraria log de cria/apaga/cria — e o histórico
   perderia o sentido. Salvar a mesma compra de novo é idempotente (devolve o
   registro existente, sem novo evento).
-- **Prazo vencido sai da lista de Salvas.** Salvas mostra só o que ainda
-  está no prazo (`OportunidadeSalvaQuerySet.no_prazo`). Vencida, a
+- **Salvas = Torre › Oportunidade (14/11/2026, GEN-87).** A lista mostra
+  tudo cujo prazo não passou, mais as que voltam por estar suspensas ou sem
+  data (regra da operação). A regra é a da Torre (`torre.ids_na_etapa`),
+  não um filtro próprio: antes, a compra que ele só acompanha, sem prazo,
+  ficava aqui e também em Encerradas. O Cotador segue a mesma ideia (=
+  Torre › Cotação), inclusive quem tem preço só no Compras.gov.
+- **Prazo vencido sai da lista de Salvas.** Vencida, a
   licitação segue a regra da Torre de Controle: vai para **Descartadas**,
   ou fica em Cadastro de proposta esperando a Sentinela confirmar, se tiver
   cotação e for do Compras.gov.br (ver [`TORRE.md`](TORRE.md), seção 2). O card (na busca e no modal) continua dizendo em
@@ -791,4 +796,4 @@ acima parecer estranha, a razão costuma estar aqui.
 | 10/11/2026 | `AGENTS.md`: decisões só com confirmação; documentação no mesmo PR para toda mudança; código GEN no ramo e no PR |
 | 14/11/2026 | **Encerradas com os mesmos filtros de Descartadas** (GEN-55): Período (últimos 90 dias, mês ou datas) e UASG, que faltavam. **Quadro antigo do Ciclo removido** (GEN-47) |
 | 14/11/2026 | **Disputar com 7 etapas** (GEN-83): Propostas aceitas (substitui "Aceita e habilitada"), Recursos e Finalizadas (adjudicado). `AP` e compra `2`/`3`/`4` → Disputa; `LS` → Aguardando sessão; `JE`/`HE` sem a Inside → Encerradas, e `JE` lido a cada ronda; diligência aberta traz o item de volta. 16 etapas |
-
+| 14/11/2026 | **Telas iguais à Torre** (GEN-87): Salvas = Torre › Oportunidade; Cotador = Torre › Cotação, com a linha "Sem cotação no Licita" para preço só no Compras.gov. Gerar o PDF da proposta não tira do Cotador (o PDF é o anexo depois de vencer). Prazo vazio é completado pelo PNCP |

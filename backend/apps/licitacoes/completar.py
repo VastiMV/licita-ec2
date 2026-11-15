@@ -8,7 +8,7 @@ aceitar o cadastro no Compras.gov primeiro e cotar no Licita depois, então
 isso acontece com toda compra que entra por esse caminho.
 
 Aqui a salva ganha o que a busca teria gravado: órgão, cidade, UF, objeto,
-valor e os itens, do PNCP. **Só o que está vazio** é preenchido — nada que já
+valor, prazo da proposta (desde 14/11/2026, GEN-87) e os itens, do PNCP. **Só o que está vazio** é preenchido — nada que já
 existe é trocado. Quem chama: a Sentinela (em segundo plano, ver
 `tasks.completar_salva`) e a conferência diária (7h45).
 """
@@ -29,10 +29,18 @@ logger = logging.getLogger(__name__)
 CAMPOS_DE_TEXTO = ("orgao_nome", "municipio", "uf", "objeto", "modalidade")
 
 
-def falta_dados(salva: OportunidadeSalva) -> bool:
-    """Sem órgão ou sem itens: o cartão e o Cotador ficam incompletos."""
+def falta_dados(salva: OportunidadeSalva, com_prazo: bool = True) -> bool:
+    """Sem órgão, sem itens ou sem prazo: o cartão e o Cotador ficam
+    incompletos. O prazo entrou em 14/11/2026 (GEN-87): a Sentinela trouxe 9
+    compras sem `dataHoraFimPropostas`, e sem prazo a compra não sai de
+    Oportunidades por prazo — mas o PNCP publica a data desde o edital.
 
-    return not salva.orgao_nome or not salva.itens
+    `com_prazo=False`: a Sentinela, nas capturas de uma salva que já existe,
+    não pergunta ao PNCP só pelo prazo (seria uma consulta a cada ronda
+    enquanto o PNCP não tiver a data); quem cobre é a conferência diária."""
+
+    sem_prazo = com_prazo and salva.data_encerramento_proposta is None
+    return not salva.orgao_nome or not salva.itens or sem_prazo
 
 
 def completar_pelo_pncp(salva: OportunidadeSalva, pncp: PncpClient | None = None) -> list[str]:
@@ -70,6 +78,9 @@ def completar_pelo_pncp(salva: OportunidadeSalva, pncp: PncpClient | None = None
     if salva.data_publicacao is None and detalhe.get("data_publicacao"):
         salva.data_publicacao = dt.date.fromisoformat(detalhe["data_publicacao"])
         preenchidos.append("data_publicacao")
+    if salva.data_encerramento_proposta is None and detalhe.get("data_encerramento_proposta"):
+        salva.data_encerramento_proposta = dt.date.fromisoformat(detalhe["data_encerramento_proposta"])
+        preenchidos.append("data_encerramento_proposta")
 
     if not salva.itens:
         itens = pncp.listar_itens(**chave)
@@ -118,13 +129,14 @@ NOMES = {
     "modalidade": "modalidade",
     "valor_total_estimado": "valor estimado",
     "data_publicacao": "data de publicação",
+    "data_encerramento_proposta": "prazo da proposta",
     "itens": "itens",
 }
 
 
 def completar_as_que_faltam(pncp: PncpClient | None = None) -> dict[str, int]:
-    """Todas as salvas ativas sem órgão ou sem itens. Uma com problema não
-    para as outras."""
+    """Todas as salvas ativas sem órgão, sem itens ou sem prazo. Uma com
+    problema não para as outras."""
 
     pncp = pncp or PncpClient()
     resumo = {"completadas": 0, "falhas": 0}
@@ -140,4 +152,4 @@ def completar_as_que_faltam(pncp: PncpClient | None = None) -> dict[str, int]:
 def _sem_dados():
     from django.db.models import Q
 
-    return Q(orgao_nome="") | Q(itens=[])
+    return Q(orgao_nome="") | Q(itens=[]) | Q(data_encerramento_proposta__isnull=True)

@@ -289,7 +289,7 @@ task Celery, com RabbitMQ como broker:
 | `licitacoes.sincronizar_transparencia` | Celery Beat | segunda a sexta, 8h10 — empenho, liquidação, pagamento federais |
 | `licitacoes.conferencia_diaria` | Celery Beat | segunda a sexta, 7h45 — data/situação no PNCP, itens acompanhados, fim da vigia (atas), mercado dos itens |
 | `notificacoes.enviar_telegram` | a cada aviso novo do sino | manda ao Telegram (sem chave no `.env`: não faz nada) |
-| `licitacoes.completar_salva` | captura da Sentinela, quando a salva está sem órgão ou sem itens (10/11/2026) | preenche pelo PNCP só o que está vazio (`completar.py`); a conferência das 7h45 pega as que ficaram para trás |
+| `licitacoes.completar_salva` | captura da Sentinela, quando a salva está sem órgão ou sem itens (10/11/2026), ou sem prazo ao ser criada (14/11/2026, GEN-87) | preenche pelo PNCP só o que está vazio (`completar.py`); a conferência das 7h45 pega as que ficaram para trás |
 | `capag.sincronizar_capag` | Celery Beat | a cada 30 dias — notas CAPAG do Tesouro |
 | chamadas à API do PNCP/compras.gov.br feitas por busca interativa do usuário | request síncrono da `licitacoes` view | -- ficam síncronas mesmo, são a resposta da busca; só o que não bloqueia a resposta ao usuário vira task |
 

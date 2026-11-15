@@ -1,6 +1,8 @@
 /**
  * Contratos de "Ciclo de Licitação / Cotador" — as licitações na etapa
- * Cotação: salvas com cotação e prazo aberto (`GET licitacoes/cotacoes/`).
+ * Cotação: as salvas que a Torre põe em Preparar › Cotação
+ * (`GET licitacoes/cotacoes/`, GEN-87). Preço lançado só no Compras.gov, sem
+ * cotação no Licita: os campos da cotação vêm `null`.
  */
 
 import { OportunidadeSalvaResponse } from './oportunidade-salva.contracts';
@@ -14,10 +16,10 @@ export interface SeloCotacao {
 }
 
 export interface EmCotacaoResponse extends OportunidadeSalvaResponse {
-  readonly cotacao_id: number;
-  readonly valor_cotado: number;
-  readonly cotacao_atualizada_em: string;
-  readonly pendencias: number;
+  readonly cotacao_id: number | null;
+  readonly valor_cotado: number | null;
+  readonly cotacao_atualizada_em: string | null;
+  readonly pendencias: number | null;
   readonly selo: SeloCotacao;
 }
 

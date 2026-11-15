@@ -34,14 +34,17 @@ class GerarPropostaTests(APITestCase):
     def gerar(self, salva):
         return self.client.post("/api/propostas/", {"oportunidade_id": salva.pk}, format="json")
 
-    def test_gerar_tira_do_cotador_e_poe_em_propostas(self):
+    def test_gerar_poe_em_propostas_e_nao_muda_a_etapa(self):
+        # O PDF é o anexo enviado depois de vencer a disputa; não define etapa
+        # (decisão da operação, 14/11/2026, GEN-87). A licitação continua no
+        # Cotador, como na Torre › Cotação. Antes saía do Cotador.
         salva = self.salva("1")
         self.cotar(salva, itens=[item_cotado(valor_referencia="50.00")])
 
         resposta = self.gerar(salva)
 
         self.assertEqual(resposta.status_code, 201)
-        self.assertEqual(self.client.get("/api/licitacoes/cotacoes/").data["results"], [])
+        self.assertEqual([l["id"] for l in self.client.get("/api/licitacoes/cotacoes/").data["results"]], [salva.pk])
         self.assertEqual(self.em_propostas(), [salva.pk])
         self.assertTrue(
             salva.eventos.filter(tipo=EventoOportunidadeSalva.Tipo.PROPOSTA).exists()

@@ -18,8 +18,8 @@ São **4 estágios** e **16 etapas**, nesta ordem (a ordem importa: a etapa
 
 | Estágio | Etapa (`chave`) | Quando a licitação está nela | De onde vem o fato |
 |---|---|---|---|
-| Preparar | Oportunidade (`oportunidade`) | salva no Licita, no prazo, sem cotação | Licita (busca) |
-| Preparar | Cotação (`cotacao`) | tem cotação salva no Cotador, no prazo | Licita (Cotador) |
+| Preparar | Oportunidade (`oportunidade`) | salva no Licita, no prazo, sem cotação. Também a suspensa ou sem data antes da sessão, sem preço (GEN-72) | Licita (busca) |
+| Preparar | Cotação (`cotacao`) | tem cotação salva no Cotador, no prazo. Também a suspensa ou sem data antes da sessão com preço só no Compras.gov (GEN-72). O PDF da proposta não muda a etapa | Licita (Cotador) |
 | Preparar | Cadastro de proposta (`cadastro_proposta`) | aceita/cadastrada no Compras.gov, **ainda sem preço lançado** no item | Sentinela |
 | Disputar | Aguardando sessão (`aguardando_sessao`) | **preço lançado** no Compras.gov e a sessão ainda não abriu (10/11/2026). Etiqueta com a data da sessão; sem cotação no Licita, avança assim mesmo com o aviso "sem cotação no Licita" | Sentinela |
 | Disputar | Disputa (`disputa`) | sessão aberta: análise das propostas (`AP`) e lances. Compra em análise (`2`), em disputa (`3`) ou em seleção de fornecedores (`4`) sem itens lidos também (14/11/2026) | Sentinela |
@@ -358,7 +358,15 @@ Frontend em `frontend/src/app/pages/torre/`.
   `salva` (o registro inteiro) e `valor_cotado` em **todos** os cartões, não
   só em Preparar.
 - **Oportunidade e Cotação** no menu abrem as listas que já existiam
-  (Salvas e Cotador), não uma lista nova.
+  (Salvas e Cotador), não uma lista nova. **Desde 14/11/2026 (GEN-87) as
+  duas listas são exatamente Torre › Oportunidade e Torre › Cotação**
+  (`torre.ids_na_etapa`). **Por quê:** o Carlinhos via 4 em Preparar e 13
+  em Oportunidades. Cada tela tinha o seu filtro (cotação sim/não + prazo):
+  as compras que ele só acompanha, trazidas pela Sentinela sem prazo,
+  seguiam em Oportunidades; e a suspensa com preço só no Compras.gov não
+  aparecia no Cotador. Agora o Cotador mostra essa linha com o selo "Sem
+  cotação no Licita"; o único botão é "Abrir cotação", que cria a cotação.
+  Teste: `test_telas_torre.py`.
 - **Menu** (`layout/sidebar/`): azul escuro, Buscar em destaque, os 4
   estágios sempre abertos, e o **número de licitações em cada etapa**
   (`contagem-do-menu.service.ts` relê `GET torre/` a cada troca de tela).
