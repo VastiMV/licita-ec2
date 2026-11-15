@@ -231,3 +231,23 @@ class PncpPacienteTests(APITestCase):
         with mock.patch.object(PncpClient, "_get_com_repeticao", side_effect=PncpClientError("PNCP respondeu 404 em /x")):
             with self.assertRaises(PncpClientError):
                 PncpPaciente()._get_com_repeticao("/x", {})
+
+
+class ComandoRadarTests(APITestCase):
+    def test_roda_e_mostra_se_os_itens_vieram(self):
+        from io import StringIO
+        from unittest import mock
+
+        from django.core.management import call_command
+
+        cache.clear()
+        salva("1", "Ração para aves")
+        pncp = FakePncp({"racao": [edital("10", publicada=timezone.localdate().isoformat(),
+                                          prazo=(timezone.localdate() + dt.timedelta(days=9)).isoformat())]})
+        saida = StringIO()
+        with mock.patch("apps.licitacoes.radar.PncpPaciente", return_value=pncp):
+            call_command("radar", stdout=saida)
+
+        texto = saida.getvalue()
+        self.assertIn("Base: 1 termos", texto)
+        self.assertIn("Novas: 1 · com itens do PNCP: 1", texto)

@@ -463,6 +463,10 @@ aparecem quando o card é aberto (o card pede o detalhe). O Radar ainda
 espera e tenta de novo no 429 (`PncpPaciente`), faz 3 pedidos por vez e
 pausa 2 s entre termos.
 
+**Rodar na mão:** `python manage.py radar` roda uma rodada agora e mostra a
+base, o resumo e, de cada sugestão nova, quantos itens vieram do PNCP. Serve
+para o ambiente de teste (que não tem o agendamento) e para produção.
+
 ## Regras de 09/11/2026 (vigia, datas, acompanhadas e o sino)
 
 A regra de "onde está cada licitação" mora **num lugar só**: `torre.avaliar`.
