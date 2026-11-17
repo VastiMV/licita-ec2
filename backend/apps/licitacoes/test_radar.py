@@ -308,3 +308,63 @@ class NomeDoItemTests(APITestCase):
         }
         for descricao, nome in casos.items():
             self.assertEqual(_nome_do_item(descricao), nome, descricao)
+
+
+class SoComItemQueCasaTests(APITestCase):
+    """Regra da operação (17/11/2026): só entra a compra com pelo menos 1 item
+    com todas as palavras do termo. Teste real sem a regra: 46 de 69 sem
+    relação ("lâmpada fenda" trazia abraçadeira e alicate)."""
+
+    def setUp(self):
+        cache.clear()
+
+    def test_casamento_de_palavras(self):
+        from .radar import item_casa
+
+        self.assertTrue(item_casa("lampada fenda", {"descricao_resumida": "LÂMPADA DE FENDA TIPO GALILEU"}))
+        self.assertTrue(item_casa("luva de procedimento", {"descricao_resumida": "LUVAS PARA PROCEDIMENTO CX C/100"}))
+        self.assertFalse(item_casa("lampada fenda", {"descricao_resumida": "Chave de fenda"}))
+        self.assertFalse(item_casa("lampada fenda", {"descricao_resumida": "Lâmpada LED 9W"}))
+
+    def test_compra_sem_item_que_casa_nao_entra(self):
+        salva("1", "Lâmpada Fenda aplicação: serviço de oftalmologia")
+        pncp = FakePncp({"lampada": [edital("10")]})
+        pncp.listar_itens = lambda **_: [{"numero_item": 1, "descricao_resumida": "Abraçadeira de nylon", "valor_total": 5.0}]
+
+        resumo = rodar(HOJE, pncp)
+
+        self.assertEqual((resumo["novas"], resumo["sem_item_que_casa"]), (0, 1))
+        self.assertFalse(SugestaoRadar.objects.exists())
+
+    def test_le_todas_as_paginas_e_poe_o_item_que_casa_primeiro(self):
+        salva("1", "Seringa descartável")
+        pncp = FakePncp({"seringa": [edital("10")]})
+        paginas = {
+            1: [{"numero_item": n, "descricao_resumida": f"Item {n}", "valor_total": 1.0} for n in range(1, 51)],
+            2: [{"numero_item": 120, "descricao_resumida": "SERINGA DESCARTÁVEL 5 ML", "valor_total": 1.0}],
+        }
+        pncp.listar_itens = lambda pagina=1, **_: paginas.get(pagina, [])
+
+        rodar(HOJE, pncp)
+
+        sugestao = SugestaoRadar.objects.get()
+        self.assertEqual(len(sugestao.itens), 51)
+        self.assertEqual(sugestao.itens[0]["numero_item"], 120)
+
+    def test_sem_itens_fica_pendente_e_nao_aparece(self):
+        from .radar import visiveis
+
+        salva("1", "Ração para aves")
+        hoje = timezone.localdate()
+        fora = FakePncp({"racao": [edital("10", publicada=hoje.isoformat(), prazo=(hoje + dt.timedelta(days=9)).isoformat())]})
+
+        def falha(**_):
+            from apps.integracoes.clients.pncp import PncpClientError
+
+            raise PncpClientError("503")
+
+        fora.listar_itens = falha
+        rodar(hoje, fora)
+
+        self.assertEqual(SugestaoRadar.objects.count(), 1)
+        self.assertEqual(visiveis(hoje).count(), 0)

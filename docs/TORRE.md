@@ -478,6 +478,21 @@ corrigidos no mesmo PR:
    primeiro ":" sem a última palavra (padrão do catálogo `<nome> <atributo>:
    <valor>`) — "Tonômetro".
 
+**Só entra compra com item que casa (regra da operação, 17/11/2026).** Teste
+real com o PNCP de volta: 69 sugestões, mas só 23 tinham um item com todas
+as palavras do termo ("lâmpada fenda" trazia abraçadeira e alicate: a busca
+do PNCP acha as palavras separadas, no objeto). Agora:
+
+1. O Radar lê **todos** os itens da compra (página por página, até 500),
+   não só os 50 primeiros.
+2. Entra só se **1 item** tem **todas** as palavras do termo (sem "de",
+   "para"…; plural conta). Os itens que casam vêm primeiro no card.
+3. Sem itens (PNCP fora), a compra fica **pendente**: não aparece, e a
+   rodada seguinte decide.
+
+Resultado no mesmo teste: **42 sugestões, todas com relação**; 30
+descartadas; 67 s.
+
 **Rodar na mão:** `python manage.py radar` roda uma rodada agora e mostra a
 base, o resumo e, de cada sugestão nova, quantos itens vieram do PNCP. Serve
 para o ambiente de teste (que não tem o agendamento) e para produção.

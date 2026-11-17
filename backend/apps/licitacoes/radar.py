@@ -38,7 +38,7 @@ from decimal import Decimal
 from django.db.models import Exists, OuterRef
 from django.utils import timezone
 
-from apps.integracoes.clients.pncp import PncpClient, PncpClientError
+from apps.integracoes.clients.pncp import TAM_PAGINA_MAX, PncpClient, PncpClientError
 
 from .mercado import achar_pdm, normalizar
 from .models import ItemParticipado, OportunidadeSalva, SugestaoRadar, montar_texto_busca
@@ -178,13 +178,71 @@ def _ja_conhecidas() -> set[tuple[str, str, str]]:
     return conhecidas
 
 
+PALAVRAS_VAZIAS = {"DE", "DA", "DO", "DAS", "DOS", "PARA", "E", "COM", "EM", "A", "O", "AS", "OS"}
+MAX_PAGINAS_DE_ITENS = 10  # 500 itens
+
+
+def _palavras(termo: str) -> list[str]:
+    return [p for p in normalizar(termo).split() if p not in PALAVRAS_VAZIAS]
+
+
+def item_casa(termo: str, item: dict) -> bool:
+    """O item tem **todas** as palavras do termo (sem "de", "para"…; plural
+    conta: "luva" casa "LUVAS"). Regra da operação, 17/11/2026: só entra no
+    Radar a compra com pelo menos 1 item assim. No teste real, sem essa
+    regra, 46 de 69 sugestões não tinham relação ("lâmpada fenda" trazia
+    abraçadeira e alicate)."""
+
+    palavras = _palavras(termo)
+    if not palavras:
+        return False
+    texto = normalizar(f"{item.get('descricao_resumida') or ''} {item.get('descricao_detalhada') or ''}")
+    tokens = texto.split()
+    return all(any(t.startswith(p) for t in tokens) for p in palavras)
+
+
+def todos_os_itens(cliente, cnpj: str, ano: str, sequencial: str) -> list[dict]:
+    """Todos os itens da compra, página por página (o PNCP devolve 50 por
+    vez): a seringa pode ser o item 120. Erro do PNCP sobe."""
+
+    itens: list[dict] = []
+    for pagina in range(1, MAX_PAGINAS_DE_ITENS + 1):
+        lote = cliente.listar_itens(cnpj=cnpj, ano=ano, sequencial=sequencial, pagina=pagina)
+        itens.extend(lote)
+        if len(lote) < TAM_PAGINA_MAX:
+            break
+    return itens
+
+
+def _linhas(base: dict, itens: list[dict], termo: str) -> tuple[list[dict], bool]:
+    """Os itens no formato da busca, **os que casam primeiro** (o card os
+    mostra no topo). Devolve também se algum casou."""
+
+    linhas = []
+    for item in itens:
+        linha = dict(base)
+        linha.update({campo: item.get(campo) for campo in CAMPOS_DO_ITEM})
+        linha["situacao_item"] = item.get("situacao")
+        linhas.append(linha)
+    casam = [l for l in linhas if item_casa(termo, l)]
+    resto = [l for l in linhas if not item_casa(termo, l)]
+    return casam + resto, bool(casam)
+
+
 def rodar(hoje: dt.date | None = None, pncp: PncpClient | None = None) -> dict[str, int]:
     """Uma rodada do Radar: limpa as vencidas e procura as novas."""
 
     from .services import _buscar_no_pncp
 
     hoje = hoje or timezone.localdate()
-    resumo = {"termos": 0, "novas": 0, "removidas": limpar(hoje), "falhas": 0, "itens_completados": 0}
+    resumo = {
+        "termos": 0,
+        "novas": 0,
+        "sem_item_que_casa": 0,
+        "removidas": limpar(hoje),
+        "falhas": 0,
+        "itens_completados": 0,
+    }
     termos = termos_da_base(hoje)
     resumo["termos"] = len(termos)
 
@@ -196,6 +254,7 @@ def rodar(hoje: dt.date | None = None, pncp: PncpClient | None = None) -> dict[s
             cliente.close()
         return resumo
     conhecidas = _ja_conhecidas()
+    itens_da_compra: dict[tuple[str, str, str], list[dict] | None] = {}
     try:
         for n, (termo, origem, por_ganho) in enumerate(termos):
             if n and proprio:
@@ -211,6 +270,7 @@ def rodar(hoje: dt.date | None = None, pncp: PncpClient | None = None) -> dict[s
                     plataforma=None,
                     pncp_client=cliente,
                     workers=WORKERS,
+                    com_itens=False,
                 ) or []
             except PncpClientError:
                 resumo["falhas"] += 1
@@ -223,11 +283,26 @@ def rodar(hoje: dt.date | None = None, pncp: PncpClient | None = None) -> dict[s
                 if all(chave) and chave not in conhecidas:
                     por_compra.setdefault(chave, []).append(item)
 
-            for chave, itens in por_compra.items():
-                primeiro = itens[0]
+            for chave, achado in por_compra.items():
+                primeiro = achado[0]
                 prazo = _data(primeiro.get("contratacao_data_encerramento_proposta"))
                 if prazo and prazo < hoje:
                     continue
+                if chave not in itens_da_compra:
+                    try:
+                        itens_da_compra[chave] = todos_os_itens(cliente, *chave)
+                    except PncpClientError:
+                        itens_da_compra[chave] = None  # sem itens agora: fica pendente
+                brutos = itens_da_compra[chave]
+                if brutos is None or not brutos:
+                    # Não dá para saber se casa: entra **pendente** (a tela
+                    # não mostra) e a próxima rodada decide (`completar_itens`).
+                    itens = [primeiro]
+                else:
+                    itens, casou = _linhas(primeiro, brutos, termo)
+                    if not casou:
+                        resumo["sem_item_que_casa"] += 1
+                        continue  # outro termo ainda pode casar com esta compra
                 objeto = primeiro.get("contratacao_objeto") or ""
                 SugestaoRadar.objects.create(
                     cnpj_orgao=chave[0],
@@ -282,34 +357,32 @@ CAMPOS_DO_ITEM = (
 
 
 def completar_itens(cliente, hoje: dt.date) -> int:
-    """Sugestões que entraram sem itens (o PNCP não devolveu): tenta de novo
-    a cada rodada. Achado do teste de 15/11/2026: o serviço de itens do PNCP
-    ficou fora do ar e as 67 sugestões entraram sem itens."""
+    """Sugestões pendentes (entraram sem itens porque o PNCP não devolveu):
+    tenta de novo a cada rodada. Com os itens, vale a regra de entrada — sem
+    item que casa, a sugestão é apagada. Achado do teste de 15/11/2026: o
+    serviço de itens do PNCP ficou fora do ar e 67 sugestões entraram sem
+    itens."""
 
     from .completar import sem_itens
 
     completadas = 0
-    for sugestao in visiveis(hoje):
+    for sugestao in SugestaoRadar.objects.filter(expira_em__gt=hoje):
         if not sem_itens(sugestao.itens):
             continue
         try:
-            itens = cliente.listar_itens(
-                cnpj=sugestao.cnpj_orgao, ano=sugestao.ano_compra, sequencial=sugestao.sequencial_compra
-            )
+            brutos = todos_os_itens(cliente, sugestao.cnpj_orgao, sugestao.ano_compra, sugestao.sequencial_compra)
         except PncpClientError:
             continue
-        if not itens:
+        if not brutos:
             continue
         base = sugestao.itens[0] if sugestao.itens else {}
-        novos = []
-        for item in itens:
-            linha = dict(base)
-            linha.update({campo: item.get(campo) for campo in CAMPOS_DO_ITEM})
-            linha["situacao_item"] = item.get("situacao")
-            novos.append(linha)
-        sugestao.itens = novos
-        sugestao.valor_total_estimado = _valor_total(novos)
-        sugestao.texto_busca = montar_texto_busca(sugestao.objeto, novos)
+        itens, casou = _linhas(base, brutos, _termo(sugestao.parecido_com))
+        if not casou:
+            sugestao.delete()
+            continue
+        sugestao.itens = itens
+        sugestao.valor_total_estimado = _valor_total(itens)
+        sugestao.texto_busca = montar_texto_busca(sugestao.objeto, itens)
         sugestao.save(update_fields=["itens", "valor_total_estimado", "texto_busca"])
         completadas += 1
     return completadas
@@ -336,5 +409,7 @@ def visiveis(hoje: dt.date | None = None):
     return (
         SugestaoRadar.objects.filter(expira_em__gt=hoje)
         .exclude(data_encerramento_proposta__lt=hoje)
+        # Pendentes (sem itens ainda): não dá para saber se casam.
+        .exclude(itens__0__descricao_resumida=None)
         .exclude(Exists(salvas))
     )

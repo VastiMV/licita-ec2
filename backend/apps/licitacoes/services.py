@@ -227,6 +227,7 @@ def _buscar_no_pncp(
     plataforma: Plataforma | None,
     pncp_client: PncpClient | None = None,
     workers: int = MAX_WORKERS,
+    com_itens: bool = True,
 ) -> list[dict[str, Any]] | None:
     """Busca editais pelo texto no PNCP, fica só com os da plataforma
     escolhida e desdobra cada um em oportunidades. `plataforma=None` = todas
@@ -291,6 +292,10 @@ def _buscar_no_pncp(
             )
             return None
         editais = editais[:MAX_EDITAIS_PNCP]
+        if not com_itens:
+            # O Radar busca todos os itens ele mesmo (todas as páginas) para
+            # decidir se a compra entra (GEN-68).
+            return [_montar_oportunidade(e, {}, plataforma) for e in editais]
 
         def itens_seguros(edital: dict[str, Any]) -> list[dict[str, Any]]:
             try:

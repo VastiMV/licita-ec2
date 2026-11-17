@@ -188,12 +188,14 @@ class PncpClient:
         ano: str | int,
         sequencial: str | int,
         tamanho_pagina: int = TAM_PAGINA_MAX,
+        pagina: int = 1,
     ) -> list[dict[str, Any]]:
-        """Itens de uma contratação, pela API de consulta do PNCP."""
+        """Itens de uma contratação, pela API de consulta do PNCP. Uma página
+        (no máximo `TAM_PAGINA_MAX`); o Radar pede as seguintes (GEN-68)."""
 
         payload = self._get(
             f"/api/pncp/v1/orgaos/{cnpj}/compras/{ano}/{sequencial}/itens",
-            {"pagina": 1, "tamanhoPagina": _tam_pagina_valido(tamanho_pagina)},
+            {"pagina": pagina, "tamanhoPagina": _tam_pagina_valido(tamanho_pagina)},
         )
         itens, _ = _extrair_lista(payload)
         return [_normalizar_item(i) for i in itens]
