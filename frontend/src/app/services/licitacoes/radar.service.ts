@@ -17,6 +17,11 @@ export class RadarService {
     return this.api.get<RadarPagina>(ENDPOINTS.licitacoes.radar, { ...params });
   }
 
+  /** "Remover do Radar" (GEN-93): sai da lista e não volta. */
+  remover(id: number): Observable<void> {
+    return this.api.post<void, Record<string, never>>(ENDPOINTS.licitacoes.radarRemover(id), {});
+  }
+
   total(): Observable<number> {
     return this.api
       .get<{ total: number }>(ENDPOINTS.licitacoes.radarTotal)

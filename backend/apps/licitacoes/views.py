@@ -678,3 +678,20 @@ class RadarTotalView(APIView):
         from .radar import visiveis
 
         return Response({"total": visiveis().count()})
+
+
+class RadarRemoverView(APIView):
+    """`POST /api/licitacoes/radar/<id>/remover/` — "Remover do Radar"
+    (GEN-93, 17/11/2026): sai da lista e não volta. Fica guardada como
+    exemplo do que ele não quer (para a IA do Radar)."""
+
+    def post(self, request: Request, pk: int) -> Response:
+        from django.utils import timezone
+
+        from .models import SugestaoRadar
+
+        sugestao = get_object_or_404(SugestaoRadar, pk=pk, removida_em__isnull=True)
+        sugestao.removida_em = timezone.now()
+        sugestao.removida_por = request.user
+        sugestao.save(update_fields=["removida_em", "removida_por"])
+        return Response(status=204)

@@ -2,7 +2,8 @@
 <p class="muted">
   Compras abertas, em todos os portais, parecidas com o que a equipe salvou nos últimos 30 dias e
   com o que a Inside ganhou. O Radar procura às 8h e às 18h. Cada sugestão fica 7 dias ou até a
-  abertura da disputa, o que vier primeiro. Clique para ver o card e salvar.
+  abertura da disputa, o que vier primeiro. Clique para ver o card e salvar; o que não interessa, remova
+  do Radar (Ações) — ele não volta.
 </p>
 
 <div class="filtros">
@@ -26,4 +27,8 @@
   (estadoMudou)="aoMudarEstado($event)"
   [linhaClicavel]="true"
   (linhaClicada)="abrir($event)"
-/>
+>
+  <ng-template appTabelaAcoes let-linha>
+    <app-menu [itens]="acoesDe(linha)" [descricao]="'Ações da sugestão ' + linha.chave" />
+  </ng-template>
+</app-data-table>

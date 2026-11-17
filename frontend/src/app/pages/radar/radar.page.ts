@@ -12,7 +12,10 @@ import {
   estadoInicialTabela,
   parametroOrdenacao,
 } from '../../shared/ui/data-table/data-table.model';
+import { TabelaAcoesDirective } from '../../shared/ui/data-table/tabela-acoes.directive';
+import { ItemMenu, MenuComponent } from '../../shared/ui/menu/menu.component';
 import { SelectComponent } from '../../shared/ui/select/select.component';
+import { ToastService } from '../../shared/ui/toast/toast.service';
 import {
   cidadeComUf,
   formatarData,
@@ -84,13 +87,14 @@ const COLUNAS: readonly ColunaTabela<SugestaoRadarResponse>[] = [
  */
 @Component({
   selector: 'app-radar-page',
-  imports: [DataTableComponent, SelectComponent, ReactiveFormsModule],
+  imports: [DataTableComponent, TabelaAcoesDirective, MenuComponent, SelectComponent, ReactiveFormsModule],
   templateUrl: './radar.page.html',
   styleUrl: './radar.page.scss',
 })
 export class RadarPage implements OnInit {
   private readonly service = inject(RadarService);
   private readonly modal = inject(ModalService);
+  private readonly toast = inject(ToastService);
 
   protected readonly colunas = COLUNAS;
   protected readonly ufs = UFS;
@@ -119,6 +123,34 @@ export class RadarPage implements OnInit {
   protected aoMudarEstado(estado: EstadoTabela): void {
     this.estado.set(estado);
     this.carregar();
+  }
+
+  protected acoesDe(sugestao: SugestaoRadarResponse): readonly ItemMenu[] {
+    return [
+      { rotulo: 'Abrir', icone: 'eye', executar: () => this.abrir(sugestao) },
+      {
+        rotulo: 'Remover do Radar',
+        icone: 'trash',
+        tom: 'perigo',
+        executar: () => this.remover(sugestao),
+      },
+    ];
+  }
+
+  /** GEN-93 (17/11/2026): sem confirmação — é limpeza da lista, e a compra
+   * continua achável na busca. Fica guardada como exemplo do que ele não
+   * quer (a IA do Radar vai usar). */
+  protected remover(sugestao: SugestaoRadarResponse): void {
+    this.service.remover(sugestao.id).subscribe({
+      next: () => {
+        this.toast.sucesso('Removida do Radar.');
+        if (this.linhas().length === 1 && this.estado().pagina > 1) {
+          this.estado.update((atual) => ({ ...atual, pagina: atual.pagina - 1 }));
+        }
+        this.carregar();
+      },
+      error: () => this.toast.erro('Não foi possível remover agora.'),
+    });
   }
 
   protected abrir(sugestao: SugestaoRadarResponse): void {
