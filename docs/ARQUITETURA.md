@@ -290,6 +290,7 @@ task Celery, com RabbitMQ como broker:
 | `licitacoes.conferencia_diaria` | Celery Beat | segunda a sexta, 7h45 — data/situação no PNCP, itens acompanhados, fim da vigia (atas), mercado dos itens |
 | `notificacoes.enviar_telegram` | a cada aviso novo do sino | manda ao Telegram (sem chave no `.env`: não faz nada) |
 | `licitacoes.completar_salva` | captura da Sentinela, quando a salva está sem órgão ou sem itens (10/11/2026), ou sem prazo ao ser criada (14/11/2026, GEN-87) | preenche pelo PNCP só o que está vazio (`completar.py`); a conferência das 7h45 pega as que ficaram para trás |
+| `licitacoes.radar` | Celery Beat | todo dia, 8h e 18h (GEN-68, 14/11/2026) — compras abertas parecidas com as salvas em 30 dias e com o que a Inside ganhou, em todos os portais (`radar.py`) |
 | `capag.sincronizar_capag` | Celery Beat | a cada 30 dias — notas CAPAG do Tesouro |
 | chamadas à API do PNCP/compras.gov.br feitas por busca interativa do usuário | request síncrono da `licitacoes` view | -- ficam síncronas mesmo, são a resposta da busca; só o que não bloqueia a resposta ao usuário vira task |
 
@@ -467,7 +468,7 @@ imperativamente no cluster.
 [`DOMINIO.md`](DOMINIO.md) para o estado detalhado e os achados contra a
 API real). Falta:
 
-1. **Torre de Controle:** Radar, telas de lançamento manual, fim da vigia por
+1. **Torre de Controle:** telas de lançamento manual, fim da vigia por
    contrato no PNCP — lista viva em
    [`Tarefas/proximo-build.md`](Tarefas/proximo-build.md). (Sentinela, sino e
    Telegram estão no ar desde 08–10/11/2026.)

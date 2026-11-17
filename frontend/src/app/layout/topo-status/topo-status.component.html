@@ -3,30 +3,17 @@
 }
 
 <div class="botoes">
-  <div class="ancora">
-    <button
-      type="button"
-      class="pilula radar"
-      [attr.aria-expanded]="aberto() === 'radar'"
-      aria-label="Radar: sugestões de licitação. Em breve."
-      (click)="alternar('radar')"
-    >
-      <app-icon name="radar" />
-      <span class="rotulo">Radar</span>
-      <span class="selo">em breve</span>
-    </button>
-    @if (aberto() === 'radar') {
-      <div class="painel" role="dialog" aria-label="Radar">
-        <b>Radar — em breve</b>
-        <p>
-          Vai sugerir licitações novas parecidas com as que vocês já ganharam, sem precisar buscar.
-        </p>
-        <a routerLink="/oportunidades/buscar" (click)="aberto.set(null)"
-          >Buscar oportunidades agora</a
-        >
-      </div>
+  <a
+    class="pilula radar"
+    routerLink="/radar"
+    [attr.aria-label]="'Radar: ' + radarTotal() + ' sugest' + (radarTotal() === 1 ? 'ão' : 'ões') + ' de licitação'"
+  >
+    <app-icon name="radar" />
+    <span class="rotulo">Radar</span>
+    @if (radarTotal() > 0) {
+      <span class="selo">{{ radarTotal() }}</span>
     }
-  </div>
+  </a>
 
   <div class="ancora">
     <button

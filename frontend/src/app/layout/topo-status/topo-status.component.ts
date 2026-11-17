@@ -15,16 +15,18 @@ import { EstadoSentinelaResponse } from '../../contracts/sentinela/sentinela.con
 import { SentinelaService } from '../../services/sentinela/sentinela.service';
 
 import { EmpresasService } from '../../services/empresas/empresas.service';
+import { RadarService } from '../../services/licitacoes/radar.service';
 import { IconComponent } from '../../shared/ui/icon/icon.component';
 
-type Painel = 'radar' | 'sentinela' | 'avisos';
+type Painel = 'sentinela' | 'avisos';
 
 /**
  * O topo da tela, como no protótipo "Licita v1.0": de quem é o Licita
  * (empresa e CNPJ), o **Radar** (sugestões), o estado da **Sentinela** e o
  * **sino** de avisos.
  *
- * Cada um mostra o estado **verdadeiro**: o Radar ainda é "em breve"; a
+ * Cada um mostra o estado **verdadeiro**: o Radar, quantas sugestões há
+ * agora (GEN-68, 14/11/2026 — relido a cada 5 min; clicar abre a lista); a
  * Sentinela mostra o que ela disse por último (`GET sentinela/estado/`,
  * relido a cada minuto) — verde só quando ela está lendo de fato. Um "lendo"
  * de mentira faria a operação confiar num vigia que não está vigiando.
@@ -45,6 +47,15 @@ export class TopoStatusComponent {
   private readonly servicoAvisos = inject(NotificacoesService);
   private readonly modal = inject(ModalService);
   private readonly router = inject(Router);
+
+  private readonly radar = inject(RadarService);
+  /** O número do botão Radar (GEN-68). Falha = 0: o botão continua lá. */
+  protected readonly radarTotal = toSignal(
+    timer(0, 300_000).pipe(
+      switchMap(() => this.radar.total().pipe(catchError(() => of(0)))),
+    ),
+    { initialValue: 0 },
+  );
 
   /** O sino (09/11/2026): relido a cada minuto. */
   protected readonly avisos = signal<NotificacoesResponse | null>(null);

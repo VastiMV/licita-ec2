@@ -36,6 +36,7 @@ from .models import (
     Entrega,
     Fonte,
     OportunidadeSalva,
+    normalizar_busca,
     registrar_prazos_vencidos,
 )
 from .salvas import garantir_salva
@@ -49,6 +50,7 @@ from .serializers import (
     EventoOportunidadeSalvaSerializer,
     OportunidadeSalvaSerializer,
     OportunidadeSerializer,
+    SugestaoRadarSerializer,
 )
 from .services import (
     BuscaSemCorrespondenciaNoCatalogo,
@@ -631,3 +633,48 @@ class DescartarView(APIView):
         salva = get_object_or_404(OportunidadeSalva.objects.ativas(), pk=pk)
         evento = descartar(salva, por=request.user)
         return Response({"descricao": evento.descricao})
+
+
+ORDENACOES_RADAR = {
+    "uasg": "uasg",
+    "cidade": "municipio",
+    "data_publicacao": "data_publicacao",
+    "prazo": "data_encerramento_proposta",
+    "valor": "valor_total_estimado",
+    "encontrada_em": "encontrada_em",
+}
+
+
+class RadarView(APIView):
+    """`GET /api/licitacoes/radar/` — as compras que o Radar achou (GEN-68):
+    `uf`, `busca` e `ordering`. Sem ordem pedida: as puxadas por item ganho
+    primeiro, depois as mais novas."""
+
+    def get(self, request: Request) -> Response:
+        from .radar import visiveis
+
+        params = request.query_params
+        lista = visiveis()
+        if termo := (params.get("busca") or "").strip():
+            lista = lista.filter(texto_busca__contains=normalizar_busca(termo))
+        if uf := (params.get("uf") or "").strip().upper():
+            lista = lista.filter(uf=uf)
+        pedida = (params.get("ordering") or "").strip()
+        campo = ORDENACOES_RADAR.get(pedida.lstrip("-"))
+        if campo:
+            lista = lista.order_by(f"-{campo}" if pedida.startswith("-") else campo, "-id")
+        else:
+            lista = lista.order_by("-por_ganho", "-encontrada_em", "-id")
+
+        paginacao = OportunidadesSalvasPaginacao()
+        pagina = paginacao.paginate_queryset(lista, request, view=self)
+        return paginacao.get_paginated_response(SugestaoRadarSerializer(pagina, many=True).data)
+
+
+class RadarTotalView(APIView):
+    """`GET /api/licitacoes/radar/total/` — o número do botão Radar no topo."""
+
+    def get(self, request: Request) -> Response:
+        from .radar import visiveis
+
+        return Response({"total": visiveis().count()})

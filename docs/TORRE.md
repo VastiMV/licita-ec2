@@ -370,7 +370,7 @@ Frontend em `frontend/src/app/pages/torre/`.
 - **Menu** (`layout/sidebar/`): azul escuro, Buscar em destaque, os 4
   estágios sempre abertos, e o **número de licitações em cada etapa**
   (`contagem-do-menu.service.ts` relê `GET torre/` a cada troca de tela).
-- **Topo** (`layout/topo-status/`): empresa e CNPJ, **Radar** ("em breve"),
+- **Topo** (`layout/topo-status/`): empresa e CNPJ, **Radar** (quantas sugestões há; abre `/radar`, GEN-68),
   **Sentinela** (verde lendo, âmbar precisa de você, vermelho parada) e
   **sino**. Mostram o estado verdadeiro.
 - **Visual:** segue o protótipo "Licita v1.0"
@@ -418,16 +418,84 @@ A Sentinela (0.2.4) e os avisos no Telegram **já existem** (ver
 
 1. **Fim da vigia por contrato publicado no PNCP** (hoje: ata ou 180 dias).
 2. **Telegram para empenho, pagamento e cobrança** (hoje: os avisos do sino).
-3. **Radar** — sugestões de licitação parecidas com as que a empresa ganhou.
-4. **Telas de lançamento manual** — a API existe (contrato, OF, entrega,
+3. **Telas de lançamento manual** — a API existe (contrato, OF, entrega,
    ligar documento "sem licitação"); falta o formulário na tela.
-5. **Prazo de validade da proposta** (Lei 14.133, art. 90, §3º) e lembrete
+4. **Prazo de validade da proposta** (Lei 14.133, art. 90, §3º) e lembrete
    de cobrança por dias parados.
-6. **Contratos pelo PNCP**, quando o módulo estabilizar e houver um contrato
+5. **Contratos pelo PNCP**, quando o módulo estabilizar e houver um contrato
    real para conferir.
 
 O plano detalhado, com caixas de seleção, está em
 [`Tarefas/feat-torre-de-controle.md`](Tarefas/feat-torre-de-controle.md).
+
+## Radar (14/11/2026, GEN-68)
+
+**Por quê:** o Carlinhos salva dezenas de oportunidades por mês, de itens
+que se repetem. O Radar faz essa busca por ele.
+
+| Regra | Como é | De onde veio |
+|---|---|---|
+| Base do "parecido" | itens das oportunidades **salvas nos últimos 30 dias** (tiradas da lista não contam) + itens que a Inside **ganhou** (qualquer data). O que foi só digitado na busca não conta: o Licita não guarda o histórico da busca | cartão GEN-68 + operação, 14/11 |
+| "Parecido" | a descrição do item vira o termo da busca textual do PNCP pelo **tipo do catálogo** (PDM, como em `mercado.achar_pdm`); sem PDM, as 4 primeiras palavras. Ganho vem primeiro; até 30 termos por rodada (o PNCP limita por IP) | decisão técnica |
+| Onde | **todos os portais** (o PNCP agrega todos) e o **Brasil todo**; a tela tem filtro de UF | cartão + operação |
+| Quando | todo dia, **8h e 18h** (`licitacoes.radar`, migration `0023_agenda_radar`) | cartão |
+| O quê | compras **recebendo proposta**, publicadas de anteontem para cá, que não estão salvas no Licita (nem tiradas da lista) | cartão |
+| Quanto tempo | **7 dias ou até a abertura da disputa**, o que vier primeiro. No dia da abertura ainda aparece (a proposta vai até a hora da sessão; o Licita só guarda o dia) | cartão + ajuste da operação, 14/11 |
+| Aviso | só o **número no botão Radar** do topo (sem sino, sem Telegram) | operação |
+| Tela | `/radar`: as colunas de Salvas + "Parecida com". O clique abre o **mesmo card da busca**; "Salvar oportunidade" leva para Oportunidades e tira do Radar | cartão |
+
+Código: `apps/licitacoes/radar.py`, `SugestaoRadar`, `GET licitacoes/radar/`
+(`uf`, `busca`, `ordering`) e `GET licitacoes/radar/total/`. A busca textual
+aceita `plataforma=None` (todas) só para o Radar; a busca da tela continua
+no Compras.gov. Testes: `test_radar.py`.
+
+**Limite do PNCP (rodadas reais de 14/11/2026, 4 termos):**
+
+| Versão | Achadas | Perdidas (429) | Tempo |
+|---|---|---|---|
+| como a busca da tela (detalhe de cada compra, 20 por vez) | 24 | ~30 | 4 min |
+| + espera no 429, 3 por vez | 39 | 30 | 8 min |
+| **sem o detalhe** (versão no ar) | **58** | **0** | **44 s** |
+
+O detalhe (`/api/consulta/`) é o endpoint com limite por IP; a busca da
+tela precisa dele para filtrar o portal, o Radar não. O portal e o link
+aparecem quando o card é aberto (o card pede o detalhe). O Radar ainda
+espera e tenta de novo no 429 (`PncpPaciente`), faz 3 pedidos por vez e
+pausa 2 s entre termos.
+
+**Teste no servidor (ambiente de teste, 15/11/2026):** 8 termos → 67
+compras novas, 0 falhas; regra "7 dias ou abertura" conferida. Dois achados,
+corrigidos no mesmo PR:
+
+1. **Itens:** o serviço de itens do PNCP (`/api/pncp/v1`) estava fora do ar
+   para todos (503 daqui e do servidor) — as 67 entraram sem itens. Agora
+   cada rodada tenta de novo os itens das sugestões que ficaram sem; e o
+   "completar pelo PNCP" trata o item vazio (sem descrição) como "sem itens"
+   — antes, a compra salva assim parecia completa.
+2. **Termo fraco:** sem tipo no catálogo, o termo eram as 4 primeiras
+   palavras ("tonometro modelo goldman tipo"), e "tipo", "serviço"
+   puxavam compras sem relação. Agora é o nome do item: o que vem antes do
+   primeiro ":" sem a última palavra (padrão do catálogo `<nome> <atributo>:
+   <valor>`) — "Tonômetro".
+
+**Só entra compra com item que casa (regra da operação, 17/11/2026).** Teste
+real com o PNCP de volta: 69 sugestões, mas só 23 tinham um item com todas
+as palavras do termo ("lâmpada fenda" trazia abraçadeira e alicate: a busca
+do PNCP acha as palavras separadas, no objeto). Agora:
+
+1. O Radar lê **todos** os itens da compra (página por página, até 500),
+   não só os 50 primeiros.
+2. Entra só se **1 item** tem **todas** as palavras do termo (sem "de",
+   "para"…; plural conta). Os itens que casam vêm primeiro no card.
+3. Sem itens (PNCP fora), a compra fica **pendente**: não aparece, e a
+   rodada seguinte decide.
+
+Resultado no mesmo teste: **42 sugestões, todas com relação**; 30
+descartadas; 67 s.
+
+**Rodar na mão:** `python manage.py radar` roda uma rodada agora e mostra a
+base, o resumo e, de cada sugestão nova, quantos itens vieram do PNCP. Serve
+para o ambiente de teste (que não tem o agendamento) e para produção.
 
 ## Regras de 09/11/2026 (vigia, datas, acompanhadas e o sino)
 

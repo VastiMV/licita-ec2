@@ -1,0 +1,29 @@
+<h1>Radar</h1>
+<p class="muted">
+  Compras abertas, em todos os portais, parecidas com o que a equipe salvou nos últimos 30 dias e
+  com o que a Inside ganhou. O Radar procura às 8h e às 18h. Cada sugestão fica 7 dias ou até a
+  abertura da disputa, o que vier primeiro. Clique para ver o card e salvar.
+</p>
+
+<div class="filtros">
+  <app-select label="UF" [options]="ufs" [formControl]="uf" />
+</div>
+
+@if (erro()) {
+  <p class="erro">Não foi possível carregar o Radar agora.</p>
+}
+
+<app-data-table
+  [colunas]="colunas"
+  [linhas]="linhas()"
+  [total]="total()"
+  [estado]="estado()"
+  [carregando]="carregando()"
+  [chaveDe]="chaveDe"
+  rotuloBusca="Buscar"
+  placeholderBusca="Busca no objeto e nos itens…"
+  mensagemVazia="Nenhuma sugestão no momento. O Radar procura às 8h e às 18h."
+  (estadoMudou)="aoMudarEstado($event)"
+  [linhaClicavel]="true"
+  (linhaClicada)="abrir($event)"
+/>

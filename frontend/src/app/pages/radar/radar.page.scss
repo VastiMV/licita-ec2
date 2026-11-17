@@ -1,0 +1,18 @@
+h1 {
+  font-size: var(--font-size-xl);
+  margin-bottom: var(--space-1);
+}
+
+.filtros {
+  max-width: 220px;
+  margin-top: var(--space-5);
+}
+
+app-data-table {
+  margin-top: var(--space-4);
+  display: block;
+}
+
+.erro {
+  color: var(--color-danger);
+}

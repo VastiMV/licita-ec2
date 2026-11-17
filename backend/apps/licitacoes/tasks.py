@@ -48,6 +48,18 @@ def conferencia_diaria() -> dict:
 
 
 
+@shared_task(name="licitacoes.radar")
+def radar() -> dict:
+    """Todo dia às 8h e às 18h (migration `0023_agenda_radar`, GEN-68): a
+    busca automática de compras parecidas (ver `radar.py`)."""
+
+    from .radar import rodar
+
+    resumo = rodar()
+    logger.info("Radar: %s", resumo)
+    return resumo
+
+
 @shared_task(name="licitacoes.completar_salva")
 def completar_salva(salva_id: int) -> list[str]:
     """Pedida pela Sentinela quando a salva chegou sem órgão ou sem itens

@@ -40,7 +40,15 @@ def falta_dados(salva: OportunidadeSalva, com_prazo: bool = True) -> bool:
     enquanto o PNCP não tiver a data); quem cobre é a conferência diária."""
 
     sem_prazo = com_prazo and salva.data_encerramento_proposta is None
-    return not salva.orgao_nome or not salva.itens or sem_prazo
+    return not salva.orgao_nome or sem_itens(salva.itens) or sem_prazo
+
+
+def sem_itens(itens: list | None) -> bool:
+    """Sem itens de verdade: lista vazia, ou só o item "vazio" que a busca
+    monta quando o PNCP não devolve os itens (15/11/2026: o serviço de itens
+    do PNCP ficou fora do ar, e a compra salva assim parecia completa)."""
+
+    return not any((i or {}).get("descricao_resumida") for i in itens or [])
 
 
 def completar_pelo_pncp(salva: OportunidadeSalva, pncp: PncpClient | None = None) -> list[str]:
@@ -82,7 +90,7 @@ def completar_pelo_pncp(salva: OportunidadeSalva, pncp: PncpClient | None = None
         salva.data_encerramento_proposta = dt.date.fromisoformat(detalhe["data_encerramento_proposta"])
         preenchidos.append("data_encerramento_proposta")
 
-    if not salva.itens:
+    if sem_itens(salva.itens):
         itens = pncp.listar_itens(**chave)
         if itens:
             plataforma = identificar_plataforma(salva.link_plataforma) or plataforma_padrao()
@@ -152,4 +160,9 @@ def completar_as_que_faltam(pncp: PncpClient | None = None) -> dict[str, int]:
 def _sem_dados():
     from django.db.models import Q
 
-    return Q(orgao_nome="") | Q(itens=[]) | Q(data_encerramento_proposta__isnull=True)
+    return (
+        Q(orgao_nome="")
+        | Q(itens=[])
+        | Q(itens__0__descricao_resumida=None)  # só o item vazio (15/11/2026)
+        | Q(data_encerramento_proposta__isnull=True)
+    )

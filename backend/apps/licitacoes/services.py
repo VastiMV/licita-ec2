@@ -61,7 +61,7 @@ from apps.integracoes.clients.compras_gov import (
     normalizar,
 )
 from apps.integracoes.clients.pncp import PncpClient, PncpClientError
-from apps.integracoes.plataformas import PLATAFORMAS, Plataforma, plataforma_padrao
+from apps.integracoes.plataformas import PLATAFORMAS, Plataforma, identificar_plataforma, plataforma_padrao
 
 logger = logging.getLogger(__name__)
 
@@ -224,11 +224,14 @@ def _buscar_no_pncp(
     codigo_modalidade: str,
     uf: str | None,
     codigo_unidade: str | None,
-    plataforma: Plataforma,
+    plataforma: Plataforma | None,
     pncp_client: PncpClient | None = None,
+    workers: int = MAX_WORKERS,
+    com_itens: bool = True,
 ) -> list[dict[str, Any]] | None:
     """Busca editais pelo texto no PNCP, fica só com os da plataforma
-    escolhida e desdobra cada um em oportunidades.
+    escolhida e desdobra cada um em oportunidades. `plataforma=None` = todas
+    as plataformas (o Radar, GEN-68: "em todos os portais").
 
     Devolve `None` quando vale tentar o índice de catálogo: a busca não achou
     edital nenhum, OU achou mas nenhum é da plataforma escolhida (o PNCP
@@ -273,15 +276,26 @@ def _buscar_no_pncp(
         if not editais:
             return []
 
-        editais = _apenas_da_plataforma(cliente, editais, plataforma)
+        if plataforma is None:
+            # Todas as plataformas (Radar): não precisa do detalhe para
+            # filtrar — e o detalhe (`/api/consulta/`) é o endpoint com limite
+            # por IP (rodada real de 14/11/2026: 30 compras perdidas para o
+            # 429 em 4 termos). O card pede o detalhe quando é aberto.
+            editais = editais[:MAX_EDITAIS_PNCP]
+        else:
+            editais = _apenas_da_plataforma(cliente, editais, plataforma, workers)
         if not editais:
             logger.info(
                 'Busca no PNCP achou "%s", mas nenhum edital é de %s; tentando o catálogo.',
                 termo,
-                plataforma.nome,
+                plataforma.nome if plataforma else "plataforma conhecida",
             )
             return None
         editais = editais[:MAX_EDITAIS_PNCP]
+        if not com_itens:
+            # O Radar busca todos os itens ele mesmo (todas as páginas) para
+            # decidir se a compra entra (GEN-68).
+            return [_montar_oportunidade(e, {}, plataforma) for e in editais]
 
         def itens_seguros(edital: dict[str, Any]) -> list[dict[str, Any]]:
             try:
@@ -295,7 +309,7 @@ def _buscar_no_pncp(
                 return []
 
         oportunidades: list[dict[str, Any]] = []
-        with ThreadPoolExecutor(max_workers=MAX_WORKERS) as pool:
+        with ThreadPoolExecutor(max_workers=workers) as pool:
             for edital, itens in zip(editais, pool.map(itens_seguros, editais)):
                 oportunidades.extend(_itens_relevantes(edital, itens, termo, plataforma))
         return oportunidades
@@ -305,7 +319,10 @@ def _buscar_no_pncp(
 
 
 def _apenas_da_plataforma(
-    cliente: PncpClient, editais: list[dict[str, Any]], plataforma: Plataforma
+    cliente: PncpClient,
+    editais: list[dict[str, Any]],
+    plataforma: Plataforma | None,
+    workers: int = MAX_WORKERS,
 ) -> list[dict[str, Any]]:
     """Detalha cada edital no PNCP e fica só com os da plataforma escolhida,
     gravando neles o `link_plataforma` definitivo (`linkSistemaOrigem`) e os
@@ -338,10 +355,10 @@ def _apenas_da_plataforma(
             return None
 
     selecionados = []
-    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as pool:
+    with ThreadPoolExecutor(max_workers=workers) as pool:
         for edital, detalhe in zip(editais, pool.map(detalhe_seguro, editais)):
             link = (detalhe or {}).get("link_plataforma")
-            if not link or not plataforma.pertence(link):
+            if not link or (plataforma is not None and not plataforma.pertence(link)):
                 continue
             edital["link_plataforma"] = link
             edital["capag_esfera_id"] = detalhe.get("esfera_id")
@@ -369,7 +386,7 @@ def _publicado_no_periodo(edital: dict[str, Any], inicial: str, final: str) -> b
 
 
 def _itens_relevantes(
-    edital: dict[str, Any], itens: list[dict[str, Any]], termo: str, plataforma: Plataforma
+    edital: dict[str, Any], itens: list[dict[str, Any]], termo: str, plataforma: Plataforma | None
 ) -> list[dict[str, Any]]:
     """Prioriza os itens que citam a palavra; se nenhum cita, devolve todos."""
 
@@ -612,14 +629,20 @@ def _passa_nos_filtros(
 
 
 def _montar_oportunidade(
-    contratacao: dict[str, Any], item: dict[str, Any], plataforma: Plataforma
+    contratacao: dict[str, Any], item: dict[str, Any], plataforma: Plataforma | None
 ) -> dict[str, Any]:
     # Toda oportunidade tem link de disputa garantido: no caminho da busca
     # textual ele já veio gravado na contratação (`linkSistemaOrigem`, ver
     # `_apenas_da_plataforma`); nos caminhos do compras.gov.br
     # (navegação/PDM) a própria plataforma o monta do `id_compra` — e quem
     # chega aqui sem id_compra já foi descartado antes.
-    link_plataforma = contratacao.get("link_plataforma") or plataforma.montar_link(contratacao)
+    if plataforma is None:
+        # Todas as plataformas (Radar): a do link, se registrada; senão vazio
+        # — o link de origem continua valendo (ver `plataformas.py`).
+        plataforma = identificar_plataforma(contratacao.get("link_plataforma"))
+    link_plataforma = contratacao.get("link_plataforma") or (
+        plataforma.montar_link(contratacao) if plataforma else None
+    )
     internos = {"raw_json", "link_plataforma", "capag_esfera_id", "capag_codigo_ibge"}
     return {
         **{f"contratacao_{k}": v for k, v in contratacao.items() if k not in internos},
@@ -638,7 +661,7 @@ def _montar_oportunidade(
         "situacao_item": item.get("situacao"),
         "criterio_julgamento": item.get("criterio_julgamento"),
         "tipo_beneficio": item.get("tipo_beneficio"),
-        "plataforma_id": plataforma.id,
+        "plataforma_id": plataforma.id if plataforma else "",
         "link_plataforma": link_plataforma,
         "link_pncp": montar_link_pncp(contratacao),
     }

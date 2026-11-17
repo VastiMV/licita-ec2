@@ -7,6 +7,7 @@ import { NotificacoesResponse } from '../../contracts/notificacoes/notificacoes.
 import { ModalService } from '../../shared/overlay/modal.service';
 import { EmpresasService } from '../../services/empresas/empresas.service';
 import { NotificacoesService } from '../../services/notificacoes/notificacoes.service';
+import { RadarService } from '../../services/licitacoes/radar.service';
 import { SentinelaService } from '../../services/sentinela/sentinela.service';
 import { TopoStatusComponent, vigiaDe } from './topo-status.component';
 
@@ -59,6 +60,7 @@ describe('TopoStatusComponent', () => {
         provideRouter([]),
         { provide: NotificacoesService, useValue: avisos },
         { provide: ModalService, useValue: modal },
+        { provide: RadarService, useValue: { total: () => of(12) } },
         {
           provide: SentinelaService,
           useValue: {
@@ -94,9 +96,17 @@ describe('TopoStatusComponent', () => {
     expect(el.querySelector('.empresa')?.textContent).toContain(
       'Inside Solutions Ltda · CNPJ 22.015.414/0001-27',
     );
-    expect(el.querySelector('.radar')?.textContent).toContain('em breve');
+    expect(el.querySelector('.radar')?.getAttribute('href')).toBe('/radar');
     expect(el.querySelector('.sentinela')?.textContent).toContain('não instalada');
     expect(el.querySelector('.sino')).toBeTruthy();
+  });
+
+  it('o Radar mostra quantas sugestões há e leva à lista (GEN-68)', async () => {
+    await new Promise((r) => setTimeout(r, 0));
+    fixture.detectChanges();
+
+    expect(el.querySelector('.radar .selo')?.textContent).toContain('12');
+    expect(el.querySelector('.radar')?.textContent).not.toContain('em breve');
   });
 
   it('a Sentinela não finge que está lendo', () => {
@@ -113,7 +123,7 @@ describe('TopoStatusComponent', () => {
   });
 
   it('só um painel aberto por vez', () => {
-    clicar('.radar');
+    clicar('.sentinela');
     clicar('.sino');
 
     const paineis = el.querySelectorAll('.painel');
