@@ -33,9 +33,14 @@ class Command(BaseCommand):
         todas = list(visiveis())
         todas_com_itens = sum(1 for s in todas if not sem_itens(s.itens))
         self.stdout.write(f"No Radar agora: {len(todas)} · com itens do PNCP: {todas_com_itens}\n")
-        for s in novas[:30]:
+        from apps.licitacoes import radar_ia
+
+        self.stdout.write(f"IA: {'ligada' if radar_ia.ligada() else 'DESLIGADA (sem ANTHROPIC_API_KEY)'}\n")
+        for s in novas.order_by("-nota_ia")[:60]:
             itens = [i for i in s.itens if (i or {}).get("descricao_resumida")]
+            nota = "--" if s.nota_ia is None else f"{s.nota_ia:2d}"
+            marca = "ENTRA" if s.nota_ia is None or s.nota_ia >= radar_ia.NOTA_MINIMA else "fora "
+            primeiro = (itens[0].get("descricao_resumida") or "")[:40] if itens else "-"
             self.stdout.write(
-                f"  {s.uf or '--'} | {s.orgao_nome[:30]:30} | prazo {s.data_encerramento_proposta} | "
-                f"some {s.expira_em} | {len(itens)} itens | {s.objeto[:50]}"
+                f"  nota {nota} {marca} | {s.uf or '--'} | {s.objeto[:45]:45} | 1º item: {primeiro} | de: {s.parecido_com[:25]}"
             )
