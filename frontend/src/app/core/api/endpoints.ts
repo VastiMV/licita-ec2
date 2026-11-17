@@ -30,6 +30,7 @@ export const ENDPOINTS = {
     /** O Radar (GEN-68): compras parecidas, achadas às 8h e às 18h. */
     radar: 'licitacoes/radar/',
     radarTotal: 'licitacoes/radar/total/',
+    radarRemover: (id: number) => `licitacoes/radar/${id}/remover/`,
     salvas: 'licitacoes/salvas/',
     salvasChaves: 'licitacoes/salvas/chaves/',
     /** A lista do Cotador: as salvas na etapa Cotação. */

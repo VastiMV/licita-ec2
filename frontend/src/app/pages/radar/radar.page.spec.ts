@@ -5,6 +5,7 @@ import { of } from 'rxjs';
 import { SugestaoRadarResponse } from '../../contracts/licitacoes/radar.contracts';
 import { RadarService } from '../../services/licitacoes/radar.service';
 import { ModalService } from '../../shared/overlay/modal.service';
+import { ToastService } from '../../shared/ui/toast/toast.service';
 import { RadarPage } from './radar.page';
 import { RadarModalComponent } from './radar-modal/radar-modal.component';
 
@@ -35,17 +36,21 @@ const SUGESTAO: SugestaoRadarResponse = {
 
 describe('RadarPage', () => {
   let fixture: ComponentFixture<RadarPage>;
-  let service: { listar: ReturnType<typeof vi.fn> };
+  let service: { listar: ReturnType<typeof vi.fn>; remover: ReturnType<typeof vi.fn> };
   let modal: { abrir: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
-    service = { listar: vi.fn(() => of({ count: 1, next: null, previous: null, results: [SUGESTAO] })) };
+    service = {
+      listar: vi.fn(() => of({ count: 1, next: null, previous: null, results: [SUGESTAO] })),
+      remover: vi.fn(() => of(undefined)),
+    };
     modal = { abrir: vi.fn(() => of('salva')) };
     TestBed.configureTestingModule({
       imports: [RadarPage],
       providers: [
         { provide: RadarService, useValue: service },
         { provide: ModalService, useValue: modal },
+        { provide: ToastService, useValue: { sucesso: vi.fn(), erro: vi.fn() } },
       ],
     });
     fixture = TestBed.createComponent(RadarPage);
@@ -70,6 +75,14 @@ describe('RadarPage', () => {
 
     expect(modal.abrir.mock.calls[0][0]).toBe(RadarModalComponent);
     expect(modal.abrir.mock.calls[0][1]).toBe(SUGESTAO);
+    expect(service.listar).toHaveBeenCalledTimes(2);
+  });
+
+  it('a lixeira remove sem perguntar e recarrega, sem abrir o card (GEN-93)', () => {
+    fixture.debugElement.query(By.css('button.lixeira')).nativeElement.click();
+
+    expect(service.remover).toHaveBeenCalledWith(3);
+    expect(modal.abrir).not.toHaveBeenCalled();
     expect(service.listar).toHaveBeenCalledTimes(2);
   });
 });

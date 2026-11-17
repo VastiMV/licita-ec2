@@ -810,3 +810,4 @@ acima parecer estranha, a razão costuma estar aqui.
 | 14/11/2026 | **Telas iguais à Torre** (GEN-87): Salvas = Torre › Oportunidade; Cotador = Torre › Cotação, com a linha "Sem cotação no Licita" para preço só no Compras.gov. Gerar o PDF da proposta não tira do Cotador (o PDF é o anexo depois de vencer). Prazo vazio é completado pelo PNCP |
 | 14/11/2026 | **Encerradas e Descartadas: menu = tela** (GEN-48): linha sem data sempre aparece; aviso "Mostrando X de N — ver todas" quando o filtro esconde; Período ganhou "Todo o período" |
 | 14/11/2026 | **Radar** (GEN-68): compras abertas parecidas com as salvas em 30 dias e com o que a Inside ganhou, em todos os portais, às 8h e às 18h; fica 7 dias ou até a abertura da disputa; número no botão do topo e tela `/radar` (ver `TORRE.md`) |
+| 17/11/2026 | **Remover do Radar** (GEN-93): sai da lista, não volta e fica guardada como exemplo do que ele não quer (para a IA do Radar) |

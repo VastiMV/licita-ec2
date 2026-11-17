@@ -368,3 +368,44 @@ class SoComItemQueCasaTests(APITestCase):
 
         self.assertEqual(SugestaoRadar.objects.count(), 1)
         self.assertEqual(visiveis(hoje).count(), 0)
+
+
+
+class RemoverDoRadarTests(APITestCase):
+    """GEN-93 (17/11/2026): "Remover do Radar" — sai da lista, não volta, e
+    fica guardada como exemplo do que ele não quer."""
+
+    def setUp(self):
+        cache.clear()
+        self.client.force_authenticate(User.objects.create_user(email="op2@empresa.com", password="x"))
+        salva("1", "Ração para aves", dias_atras=1)
+        self.hoje = timezone.localdate()
+        self.pncp = FakePncp({"racao": [edital("10", publicada=self.hoje.isoformat(),
+                                               prazo=(self.hoje + dt.timedelta(days=10)).isoformat())]})
+        rodar(self.hoje, self.pncp)
+        self.sugestao = SugestaoRadar.objects.get()
+
+    def test_remover_tira_da_lista_e_do_numero(self):
+        resposta = self.client.post(f"/api/licitacoes/radar/{self.sugestao.pk}/remover/")
+
+        self.assertEqual(resposta.status_code, 204)
+        self.assertEqual(self.client.get("/api/licitacoes/radar/").data["count"], 0)
+        self.assertEqual(self.client.get("/api/licitacoes/radar/total/").data, {"total": 0})
+        self.sugestao.refresh_from_db()
+        self.assertIsNotNone(self.sugestao.removida_por)
+
+    def test_removida_nao_volta_e_fica_guardada_depois_dos_7_dias(self):
+        from .radar import limpar
+
+        self.client.post(f"/api/licitacoes/radar/{self.sugestao.pk}/remover/")
+        cache.clear()
+        rodar(self.hoje, self.pncp)  # o PNCP acha a mesma compra de novo
+
+        self.assertEqual(SugestaoRadar.objects.count(), 1)
+        limpar(self.hoje + dt.timedelta(days=30))
+        self.assertTrue(SugestaoRadar.objects.filter(pk=self.sugestao.pk).exists())
+
+    def test_remover_duas_vezes_da_404(self):
+        self.client.post(f"/api/licitacoes/radar/{self.sugestao.pk}/remover/")
+
+        self.assertEqual(self.client.post(f"/api/licitacoes/radar/{self.sugestao.pk}/remover/").status_code, 404)

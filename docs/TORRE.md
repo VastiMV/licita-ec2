@@ -493,6 +493,13 @@ do PNCP acha as palavras separadas, no objeto). Agora:
 Resultado no mesmo teste: **42 sugestões, todas com relação**; 30
 descartadas; 67 s.
 
+**Remover do Radar (GEN-93, 17/11/2026).** Uma **lixeira** em cada linha
+(pedido da operação: lixeira, não menu; clicar na linha abre o card), sem
+confirmação: a compra sai da lista e do número do botão e
+**não volta** (nem depois dos 7 dias: a remoção fica guardada). Por quê: a
+lista fica limpa, e a remoção vira exemplo do que ele **não** quer para a IA
+do Radar (GEN-93, ainda não ligada). API: `POST licitacoes/radar/<id>/remover/`.
+
 **Rodar na mão:** `python manage.py radar` roda uma rodada agora e mostra a
 base, o resumo e, de cada sugestão nova, quantos itens vieram do PNCP. Serve
 para o ambiente de teste (que não tem o agendamento) e para produção.

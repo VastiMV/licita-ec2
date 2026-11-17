@@ -1,6 +1,7 @@
 from django.urls import path
 
 from .views import (
+    RadarRemoverView,
     RadarTotalView,
     RadarView,
     DescartarView,
@@ -31,6 +32,7 @@ urlpatterns = [
     path("torre/", TorreView.as_view(), name="licitacoes-torre"),
     path("radar/", RadarView.as_view(), name="licitacoes-radar"),
     path("radar/total/", RadarTotalView.as_view(), name="licitacoes-radar-total"),
+    path("radar/<int:pk>/remover/", RadarRemoverView.as_view(), name="licitacoes-radar-remover"),
     path("cotacoes/", EmCotacaoView.as_view(), name="licitacoes-cotacoes"),
     path("encerradas/", EncerradasView.as_view(), name="licitacoes-encerradas"),
     path("relatorios/mensal/", RelatorioMensalView.as_view(), name="licitacoes-relatorio-mensal"),

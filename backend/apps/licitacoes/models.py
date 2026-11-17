@@ -832,6 +832,17 @@ class SugestaoRadar(models.Model):
     )
     encontrada_em = models.DateTimeField("encontrada em", auto_now_add=True)
     expira_em = models.DateField("some em")
+    # "Remover do Radar" (GEN-93, 17/11/2026): sai da lista e fica guardada
+    # como exemplo do que ele NÃO quer (a IA do Radar vai usar).
+    removida_em = models.DateTimeField("removida em", null=True, blank=True)
+    removida_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name="removida por",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+    )
 
     class Meta:
         verbose_name = "sugestão do Radar"

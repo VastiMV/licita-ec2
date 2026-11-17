@@ -366,7 +366,7 @@ def completar_itens(cliente, hoje: dt.date) -> int:
     from .completar import sem_itens
 
     completadas = 0
-    for sugestao in SugestaoRadar.objects.filter(expira_em__gt=hoje):
+    for sugestao in SugestaoRadar.objects.filter(expira_em__gt=hoje, removida_em__isnull=True):
         if not sem_itens(sugestao.itens):
             continue
         try:
@@ -392,7 +392,9 @@ def limpar(hoje: dt.date | None = None) -> int:
     """Apaga as que fizeram 7 dias no Radar ou cuja disputa já abriu."""
 
     hoje = hoje or timezone.localdate()
-    apagadas, _ = SugestaoRadar.objects.filter(expira_em__lte=hoje).delete()
+    # As removidas por ele ficam: são o exemplo do que ele não quer (GEN-93),
+    # e não voltam ao Radar (`_ja_conhecidas`).
+    apagadas, _ = SugestaoRadar.objects.filter(expira_em__lte=hoje, removida_em__isnull=True).delete()
     return apagadas
 
 
@@ -407,7 +409,7 @@ def visiveis(hoje: dt.date | None = None):
         sequencial_compra=OuterRef("sequencial_compra"),
     )
     return (
-        SugestaoRadar.objects.filter(expira_em__gt=hoje)
+        SugestaoRadar.objects.filter(expira_em__gt=hoje, removida_em__isnull=True)
         .exclude(data_encerramento_proposta__lt=hoje)
         # Pendentes (sem itens ainda): não dá para saber se casam.
         .exclude(itens__0__descricao_resumida=None)
