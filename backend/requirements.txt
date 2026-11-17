@@ -46,3 +46,5 @@ boto3==1.43.98
 # (apps/armazenamento/cripto.py). Já vinha como sub-dependência do
 # simplejwt; está aqui porque agora é uso direto.
 cryptography==50.0.1
+# IA do Radar (GEN-93, 17/11/2026): Claude Haiku julga se a compra tem a ver.
+anthropic==2.9.0

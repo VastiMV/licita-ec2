@@ -409,3 +409,132 @@ class RemoverDoRadarTests(APITestCase):
         self.client.post(f"/api/licitacoes/radar/{self.sugestao.pk}/remover/")
 
         self.assertEqual(self.client.post(f"/api/licitacoes/radar/{self.sugestao.pk}/remover/").status_code, 404)
+
+
+class AgrupamentoNaoEProdutoTests(APITestCase):
+    """Operação, 17/11/2026: "Grupo 3" não é produto — buscar isso traz lixo."""
+
+    def test_grupo_lote_item(self):
+        from .radar import _sem_agrupamento
+
+        self.assertEqual(_sem_agrupamento("Grupo 3"), "")
+        self.assertEqual(_sem_agrupamento("LOTE 02"), "")
+        self.assertEqual(_sem_agrupamento("Lote 2 - Luva de procedimento"), "Luva de procedimento")
+        self.assertEqual(_sem_agrupamento("Luva de procedimento"), "Luva de procedimento")
+
+    def test_grupo_fica_fora_da_base(self):
+        salva("1", "Grupo 3")
+        salva("2", "Ração para aves")
+
+        self.assertEqual([o for _, o, _ in termos_da_base(HOJE)], ["Ração para aves"])
+
+
+class FakeIA:
+    """O cliente da Anthropic de mentira: nota por palavra no objeto."""
+
+    def __init__(self, notas: dict[str, int] | None = None, falha=False):
+        self.notas = notas or {}
+        self.falha = falha
+        self.perguntas: list[str] = []
+        self.messages = self
+
+    def parse(self, **kw):
+        from types import SimpleNamespace
+
+        from .radar_ia import Avaliacao
+
+        pergunta = kw["messages"][0]["content"]
+        self.perguntas.append(pergunta)
+        if self.falha:
+            import anthropic
+            import httpx
+
+            raise anthropic.APIConnectionError(request=httpx.Request("POST", "https://x"))
+        nota = next((n for palavra, n in self.notas.items() if palavra in pergunta), 5)
+        return SimpleNamespace(stop_reason="end_turn", parsed_output=Avaliacao(nota=nota, motivo="teste"))
+
+
+class IADoRadarTests(APITestCase):
+    """GEN-93 (17/11/2026): a IA dá nota 0–10; abaixo de 7 não aparece, mas
+    fica guardada (não é julgada de novo). Sem chave, a IA fica desligada."""
+
+    def setUp(self):
+        from unittest import mock
+
+        cache.clear()
+        self.hoje = timezone.localdate()
+        salva("1", "Ração para aves")
+        datas = {"publicada": self.hoje.isoformat(), "prazo": (self.hoje + dt.timedelta(days=9)).isoformat()}
+        self.pncp = FakePncp({"racao": [edital("10", objeto="Ração para o zoológico", **datas),
+                                        edital("11", objeto="Bandana e ração decorativa", **datas)]})
+        self.ia = FakeIA({"zoológico": 9, "Bandana": 2})
+        self.patches = [mock.patch("apps.licitacoes.radar_ia.ligada", return_value=True)]
+        for p in self.patches:
+            p.start()
+        self.addCleanup(lambda: [p.stop() for p in self.patches])
+
+    def rodar_com_ia(self, ia=None):
+        from unittest import mock
+
+        from . import radar_ia
+
+        original = radar_ia.avaliar
+        with mock.patch.object(radar_ia, "avaliar", lambda *a, **kw: original(*a, cliente=ia or self.ia)):
+            return rodar(self.hoje, self.pncp)
+
+    def test_so_a_nota_alta_aparece_e_a_baixa_fica_guardada(self):
+        from .radar import visiveis
+
+        resumo = self.rodar_com_ia()
+
+        self.assertEqual((resumo["aprovadas_ia"], resumo["reprovadas_ia"]), (1, 1))
+        self.assertEqual([s.sequencial_compra for s in visiveis(self.hoje)], ["10"])
+        self.assertEqual(SugestaoRadar.objects.get(sequencial_compra="11").nota_ia, 2)
+        segunda = self.rodar_com_ia()
+        self.assertEqual(segunda["aprovadas_ia"] + segunda["reprovadas_ia"], 0)  # não julga de novo
+
+    def test_falha_da_ia_nao_guarda_e_tenta_na_proxima(self):
+        resumo = self.rodar_com_ia(FakeIA(falha=True))
+
+        self.assertEqual(resumo["ia_falhou"], 2)
+        self.assertFalse(SugestaoRadar.objects.exists())
+
+    def test_a_lixeira_vai_para_a_ia_como_exemplo_do_que_ele_nao_quer(self):
+        from django.utils import timezone as tz
+
+        SugestaoRadar.objects.create(
+            cnpj_orgao="3", ano_compra="2026", sequencial_compra="1", objeto="Ração para peixes ornamentais",
+            itens=[{"descricao_resumida": "Ração para peixes"}], expira_em=self.hoje, removida_em=tz.now(),
+        )
+
+        self.rodar_com_ia()
+
+        self.assertIn("REMOVEU", self.ia.perguntas[0])
+        self.assertIn("Ração para peixes", self.ia.perguntas[0])
+
+    def test_referencias_incluem_salvas_descartadas_e_o_que_participou(self):
+        from .models import ItemParticipado
+        from .radar_ia import referencias
+
+        descartada = salva("5", "Ração extrusada para aves silvestres")
+        descartada.remover()
+        ItemParticipado.objects.create(oportunidade=descartada, numero_item="1", descricao="Ração para aves de postura")
+
+        refs = referencias("racao para aves")
+
+        self.assertIn("Ração extrusada para aves silvestres", refs)
+        self.assertIn("Ração para aves de postura", refs)
+
+
+
+class IALigadaSoComChaveTests(APITestCase):
+    def test_sem_chave_desligada_com_chave_ligada(self):
+        from types import SimpleNamespace
+        from unittest import mock
+
+        from .radar_ia import ligada
+
+        with mock.patch("apps.licitacoes.radar_ia.env", SimpleNamespace(anthropic_api_key="")):
+            self.assertFalse(ligada())
+        with mock.patch("apps.licitacoes.radar_ia.env", SimpleNamespace(anthropic_api_key="chave-de-teste")):
+            self.assertTrue(ligada())

@@ -832,6 +832,9 @@ class SugestaoRadar(models.Model):
     )
     encontrada_em = models.DateTimeField("encontrada em", auto_now_add=True)
     expira_em = models.DateField("some em")
+    # Nota da IA, 0 a 10 (GEN-93): abaixo de 7 não aparece, mas fica guardada
+    # para a compra não ser julgada de novo. Vazia = IA desligada.
+    nota_ia = models.PositiveSmallIntegerField("nota da IA", null=True, blank=True)
     # "Remover do Radar" (GEN-93, 17/11/2026): sai da lista e fica guardada
     # como exemplo do que ele NÃO quer (a IA do Radar vai usar).
     removida_em = models.DateTimeField("removida em", null=True, blank=True)

@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import datetime as dt
 
-from django.db.models import Q
+from django.db.models import F, Q
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.pagination import PageNumberPagination
@@ -664,7 +664,8 @@ class RadarView(APIView):
         if campo:
             lista = lista.order_by(f"-{campo}" if pedida.startswith("-") else campo, "-id")
         else:
-            lista = lista.order_by("-por_ganho", "-encontrada_em", "-id")
+            # Melhor nota da IA primeiro (GEN-93); sem IA, ganho e as mais novas.
+            lista = lista.order_by(F("nota_ia").desc(nulls_last=True), "-por_ganho", "-encontrada_em", "-id")
 
         paginacao = OportunidadesSalvasPaginacao()
         pagina = paginacao.paginate_queryset(lista, request, view=self)

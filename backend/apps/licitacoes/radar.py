@@ -32,6 +32,7 @@ from __future__ import annotations
 
 import datetime as dt
 import logging
+import re
 import time
 from decimal import Decimal
 
@@ -40,6 +41,7 @@ from django.utils import timezone
 
 from apps.integracoes.clients.pncp import TAM_PAGINA_MAX, PncpClient, PncpClientError
 
+from . import radar_ia
 from .mercado import achar_pdm, normalizar
 from .models import ItemParticipado, OportunidadeSalva, SugestaoRadar, montar_texto_busca
 
@@ -99,6 +101,18 @@ def _nome_do_item(descricao: str) -> str:
     return " ".join(descricao.split()[:PALAVRAS_SEM_PDM])
 
 
+AGRUPAMENTO = re.compile(r"^\s*(grupo|lote|item)\s*\d+\s*[-–:.)]?\s*", re.IGNORECASE)
+
+
+def _sem_agrupamento(descricao: str) -> str:
+    """"Grupo 3", "Lote 2 - Luva…" (17/11/2026, operação): o nome do
+    agrupamento não é produto — "Grupo 3" sozinho fica fora da base, e
+    "Lote 2 - Luva" vira "Luva". Buscar "grupo 3" trazia muito lixo."""
+
+    resto = AGRUPAMENTO.sub("", descricao or "").strip()
+    return resto if len(normalizar(resto)) >= 3 else ""
+
+
 def _termo(descricao: str) -> str:
     """O que se procura no PNCP para uma descrição de item: o tipo do
     catálogo (PDM) ou, sem ele, o nome do item (`_nome_do_item`)."""
@@ -133,6 +147,9 @@ def termos_da_base(hoje: dt.date | None = None) -> list[tuple[str, str, bool]]:
     vistos: set[str] = set()
     termos: list[tuple[str, str, bool]] = []
     for descricao, por_ganho in descricoes:
+        descricao = _sem_agrupamento(descricao)
+        if not descricao:
+            continue
         termo = _termo(descricao)
         chave = normalizar(termo)
         if not chave or chave in vistos:
@@ -242,6 +259,9 @@ def rodar(hoje: dt.date | None = None, pncp: PncpClient | None = None) -> dict[s
         "removidas": limpar(hoje),
         "falhas": 0,
         "itens_completados": 0,
+        "aprovadas_ia": 0,
+        "reprovadas_ia": 0,
+        "ia_falhou": 0,
     }
     termos = termos_da_base(hoje)
     resumo["termos"] = len(termos)
@@ -304,6 +324,14 @@ def rodar(hoje: dt.date | None = None, pncp: PncpClient | None = None) -> dict[s
                         resumo["sem_item_que_casa"] += 1
                         continue  # outro termo ainda pode casar com esta compra
                 objeto = primeiro.get("contratacao_objeto") or ""
+                nota = None
+                if radar_ia.ligada() and brutos:
+                    avaliacao = radar_ia.avaliar(termo, objeto, [i for i in itens if item_casa(termo, i)])
+                    if avaliacao is None:
+                        resumo["ia_falhou"] += 1
+                        continue  # não guarda: a próxima rodada tenta de novo
+                    nota = avaliacao.nota
+                    resumo["aprovadas_ia" if nota >= radar_ia.NOTA_MINIMA else "reprovadas_ia"] += 1
                 SugestaoRadar.objects.create(
                     cnpj_orgao=chave[0],
                     ano_compra=chave[1],
@@ -325,6 +353,7 @@ def rodar(hoje: dt.date | None = None, pncp: PncpClient | None = None) -> dict[s
                     parecido_com=origem[:255],
                     por_ganho=por_ganho,
                     expira_em=_expira_em(hoje, prazo),
+                    nota_ia=nota,
                 )
                 conhecidas.add(chave)
                 resumo["novas"] += 1
@@ -376,14 +405,20 @@ def completar_itens(cliente, hoje: dt.date) -> int:
         if not brutos:
             continue
         base = sugestao.itens[0] if sugestao.itens else {}
-        itens, casou = _linhas(base, brutos, _termo(sugestao.parecido_com))
+        termo = _termo(sugestao.parecido_com)
+        itens, casou = _linhas(base, brutos, termo)
         if not casou:
             sugestao.delete()
             continue
+        if radar_ia.ligada():
+            avaliacao = radar_ia.avaliar(termo, sugestao.objeto, [i for i in itens if item_casa(termo, i)])
+            if avaliacao is None:
+                continue  # fica pendente; a próxima rodada tenta de novo
+            sugestao.nota_ia = avaliacao.nota
         sugestao.itens = itens
         sugestao.valor_total_estimado = _valor_total(itens)
         sugestao.texto_busca = montar_texto_busca(sugestao.objeto, itens)
-        sugestao.save(update_fields=["itens", "valor_total_estimado", "texto_busca"])
+        sugestao.save(update_fields=["itens", "valor_total_estimado", "texto_busca", "nota_ia"])
         completadas += 1
     return completadas
 
@@ -413,5 +448,7 @@ def visiveis(hoje: dt.date | None = None):
         .exclude(data_encerramento_proposta__lt=hoje)
         # Pendentes (sem itens ainda): não dá para saber se casam.
         .exclude(itens__0__descricao_resumida=None)
+        # Reprovadas pela IA ficam guardadas, mas não aparecem (GEN-93).
+        .exclude(nota_ia__lt=radar_ia.NOTA_MINIMA)
         .exclude(Exists(salvas))
     )
