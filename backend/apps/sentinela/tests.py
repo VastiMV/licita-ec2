@@ -267,7 +267,10 @@ class EstadoTests(TestCase):
         self.assertEqual(estado_atual()["estado"], "nao_instalada")
 
     def test_falou_ha_pouco_e_ok(self):
-        Pulso.objects.create()
+        # Com leitura: desde o GEN-73, em horário de trabalho, pulso sem
+        # leitura há 30 min fica âmbar — o teste falhava das 8h30 às 19h
+        # (achado em 17/11/2026, 8h54).
+        Pulso.objects.create(captura="mensagens")
 
         self.assertEqual(estado_atual()["estado"], "ok")
 

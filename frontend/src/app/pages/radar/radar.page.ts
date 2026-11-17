@@ -13,7 +13,7 @@ import {
   parametroOrdenacao,
 } from '../../shared/ui/data-table/data-table.model';
 import { TabelaAcoesDirective } from '../../shared/ui/data-table/tabela-acoes.directive';
-import { ItemMenu, MenuComponent } from '../../shared/ui/menu/menu.component';
+import { IconComponent } from '../../shared/ui/icon/icon.component';
 import { SelectComponent } from '../../shared/ui/select/select.component';
 import { ToastService } from '../../shared/ui/toast/toast.service';
 import {
@@ -87,7 +87,7 @@ const COLUNAS: readonly ColunaTabela<SugestaoRadarResponse>[] = [
  */
 @Component({
   selector: 'app-radar-page',
-  imports: [DataTableComponent, TabelaAcoesDirective, MenuComponent, SelectComponent, ReactiveFormsModule],
+  imports: [DataTableComponent, TabelaAcoesDirective, IconComponent, SelectComponent, ReactiveFormsModule],
   templateUrl: './radar.page.html',
   styleUrl: './radar.page.scss',
 })
@@ -125,19 +125,8 @@ export class RadarPage implements OnInit {
     this.carregar();
   }
 
-  protected acoesDe(sugestao: SugestaoRadarResponse): readonly ItemMenu[] {
-    return [
-      { rotulo: 'Abrir', icone: 'eye', executar: () => this.abrir(sugestao) },
-      {
-        rotulo: 'Remover do Radar',
-        icone: 'trash',
-        tom: 'perigo',
-        executar: () => this.remover(sugestao),
-      },
-    ];
-  }
-
-  /** GEN-93 (17/11/2026): sem confirmação — é limpeza da lista, e a compra
+  /** A lixeira da linha (GEN-93, 17/11/2026 — a operação pediu lixeira, não
+   * menu; clicar na linha abre o card). Sem confirmação — é limpeza da lista, e a compra
    * continua achável na busca. Fica guardada como exemplo do que ele não
    * quer (a IA do Radar vai usar). */
   protected remover(sugestao: SugestaoRadarResponse): void {

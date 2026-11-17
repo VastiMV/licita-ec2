@@ -1,3 +1,5 @@
+@use 'mixins' as *;
+
 h1 {
   font-size: var(--font-size-xl);
   margin-bottom: var(--space-1);
@@ -15,4 +17,33 @@ app-data-table {
 
 .erro {
   color: var(--color-danger);
+}
+
+// A lixeira da linha (GEN-93): o mesmo jeito da lixeira do cartão da Torre.
+.lixeira {
+  appearance: none;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--color-muted);
+  cursor: pointer;
+
+  app-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  &:hover {
+    border-color: var(--color-danger);
+    color: var(--color-danger);
+    background: var(--color-danger-bg);
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
 }

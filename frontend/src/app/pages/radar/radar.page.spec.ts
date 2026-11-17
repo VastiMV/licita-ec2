@@ -78,15 +78,11 @@ describe('RadarPage', () => {
     expect(service.listar).toHaveBeenCalledTimes(2);
   });
 
-  it('"Remover do Radar" remove sem perguntar e recarrega (GEN-93)', () => {
-    const acoes = (fixture.componentInstance as never as {
-      acoesDe: (s: SugestaoRadarResponse) => { rotulo: string; executar: () => void }[];
-    }).acoesDe(SUGESTAO);
-
-    expect(acoes.map((a) => a.rotulo)).toEqual(['Abrir', 'Remover do Radar']);
-    acoes[1].executar();
+  it('a lixeira remove sem perguntar e recarrega, sem abrir o card (GEN-93)', () => {
+    fixture.debugElement.query(By.css('button.lixeira')).nativeElement.click();
 
     expect(service.remover).toHaveBeenCalledWith(3);
+    expect(modal.abrir).not.toHaveBeenCalled();
     expect(service.listar).toHaveBeenCalledTimes(2);
   });
 });
