@@ -210,11 +210,35 @@ class FakePncp:
 
 
 class FakeCompras:
-    def __init__(self, atas=None):
+    def __init__(self, atas=None, contratos=None, codigo_orgao="36000", falha=None):
         self.atas = atas or []
+        self.contratos = contratos or []
+        self.codigo_orgao = codigo_orgao
+        self.falha = falha
+        self.consultas_de_contrato = []
+        self.uasgs_consultadas = []
 
     def itens_de_ata_da_unidade(self, *_):
         return self.atas
+
+    def codigo_orgao_da_uasg(self, uasg):
+        self.uasgs_consultadas.append(uasg)
+        return self.codigo_orgao
+
+    def itens_de_contrato_da_compra(self, codigo_orgao, id_compra, inicio, fim):
+        if self.falha:
+            raise self.falha
+        self.consultas_de_contrato.append((codigo_orgao, id_compra, inicio, fim))
+        return self.contratos
+
+
+def contrato(numero_item="00002", fornecedor="35569716000199", **extra):
+    """Um item de contrato como vem do Contratos.gov.br (formato visto ao vivo em 18/11/2026)."""
+
+    return {"idCompra": CUBATAO, "numeroItem": numero_item, "niFornecedor": fornecedor,
+            "nomeRazaoSocialFornecedor": "VL-LOJA", "numeroContrato": "2026NE000023",
+            "dataVigenciaInicial": "2026-11-05T00:00:00", "contratoExcluido": False,
+            "contratoItemExcluido": False, **extra}  # fmt: skip
 
 
 class ConferenciaDiariaTests(_Base):
@@ -251,6 +275,82 @@ class ConferenciaDiariaTests(_Base):
         item.refresh_from_db()
         self.assertEqual(resumo["vigias_encerradas"], 1)
         self.assertIn("VL-LOJA", item.vigia_motivo)
+
+
+class FimDaVigiaPorContratoTests(_Base):
+    """GEN-46 (18/11/2026): contrato, empenho ou termo de adesão do item com
+    outra empresa no Contratos.gov.br encerra a vigia."""
+
+    def setUp(self):
+        super().setUp()
+        self.s = salva()
+        self.item = ItemParticipado.objects.create(oportunidade=self.s, numero_item="2", vencedor_e_a_empresa=False)
+
+    def conferir(self, compras):
+        resumo = conferir(HOJE, FakePncp(), compras)
+        self.item.refresh_from_db()
+        return resumo
+
+    def test_contrato_com_outra_empresa_encerra_a_vigia(self):
+        compras = FakeCompras(contratos=[contrato()])
+
+        resumo = self.conferir(compras)
+
+        self.assertEqual(resumo["vigias_encerradas"], 1)
+        self.assertIsNotNone(self.item.vigia_encerrada_em)
+        self.assertIn("contrato 2026NE000023", self.item.vigia_motivo)
+        self.assertIn("VL-LOJA", self.item.vigia_motivo)
+        self.assertEqual(compras.uasgs_consultadas, [CUBATAO[:6]])
+        self.assertEqual(compras.consultas_de_contrato[0][:2], ("36000", CUBATAO))
+
+    def test_um_codigo_de_orgao_por_uasg(self):
+        outra = salva()  # mesma UASG, outra compra
+        ItemParticipado.objects.create(oportunidade=outra, numero_item="1", vencedor_e_a_empresa=False)
+        compras = FakeCompras()
+
+        self.conferir(compras)
+
+        self.assertEqual(compras.uasgs_consultadas, [CUBATAO[:6]])
+
+    def test_contrato_com_a_propria_empresa_nao_encerra(self):
+        self.conferir(FakeCompras(contratos=[contrato(fornecedor=CNPJ)]))
+
+        self.assertIsNone(self.item.vigia_encerrada_em)
+
+    def test_contrato_de_outro_item_nao_encerra(self):
+        self.conferir(FakeCompras(contratos=[contrato(numero_item="00003")]))
+
+        self.assertIsNone(self.item.vigia_encerrada_em)
+
+    def test_contrato_ou_item_excluido_nao_encerra(self):
+        self.conferir(FakeCompras(contratos=[contrato(contratoExcluido=True), contrato(contratoItemExcluido=True)]))
+
+        self.assertIsNone(self.item.vigia_encerrada_em)
+
+    def test_orgao_sem_codigo_nao_consulta(self):
+        compras = FakeCompras(contratos=[contrato()], codigo_orgao=None)
+
+        self.conferir(compras)
+
+        self.assertEqual(compras.consultas_de_contrato, [])
+        self.assertIsNone(self.item.vigia_encerrada_em)
+
+    def test_ata_ja_encerrou_nao_consulta_contrato(self):
+        atas = [{"idCompra": CUBATAO, "numeroItem": "2", "niFornecedor": "35569716000199"}]
+        compras = FakeCompras(atas=atas, contratos=[contrato()])
+
+        resumo = self.conferir(compras)
+
+        self.assertEqual(resumo["vigias_encerradas"], 1)
+        self.assertEqual(compras.consultas_de_contrato, [])
+        self.assertIn("ata", self.item.vigia_motivo)
+
+    def test_api_fora_do_ar_nao_para_a_conferencia(self):
+        # Decisão de 18/11/2026: registra a falha e tenta no dia seguinte.
+        resumo = self.conferir(FakeCompras(falha=RuntimeError("fora do ar")))
+
+        self.assertEqual(resumo["vigias_encerradas"], 0)
+        self.assertIsNone(self.item.vigia_encerrada_em)
 
 
 class AcompanhadaTests(_Base):

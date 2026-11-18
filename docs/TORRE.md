@@ -418,7 +418,9 @@ Em ordem de prioridade (combinado com a operação):
 A Sentinela (0.2.4) e os avisos no Telegram **já existem** (ver
 [`SENTINELA.md`](SENTINELA.md)). Falta:
 
-1. **Fim da vigia por contrato publicado no PNCP** (hoje: ata ou 180 dias).
+1. ~~Fim da vigia por contrato~~ — **feito em 18/11/2026 (GEN-46)** pelo
+   Contratos.gov.br, para os órgãos que o usam. Falta o PNCP e o Portal da
+   Transparência para os outros órgãos (cartão novo).
 2. **Telegram para empenho, pagamento e cobrança** (hoje: os avisos do sino).
 3. **Telas de lançamento manual** — a API existe (contrato, OF, entrega,
    ligar documento "sem licitação"); falta o formulário na tela.
@@ -549,8 +551,12 @@ Disputar › Aguardando sessão. Decisões da operação:
   ("Data alterada pelo órgão: 10/11 → 17/11") e aviso no sino.
 - **Vigia de quem perdeu:** todo item em que ele deu preço segue vigiado 1x por
   dia (proposta dele e recurso), esteja onde estiver, até a ata aparecer
-  assinada com outra empresa (Dados Abertos, por UASG) ou 180 dias depois da
-  homologação. Contrato sem ata não aparece nessa fonte: vale o limite.
+  assinada com outra empresa (Dados Abertos, por UASG), até o item aparecer
+  num **contrato, empenho ou termo de adesão** com outra empresa no
+  Contratos.gov.br (GEN-46, 18/11/2026), ou 180 dias depois da homologação.
+  Órgão que não usa o Contratos.gov.br (estados, municípios, ex.: PMDF): vale
+  a ata ou o limite. Código: `licitacoes/conferencia_diaria.py`
+  (`_encerrar_vigias`, `_encerrar_por_contrato`).
 - **Acompanhadas:** os itens vêm do PNCP (`ItemAcompanhado`); as propostas, da
   Sentinela, 1x por dia. Se aparecer proposta da Inside, o item vira dela e a
   licitação volta para a Torre (rede de segurança).

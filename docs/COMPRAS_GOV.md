@@ -96,6 +96,7 @@ em "Minhas participações".
 | Para quê | Endereço (`https://dadosabertos.compras.gov.br`) |
 |---|---|
 | Atas da UASG (fim da vigia: ata assinada com outra empresa) | `/modulo-arp/2_consultarARPItem?codigoUnidadeGerenciadora=…` |
+| **Contratos da compra** (fim da vigia: contrato, empenho ou termo de adesão com outra empresa; GEN-46, 18/11/2026). Espelho do Contratos.gov.br: só órgãos que usam o Contratos.gov.br (federais e os que aderiram). Exige o código do órgão, que vem do **cadastro da UASG** (`/modulo-uasg/1_consultarUasg?codigoUasg=…`, campo `codigoOrgao`). ⚠️ O `codigoOrgao` do detalhe da contratação é **outro** código e não serve (ao vivo, 18/11/2026: UASG 250030 → 36000 na UASG e nos contratos, 46844 na contratação); máx. 365 dias; página mínima de 10 | `/modulo-contratos/2_consultarContratosItem?codigoOrgao=…&idCompra=…&dataVigenciaInicialMin&dataVigenciaInicialMax` |
 | Catálogo: tipos (PDM) e itens exatos (CATMAT) | `/modulo-material/3_consultarPdmMaterial`, `/modulo-material/4_consultarItemMaterial?codigoPdm=…` |
 | **Pesquisa de Preços** (preço, data e **marca** de cada compra no Brasil) | `/modulo-pesquisa-preco/1_consultarMaterial?tipo=codigoItemCatalogo|codigoPdm&codigo=…&dataCompraInicio&dataCompraFim` |
 | Itens de uma compra (o PNCP dá a lista para as acompanhadas) | `/modulo-contratacoes/2.1_consultarItensContratacoes_PNCP_14133_Id?tipo=idCompra&codigo=…` (vem **sem** o código CATMAT) |

@@ -285,6 +285,34 @@ class ComprasGovClient:
             fim,
         )
 
+    def itens_de_contrato_da_compra(
+        self, codigo_orgao: str, id_compra: str, inicio: str, fim: str
+    ) -> list[dict[str, Any]]:
+        """Itens de contrato (contrato, empenho, termo de adesão) de uma
+        compra, com vigência iniciada entre `inicio` e `fim`: número do item,
+        fornecedor e número do contrato. É o espelho do Contratos.gov.br no
+        Dados Abertos (GEN-46, testado ao vivo em 18/11/2026). A API exige o
+        código do órgão (`codigo_orgao_da_uasg`). Só tem os órgãos que usam o
+        Contratos.gov.br (federais e os que aderiram)."""
+
+        return self._paginar_por_periodo(
+            "/modulo-contratos/2_consultarContratosItem",
+            {"codigoOrgao": codigo_orgao, "idCompra": id_compra},
+            ("dataVigenciaInicialMin", "dataVigenciaInicialMax"),
+            inicio,
+            fim,
+        )
+
+    def codigo_orgao_da_uasg(self, uasg: str) -> str | None:
+        """O código do órgão da UASG no cadastro do Compras.gov.br — o mesmo
+        que o módulo de contratos usa (GEN-46). Atenção: o `codigoOrgao` do
+        detalhe da contratação é **outro** código (ao vivo, 18/11/2026: UASG
+        250030 → 36000 aqui e nos contratos, 46844 na contratação)."""
+
+        registros = self._paginar("/modulo-uasg/1_consultarUasg", {"codigoUasg": uasg, "statusUasg": "true"})
+        codigo = registros[0].get("codigoOrgao") if registros else None
+        return str(codigo) if codigo else None
+
     def listar_itens(self, id_compra: str) -> list[dict[str, Any]]:
         """Lista os itens de uma contratação — o que efetivamente é precificado."""
 

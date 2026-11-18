@@ -264,6 +264,48 @@ class ResultadosEAtasDoFornecedorTests(SimpleTestCase):
         self.assertEqual(capturado["params"]["dataVigenciaInicialMin"], "2025-11-08")
         self.assertEqual(capturado["params"]["dataVigenciaInicialMax"], "2026-11-07")
 
+    def test_itens_de_contrato_da_compra_usam_o_modulo_contratos(self):
+        # GEN-46 (18/11/2026): o espelho do Contratos.gov.br no Dados Abertos.
+        # A API exige o código do órgão; o idCompra filtra a compra.
+        capturado = {}
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            capturado["caminho"] = request.url.path
+            capturado["params"] = dict(request.url.params)
+            return httpx.Response(200, json={"resultado": [{"numeroItem": "00001"}], "paginasRestantes": 0})
+
+        with _client_falso(handler) as client:
+            itens = client.itens_de_contrato_da_compra("36000", "25003006900022025", "2026-05-01", "2026-12-31")
+
+        self.assertEqual(itens, [{"numeroItem": "00001"}])
+        self.assertEqual(capturado["caminho"], "/modulo-contratos/2_consultarContratosItem")
+        self.assertEqual(capturado["params"]["codigoOrgao"], "36000")
+        self.assertEqual(capturado["params"]["idCompra"], "25003006900022025")
+        self.assertEqual(capturado["params"]["dataVigenciaInicialMin"], "2026-05-01")
+        self.assertEqual(capturado["params"]["dataVigenciaInicialMax"], "2026-12-31")
+
+    def test_codigo_do_orgao_vem_do_cadastro_da_uasg(self):
+        capturado = {}
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            capturado["caminho"] = request.url.path
+            capturado["params"] = dict(request.url.params)
+            return httpx.Response(200, json={"resultado": [{"codigoUasg": "250030", "codigoOrgao": 36000}]})
+
+        with _client_falso(handler) as client:
+            codigo = client.codigo_orgao_da_uasg("250030")
+
+        self.assertEqual(codigo, "36000")
+        self.assertEqual(capturado["caminho"], "/modulo-uasg/1_consultarUasg")
+        self.assertEqual(capturado["params"]["codigoUasg"], "250030")
+
+    def test_uasg_desconhecida_nao_tem_codigo(self):
+        def handler(request: httpx.Request) -> httpx.Response:
+            return httpx.Response(404, json={"statusCode": 404, "message": "Resource not found"})
+
+        with _client_falso(handler) as client:
+            self.assertIsNone(client.codigo_orgao_da_uasg("999999"))
+
     def test_outro_erro_continua_sendo_erro(self):
         def handler(request: httpx.Request) -> httpx.Response:
             return httpx.Response(500, text="falhou")
