@@ -35,7 +35,13 @@ class Command(BaseCommand):
         self.stdout.write(f"No Radar agora: {len(todas)} · com itens do PNCP: {todas_com_itens}\n")
         from apps.licitacoes import radar_ia
 
-        self.stdout.write(f"IA: {'ligada' if radar_ia.ligada() else 'DESLIGADA (sem ANTHROPIC_API_KEY)'}\n")
+        if radar_ia._chave_recusada:
+            estado_ia = "PARADA nesta rodada (chave recusada ou sem crédito: ver a linha de erro acima)"
+        elif radar_ia.ligada():
+            estado_ia = "ligada"
+        else:
+            estado_ia = "DESLIGADA (sem ANTHROPIC_API_KEY)"
+        self.stdout.write(f"IA: {estado_ia}\n")
         for s in novas.order_by("-nota_ia")[:60]:
             itens = [i for i in s.itens if (i or {}).get("descricao_resumida")]
             nota = "--" if s.nota_ia is None else f"{s.nota_ia:2d}"

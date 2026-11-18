@@ -570,3 +570,32 @@ class ChaveRecusadaTests(IADoRadarTests):
         self.assertEqual(len(ia.perguntas), 1)
         self.assertEqual(resumo["ia_falhou"], 2)
         self.assertFalse(SugestaoRadar.objects.exists())
+
+
+    def test_sem_credito_tambem_para_na_primeira(self):
+        import anthropic
+        import httpx
+
+        from . import radar_ia
+
+        class SemCredito(FakeIA):
+            def parse(self, **kw):
+                self.perguntas.append(kw)
+                resposta = httpx.Response(400, request=httpx.Request("POST", "https://x"))
+                raise anthropic.BadRequestError(
+                    "Your credit balance is too low to access the Anthropic API.", response=resposta, body=None
+                )
+
+        ia = SemCredito()
+        self.patches[0].stop()
+        self.patches = []
+        from types import SimpleNamespace
+        from unittest import mock
+
+        with mock.patch("apps.licitacoes.radar_ia.env", SimpleNamespace(anthropic_api_key="ok")):
+            resumo = self.rodar_com_ia(ia)
+        radar_ia._chave_recusada = False
+
+        self.assertEqual(len(ia.perguntas), 1)
+        self.assertFalse(SugestaoRadar.objects.exists())
+        self.assertEqual(resumo["ia_falhou"], 2)

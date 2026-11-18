@@ -149,13 +149,18 @@ def avaliar(termo: str, objeto: str, itens: list[dict], cliente=None) -> Avaliac
             messages=[{"role": "user", "content": _pergunta(termo, objeto, itens)}],
             output_format=Avaliacao,
         )
-    except anthropic.AuthenticationError:
-        # Chave errada (teste no servidor, 17/11/2026: 100 erros iguais na
-        # tela). Para de perguntar nesta execução; a rodada segue sem IA para
-        # as próximas e não guarda nada que dependia dela.
+    except (anthropic.AuthenticationError, anthropic.PermissionDeniedError, anthropic.BadRequestError) as exc:
+        # Problema da CONTA, não da compra: chave errada ou sem crédito (teste
+        # no servidor, 17/11/2026: 100 erros iguais na tela, duas vezes).
+        # Para de perguntar nesta execução; nada que dependia dela entra.
         global _chave_recusada
         _chave_recusada = True
-        logger.error("Radar IA: a Anthropic recusou a chave (ANTHROPIC_API_KEY inválida). IA parada nesta rodada.")
+        motivo = (
+            "sem crédito na conta da Anthropic (Billing)"
+            if "credit balance" in str(exc)
+            else "a Anthropic recusou a chave (ANTHROPIC_API_KEY)"
+        )
+        logger.error("Radar IA parada nesta rodada: %s.", motivo)
         return None
     except anthropic.APIError as exc:
         logger.warning('Radar IA: falhou ao julgar "%s": %s', objeto[:80], exc)
