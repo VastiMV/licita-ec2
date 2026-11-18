@@ -448,7 +448,8 @@ A Sentinela (0.2.4) e os avisos no Telegram **já existem** (ver
 2. **Telegram para cobrança.** Empenho, liquidação e pagamento do Portal da
    Transparência **já avisam** no sino e no Telegram (GEN-97, 18/11/2026).
 3. **Telas de lançamento manual** — a API existe (contrato, OF, entrega,
-   ligar documento "sem licitação"); falta o formulário na tela.
+   ligar documento "sem licitação"); falta o formulário na tela. Inclui
+   mostrar o **órgão pagador** de cada documento (**GEN-98**).
 4. **Prazo de validade da proposta** (Lei 14.133, art. 90, §3º) e lembrete
    de cobrança por dias parados.
 5. **Contratos pelo PNCP**, quando o módulo estabilizar e houver um contrato
