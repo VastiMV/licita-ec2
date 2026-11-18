@@ -139,8 +139,8 @@ As regras de cada uma estão em [`docs/TORRE.md`](docs/TORRE.md) e
 [`docs/DOMINIO.md`](docs/DOMINIO.md).
 
 **Ainda não existe** (em ordem de prioridade): fim da vigia por **contrato**
-publicado no PNCP (hoje: ata de registro de preços ou 180 dias), tirar o
-**Ciclo de Licitação** antigo do código, o painel da camada mostrar só o item
+para órgãos fora do Contratos.gov.br (estados e municípios: hoje ata ou 180
+dias; os federais já encerram pelo contrato desde 18/11/2026, GEN-46), o painel da camada mostrar só o item
 aberto e o aviso de lance abaixo do piso (precisam de um .har da tela de
 lances), o **Radar** e as telas para **lançar à mão** contrato, ordem de
 fornecimento e entrega (a API já existe). Lista viva:
