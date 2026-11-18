@@ -399,7 +399,9 @@ em que ele cai e o nome na tela, estão em
 [Status oficiais × Licita](STATUS_OFICIAIS.md). O levantamento achou **8
 pontos a decidir** (D1 a D8), por exemplo item cancelado/deserto/fracassado
 que fica preso na Torre e diligência cancelada contada como aberta. Nada foi
-mudado no código; todos estão **a confirmar** pela operação.
+mudado no código naquele dia; todos ficaram **a confirmar** pela operação.
+A D2 foi decidida e feita em 18/11/2026 (GEN-76): só a diligência `A`
+(em andamento) conta como aberta.
 
 Em 14/11/2026 o Carlinhos decidiu 16 mudanças na Torre: 3 fases novas em
 Disputar (Propostas aceitas, Finalizadas, Recursos), para onde vai cada fase

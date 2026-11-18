@@ -160,9 +160,9 @@ Lido em `ItemParticipado.decisao_recurso` (vale a revisão da autoridade, se hou
 | | `E` | Encerrada | ✅ | nada |
 | Negociação (`situacaoUltimaNegociacao`) | `E` | Encerrada | ✅ | nada |
 | | outro | em andamento | ✅ | vermelho "pedido de desconto · item N" |
-| Diligência (`SituacaoDiligenciaEnum`) | `A` | Em andamento | ✅ | vermelho "diligência · item N" |
+| Diligência (`SituacaoDiligenciaEnum`) | `A` | Em andamento | ✅ | vermelho "diligência · item N" (sem o campo `situacao`, também conta: lado seguro) |
 | | `E` | Encerrada | ✅ | não conta |
-| | `C` | Cancelada | ❌ | **conta como aberta** ([D2](#d2)) |
+| | `C` | Cancelada | ✅ | não conta ([D2](#d2), GEN-76) |
 
 O código de `situacaoUltimaNegociacao` não aparece na lista oficial; o
 Licita trata "tudo que não é `E`" como em andamento.
@@ -198,9 +198,10 @@ Ordenadas por impacto. Cada uma tem a recomendação de quem levantou, mas
 **a decisão é da operação** (`AGENTS.md`, regra 1). Ao decidir, anote aqui a
 data, quem decidiu e o porquê no cartão da decisão (GEN-75 a GEN-82) e aqui.
 
-| Decisão | Situação em 14/11/2026 |
+| Decisão | Situação em 18/11/2026 |
 |---|---|
-| D1 · D2 · D5 · D7 | a confirmar (sem decisão) |
+| D2 | decidida e feita (18/11/2026, GEN-76) |
+| D1 · D5 · D7 | a confirmar (sem decisão) |
 | D3 · D4 · D6 · D8 | decididas em parte pelo Carlinhos; o que falta está em cada uma |
 
 As decisões de 14/11 descrevem como **deve ficar**. As tabelas das seções
@@ -231,7 +232,14 @@ As decisões de 14/11 descrevem como **deve ficar**. As tabelas das seções
 - **Opções:** (a) contar como aberta só `A`; (b) descartar também `C`.
 - **Recomendação:** (a): segue a lista oficial e não depende de adivinhar
   outros valores.
-- **Status:** a confirmar. Cartão: GEN-76.
+- **Status:** decidido e feito (dona, 18/11/2026). Cartão: GEN-76.
+    - **Decisão:** (a). Só `A` (em andamento) conta como aberta. `E` e `C`
+      não contam. Porquê: segue a lista oficial e não depende de adivinhar
+      outros valores.
+    - **Lado seguro:** o formato real de uma diligência ainda não foi visto
+      (só listas vazias). Se vier **sem** o campo `situacao`, ela conta como
+      aberta, para não esconder um alerta caso o campo tenha outro nome.
+    - **Código:** `sentinela/ingestao.py`, `_diligencia_aberta`.
 
 ### D3 — Nomes de etapa adiantados {#d3}
 
