@@ -41,6 +41,13 @@ o Licita abre aba nova como antes (`licita.js` marca a página do Licita com
 - A cotação do painel não confere mais a cada minuto: é lida ao abrir a
   compra e no F5 (o ↻ continua).
 
+**0.2.8 (18/11/2026):** menos queda de sessão. A ronda usa o token que o
+Compras.gov guarda **agora** (antes usava uma cópia que envelhecia quando o
+site renovava a sessão). Se levar "não autorizado", espera 5 segundos o site
+renovar e tenta 1 vez antes de avisar que caiu. Ela continua **sem** renovar
+a sessão sozinha: com a aba parada muito tempo, ainda é preciso entrar de
+novo.
+
 **0.2.7 (14/11/2026):** se a ronda falhar duas vezes seguidas (aba que não
 responde, erro no Licita ou no Compras.gov), a Sentinela avisa o Licita com o
 motivo — o topo fica âmbar — e avisa de novo quando voltar a ler. A aba do

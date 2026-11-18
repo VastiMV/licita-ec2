@@ -1,4 +1,4 @@
-# Sentinela — plano e o que já existe (0.2.7, 14/11/2026)
+# Sentinela — plano e o que já existe (0.2.8, 18/11/2026)
 
 A Sentinela é uma **extensão do Chrome** no computador do Carlinhos. Ela é a
 ponte entre o Compras.gov.br (a sessão **dele**, já logada) e o Licita. Sem
@@ -172,7 +172,7 @@ cada 401 era avisado 2 vezes; e ~200 "sem aba" à noite e no fim de semana.
 - **"Sem aba" só em horário de trabalho** (seg–sex, 8h–19h).
 - **Ícone** da extensão = o favicon do Licita (`sentinela/icones/`).
 - **A confirmar (fica no GEN-45):** pegar o token novo quando a página
-  renova a sessão (o "retoken"). Precisa de um HAR do retoken.
+  renova a sessão (o "retoken"). Feito na 0.2.8, sem precisar do HAR.
 
 **14/11/2026 — ligada, mas cega (GEN-73).** De 11/11 às 22h42 a 14/11 às
 10h50 a Sentinela **não leu nada**, mas mandou "ok" a cada 3 minutos (havia
@@ -207,6 +207,27 @@ operação de 14/11/2026:
   no Compras.gov. Se a sessão tiver caído, vale o aviso de sessão.
 - Fora: o "ok só se leu" na extensão — o alarme de silêncio do servidor já
   cobre (decisão da operação).
+
+**0.2.8 (18/11/2026, GEN-45):** a ronda não cai mais por usar um token
+velho. Decisão da operação de 18/11/2026: opção **(A + C)**.
+- **Por quê:** a ronda usava uma **cópia** do token, tirada da última
+  consulta da página. Quando o site renovava a sessão (o "retoken"), a cópia
+  envelhecia: a ronda levava 401 e avisava "sessão caiu", com o site ainda
+  logado. Pela medição do GEN-45, pelo menos 6 das 24 quedas foram assim.
+- **(A) Token atual:** a cada consulta, a ronda lê o token que o próprio site
+  guarda agora (`sessionStorage.accessToken`, que ele troca a cada retoken).
+  Sem ele, usa a cópia, como antes. O formato exato ainda não foi visto no
+  Chrome: aceita com ou sem aspas e com ou sem "Bearer".
+- **(C) Uma segunda chance:** se levar 401, espera **5 segundos** (tempo para
+  o site renovar), lê o token de novo e, **se ele mudou**, tenta **1 vez**.
+  Se não mudou, é queda: o aviso é o de sempre e ela não insiste com aquele
+  token (a ronda seguinte é "sem sessão", a mesma queda).
+- **A Sentinela continua sem chamar o retoken.** Fora (opção B, descartada
+  em 18/11/2026): renovar a sessão sozinha com o `refreshToken`. Por isso,
+  com a aba parada (à noite, por exemplo), o token ainda vence e é preciso
+  entrar de novo.
+- Teste: `node sentinela/testes/teste-retoken.js` (Chromium de verdade,
+  Compras.gov simulado; não precisa do Licita).
 
 **10/11/2026 — compra trazida pela Sentinela fica completa:** a compra
 que a Sentinela cria no Licita (a empresa já participa no Compras.gov) vinha
@@ -326,8 +347,10 @@ Achados dos HARs gravados em 07/11/2026 na sessão do Carlinhos:
 | Proposta da empresa num item (situação, classificação, negociação) | `compras/{código}/em-selecao-fornecedores/participacoes/{CNPJ}/itens/{n}/propostas` | não | (próxima etapa: sozinha) |
 | Chat de cada pregão | — | **sim, a cada consulta** | **não usar** |
 
-- A sessão se renova sozinha (`retoken`) quando há uso. Se cair, a
-  Sentinela avisa "sessão caiu, entre de novo".
+- A sessão se renova sozinha (`retoken`) quando há uso. Desde a 0.2.8 a
+  ronda usa o token atual do site e, depois de um 401, espera o site renovar
+  e tenta 1 vez. Se cair mesmo, a Sentinela avisa "sessão caiu, entre de
+  novo".
 - A **convocação real** do item 22, Pregão 61/2026 (UASG 158127), veio pela
   caixa de mensagens — é o caso de teste.
 

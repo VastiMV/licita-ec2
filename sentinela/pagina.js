@@ -2,9 +2,12 @@
 //
 // 1. OBSERVA: quando a própria página recebe a resposta de uma consulta que
 //    interessa, copia a resposta e entrega para a ponte (ponte.js).
-// 2. LEMBRA A SESSÃO: quando a página manda o cabeçalho `authorization`, guarda
-//    o valor numa variável desta função — só na memória desta aba. Nunca é
-//    gravado, nunca sai do computador, nunca vai para o Licita.
+// 2. USA A SESSÃO DA ABA: a cada consulta, lê o token ATUAL que o próprio
+//    site guarda (`sessionStorage.accessToken`, que ele troca quando renova a
+//    sessão). Sem ele, usa o `authorization` que a página mandou por último.
+//    Só na memória desta aba: nunca é gravado, nunca sai do computador, nunca
+//    vai para o Licita. A Sentinela nunca chama o retoken (decisão da
+//    operação, 18/11/2026, GEN-45).
 // 3. CONSULTA SOZINHA, a pedido da ponte, só o que está em PERMITIDO: leituras
 //    que NÃO pedem captcha (favoritos, proposta do item, propostas de todos,
 //    fase recursal, diligências) e o "tirar favorito" de uma compra (lixeira,
@@ -66,8 +69,33 @@
     },
   ];
 
-  // A sessão da aba, como a página a usa. Só na memória.
-  const sessao = { authorization: "", versao: "" };
+  // A sessão da aba, como a página a usa. Só na memória. `recusado` é o
+  // token que levou 401 e não foi trocado: não insiste com ele.
+  const sessao = { authorization: "", versao: "", recusado: "" };
+
+  // Depois de um 401, quanto tempo dar para o site renovar a sessão (ele
+  // renova sozinho quando a própria tela leva 401) antes de tentar 1 vez.
+  const ESPERA_RENOVACAO_MS = 5000;
+
+  // O token que o site guarda agora (GEN-45, 18/11/2026). O formato exato
+  // não foi visto: aceita com ou sem aspas e com ou sem "Bearer".
+  function tokenDoSite() {
+    try {
+      let valor = String(window.sessionStorage.getItem("accessToken") || "").trim();
+      if (valor.startsWith('"')) valor = String(JSON.parse(valor) || "").trim();
+      if (!valor) return "";
+      return /^Bearer\s+\S+/i.test(valor) ? valor : `Bearer ${valor}`;
+    } catch {
+      return "";
+    }
+  }
+
+  function tokenAtual() {
+    const token = tokenDoSite() || sessao.authorization;
+    return token && token !== sessao.recusado ? token : "";
+  }
+
+  const esperar = (ms) => new Promise((pronto) => setTimeout(pronto, ms));
 
   function lembrar(nome, valor) {
     const n = String(nome || "").toLowerCase();
@@ -189,32 +217,43 @@
 
   // -- consultas da Sentinela (a pedido da ponte) -----------------------------
 
+  function chamar(pedido, token) {
+    return fetchOriginal.call(window, location.origin + pedido.caminho, {
+      method: pedido.metodo,
+      credentials: "same-origin",
+      headers: {
+        accept: "application/json, text/plain, */*",
+        authorization: token,
+        "x-device-platform": "web",
+        "x-version-number": sessao.versao || "6.4.4",
+        "bloqueio-desabilitado": "true",
+      },
+    });
+  }
+
   async function executar(pedido) {
     const permitido = PERMITIDO.find(
       (p) => p.metodo === pedido.metodo && p.padrao.test(pedido.caminho),
     );
     if (!permitido)
       return { status: 0, erro: "endereço fora da lista permitida" };
-    if (!sessao.authorization) return { status: 0, erro: "sem_sessao" };
-    const resposta = await fetchOriginal.call(
-      window,
-      location.origin + pedido.caminho,
-      {
-        method: pedido.metodo,
-        credentials: "same-origin",
-        headers: {
-          accept: "application/json, text/plain, */*",
-          authorization: sessao.authorization,
-          "x-device-platform": "web",
-          "x-version-number": sessao.versao || "6.4.4",
-          "bloqueio-desabilitado": "true",
-        },
-      },
-    );
+    let token = tokenAtual();
+    if (!token) return { status: 0, erro: "sem_sessao" };
+    let resposta = await chamar(pedido, token);
+    if (resposta.status === 401) {
+      // 0.2.8 (GEN-45): o token venceu. Dá tempo para o site renovar e, se
+      // ele trocou o token, tenta 1 vez. Nunca chama o retoken.
+      await esperar(ESPERA_RENOVACAO_MS);
+      const novo = tokenAtual();
+      if (novo && novo !== token) {
+        token = novo;
+        resposta = await chamar(pedido, token);
+      }
+    }
     if (resposta.status === 401) {
       // Quem avisa é o fundo, uma vez só (0.2.6, GEN-45): antes a página e o
       // fundo avisavam o mesmo 401.
-      sessao.authorization = "";
+      sessao.recusado = token;
     }
     const texto = await resposta.text().catch(() => "");
     let dados = null;
