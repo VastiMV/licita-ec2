@@ -25,6 +25,8 @@ class Notificacao(models.Model):
         MENSAGEM = "mensagem", "Mensagem do Compras.gov"
         # A própria Sentinela parada ou sem ler (GEN-73, 14/11/2026).
         SENTINELA = "sentinela", "Sentinela sem ler"
+        # Empenho, liquidação ou pagamento do Portal da Transparência (GEN-97, 18/11/2026).
+        FINANCEIRO = "financeiro", "Empenho, liquidação ou pagamento"
 
     class Nivel(models.TextChoices):
         ALERTA = "alerta", "Alerta"

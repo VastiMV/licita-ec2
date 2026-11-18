@@ -296,7 +296,7 @@ de semana não tem movimentação). Agendadas por migração (`0007`, `0009` e
 | Hora | O quê | Arquivo | Rodar à mão |
 |---|---|---|---|
 | 8h | **PNCP**: itens homologados para os CNPJs ativos em Cadastros › Empresas e itens de ata. Cria a salva se a vitória não estava no Licita | `sincronia_pncp.py` | `manage.py sincronizar_pncp` |
-| 8h10 | **Portal da Transparência**: empenho, liquidação e pagamento (federal), ano atual e anterior. Liga à licitação pelo **número do processo** (só dígitos, também quando vem na observação) ou, sem processo, pela **UG = UASG** quando há uma única licitação ganha naquela unidade | `sincronia_transparencia.py` | `manage.py sincronizar_transparencia` |
+| 8h10 | **Portal da Transparência**: empenho, liquidação e pagamento (federal), ano atual e anterior. Liga à licitação pelo **número do processo** (também quando vem na observação): iguais pelos dígitos **ou** pedaço a pedaço sem os zeros à esquerda (`00054-00061297/2026-38` = `054-00061297/2026-38`). Sem processo, pela **UG = UASG** quando há uma única licitação ganha naquela unidade. **Avisa no sino e no Telegram** cada documento novo: ligado ou "sem licitação" | `sincronia_transparencia.py` | `manage.py sincronizar_transparencia` |
 
 - As duas são **idempotentes**: rodar de novo atualiza, não duplica.
 - Uma ligação feita à mão nunca é desfeita pela sincronia.
@@ -308,6 +308,30 @@ de semana não tem movimentação). Agendadas por migração (`0007`, `0009` e
   sincronia só avisa no log e não roda.
 - **Estados e prefeituras** não estão no Portal da Transparência federal:
   para eles empenho, liquidação e pagamento são lançados à mão.
+  **Exceção: PMDF, PCDF e CBMDF estão lá.** Quem paga é o **Fundo
+  Constitucional do DF** (federal, roda no SIAFI), com UG própria (ex.:
+  170485), diferente da UASG da compra (ex.: 926670). A UG nunca bate; quem
+  liga é o número do processo.
+
+### Número do processo e órgão pagador (GEN-97, 18/11/2026)
+
+Caso real: **PMDF, Pregão 56/2026**. O empenho chegou por e-mail; o Licita já
+o tinha desde 16/11, mas ficou "sem licitação" e ninguém viu.
+
+- **Processo não tem tamanho fixo** (não é como o CNPJ): cada órgão e cada
+  sistema tem o seu formato, e o SIAFI corta zeros à esquerda que o PNCP
+  mantém. O PNCP trouxe `00054-00061297/2026-38`; o Portal,
+  `054-00061297/2026-38`. Regra: iguais pelos dígitos **ou**, com símbolos
+  (`-` `/` `.`) nos dois, pedaço a pedaço sem os zeros à esquerda. Um dígito
+  diferente não liga.
+- **Aviso** (decisão da operação): documento novo que **ligou** → aviso
+  "Empenho · Pregão 56/2026" (informação), com valor e órgão pagador.
+  **Não ligou** → aviso "Empenho sem licitação · 2026NE…" (aviso), com o
+  processo, para ligar à mão. Um "sem licitação" que depois liga sozinho
+  avisa de novo; ligado à mão, não. Vale para empenho, liquidação e
+  pagamento. Tipo `financeiro` no sino; vai ao Telegram como todos.
+- **Órgão pagador**: campo `orgao_pagador` nos documentos financeiros da API
+  ("UG (UG código) · órgão"), lido dos dados do Portal. Lançado à mão: vazio.
 - **Contratos no PNCP** ainda não são lidos: o módulo de contratos da API
   estava instável (Comunicado nº 18/26) e não havia contrato real para
   conferir o formato. Contrato é lançado à mão.
@@ -322,7 +346,7 @@ Todas em `/api/licitacoes/`, exigem login.
 | `GET/POST salvas/<id>/documentos-financeiros/` | lista / lança à mão (contrato, OF, empenho de estado ou prefeitura…) |
 | `GET/POST salvas/<id>/entregas/` | lista / lança entrega |
 | `DELETE documentos-financeiros/<id>/`, `DELETE entregas/<id>/` | apaga — **só o que é manual**; o que veio de sincronia não se apaga |
-| `GET documentos-financeiros/sem-licitacao/` | o que o Portal trouxe e não deu para ligar |
+| `GET documentos-financeiros/sem-licitacao/` | o que o Portal trouxe e não deu para ligar (cada documento traz `orgao_pagador`) |
 | `POST documentos-financeiros/<id>/ligar/` | liga a uma licitação (e item, opcional) |
 | `GET encerradas/`, `GET descartadas/` | as listas de saída, com filtros |
 | `GET/POST salvas/<id>/descartar/` | a lixeira: a pergunta (preço lançado) / descartar |
@@ -421,9 +445,11 @@ A Sentinela (0.2.4) e os avisos no Telegram **já existem** (ver
 1. ~~Fim da vigia por contrato~~ — **feito em 18/11/2026 (GEN-46)** pelo
    Contratos.gov.br, para os órgãos que o usam. Falta o PNCP e o Portal da
    Transparência para os outros órgãos (cartão novo).
-2. **Telegram para empenho, pagamento e cobrança** (hoje: os avisos do sino).
+2. **Telegram para cobrança.** Empenho, liquidação e pagamento do Portal da
+   Transparência **já avisam** no sino e no Telegram (GEN-97, 18/11/2026).
 3. **Telas de lançamento manual** — a API existe (contrato, OF, entrega,
-   ligar documento "sem licitação"); falta o formulário na tela.
+   ligar documento "sem licitação"); falta o formulário na tela. Inclui
+   mostrar o **órgão pagador** de cada documento (**GEN-98**).
 4. **Prazo de validade da proposta** (Lei 14.133, art. 90, §3º) e lembrete
    de cobrança por dias parados.
 5. **Contratos pelo PNCP**, quando o módulo estabilizar e houver um contrato
@@ -562,7 +588,8 @@ Disputar › Aguardando sessão. Decisões da operação:
   licitação volta para a Torre (rede de segurança).
 - **O sino** (`apps/notificacoes`): convocação, pedido de desconto, recurso,
   data alterada, compra suspensa/revogada, fora dos favoritos, resultado de
-  item perdido/acompanhado e relatório completo. Uma notificação por fato
+  item perdido/acompanhado, relatório completo e, desde 18/11/2026 (GEN-97),
+  empenho/liquidação/pagamento do Portal da Transparência. Uma notificação por fato
   (`chave`); cada pessoa marca as suas como lidas.
 - **Conferência diária** (Celery Beat, seg–sex 7h45): `conferencia_diaria.py`.
 

@@ -19,6 +19,7 @@ from rest_framework.test import APITestCase
 from apps.accounts.models import User
 from apps.empresas.models import Empresa
 from apps.integracoes.clients.transparencia import TransparenciaError
+from apps.notificacoes.models import Notificacao
 from apps.tenants.atual import tenant_atual
 
 from . import sincronia_transparencia
@@ -109,6 +110,36 @@ class SincroniaTransparenciaTests(TestCase):
         self.rodar(ClienteFalso({1: [empenho]}))
 
         self.assertEqual(DocumentoFinanceiro.objects.get().oportunidade, self.ufvjm)
+
+    def test_processo_com_zeros_a_esquerda_diferentes_liga(self):
+        """GEN-97 (18/11/2026), PMDF 56/2026: o PNCP traz "00054-00061297/2026-38"
+        e o Portal "054-00061297/2026-38". Quem empenha é o FCDF (UG 170485),
+        não a UASG da compra (926670): só o processo liga."""
+
+        pmdf = self.ganha("926670", "91", "00054-00061297/2026-38")
+        empenho = documento("Empenho", "170485000012026NE003522", "15.500,00", "170485", "054-00061297/2026-38")
+
+        self.rodar(ClienteFalso({1: [empenho]}))
+
+        doc = DocumentoFinanceiro.objects.get()
+        self.assertEqual(doc.oportunidade, pmdf)
+        self.assertEqual(doc.dados["ligado_por"], "processo")
+        self.assertEqual(self.etapa(pmdf), "empenho")
+
+    def test_zero_a_mais_no_meio_do_processo_ainda_liga(self):
+        empenho = documento("Empenho", "193099192082026NE000104", "10,00", "000000", "2001.15536/2024-21")
+
+        self.rodar(ClienteFalso({1: [empenho]}))
+
+        self.assertEqual(DocumentoFinanceiro.objects.get().oportunidade, self.ibama)
+
+    def test_processo_diferente_so_no_digito_nao_liga(self):
+        self.ganha("926670", "91", "00054-00061297/2026-38")
+        empenho = documento("Empenho", "170485000012026NE003523", "10,00", "170485", "054-00061297/2026-39")
+
+        self.rodar(ClienteFalso({1: [empenho]}))
+
+        self.assertIsNone(DocumentoFinanceiro.objects.get().oportunidade)
 
     def test_sem_processo_liga_pela_unidade_quando_ha_uma_licitacao_so(self):
         empenho = documento("Empenho", "193099192082026NE000102", "1.000,00", "193099")
@@ -237,3 +268,101 @@ class DocumentosSemLicitacaoTests(APITestCase):
         )
 
         self.assertEqual(resposta.status_code, 400)
+
+    def test_mostra_o_orgao_pagador(self):
+        """GEN-97 (18/11/2026): quem paga pode não ser a UASG da compra (PMDF:
+        o FCDF). O documento diz quem é."""
+
+        self.solto.dados = {"ug": "DEPARTAMENTO DE SAUDE", "codigo_ug": "170485", "orgao": "Fundo Constitucional"}
+        self.solto.save()
+
+        doc = self.client.get("/api/licitacoes/documentos-financeiros/sem-licitacao/").data[0]
+
+        self.assertEqual(doc["orgao_pagador"], "DEPARTAMENTO DE SAUDE (UG 170485) · Fundo Constitucional")
+
+    def test_lancado_a_mao_nao_tem_orgao_pagador(self):
+        self.solto.dados = {}
+        self.solto.save()
+
+        doc = self.client.get("/api/licitacoes/documentos-financeiros/sem-licitacao/").data[0]
+
+        self.assertIsNone(doc["orgao_pagador"])
+
+
+class AvisoDoDocumentoFinanceiroTests(TestCase):
+    """GEN-97 (18/11/2026): o empenho da PMDF 56/2026 chegou por e-mail e o
+    Licita, que já o tinha, ficou calado. Decisão da operação: avisar no sino
+    (e no Telegram) quando o documento liga sozinho **e** quando não liga."""
+
+    def setUp(self):
+        Empresa.objects.create(tenant=tenant_atual(), nome="Inside Solutions Ltda", cnpj=CNPJ)
+        self.pmdf = OportunidadeSalva.objects.create(
+            cnpj_orgao="08942610000116",
+            ano_compra="2026",
+            sequencial_compra="91",
+            uasg="926670",
+            numero_processo="00054-00061297/2026-38",
+            plataforma_id="compras_gov",
+            data_encerramento_proposta=dt.date(2026, 9, 22),
+        )
+        ItemParticipado.objects.create(
+            oportunidade=self.pmdf, numero_item="22", vencedor_e_a_empresa=True, fonte=Fonte.PNCP
+        )
+
+    def empenho(self, processo="054-00061297/2026-38"):
+        registro = documento("Empenho", "170485000012026NE003522", "15.500,00", "170485", processo)
+        registro |= {"ug": "DEPARTAMENTO DE SAUDE E ASSIST. DE PESSOAL", "orgao": "Fundo Constitucional do DF"}
+        return registro
+
+    def rodar(self, *registros):
+        return sincronizar_transparencia(hoje=HOJE, cliente=ClienteFalso({1: list(registros)}))
+
+    def test_ligou_sozinho_avisa_com_a_licitacao(self):
+        self.rodar(self.empenho())
+
+        aviso = Notificacao.objects.get()
+        self.assertEqual(aviso.tipo, "financeiro")
+        self.assertEqual(aviso.nivel, "info")
+        self.assertEqual(aviso.oportunidade, self.pmdf)
+        self.assertIn("Empenho", aviso.titulo)
+        self.assertIn("R$ 15.500,00", aviso.texto)
+        self.assertIn("Fundo Constitucional do DF", aviso.texto)
+
+    def test_nao_ligou_avisa_para_ligar_a_mao(self):
+        self.rodar(self.empenho(processo="999-99999999/2026-99"))
+
+        aviso = Notificacao.objects.get()
+        self.assertEqual(aviso.tipo, "financeiro")
+        self.assertEqual(aviso.nivel, "aviso")
+        self.assertIsNone(aviso.oportunidade)
+        self.assertIn("sem licitação", aviso.titulo)
+        self.assertIn("999-99999999/2026-99", aviso.texto)
+
+    def test_rodar_de_novo_nao_repete_o_aviso(self):
+        self.rodar(self.empenho())
+        self.rodar(self.empenho())
+
+        self.assertEqual(Notificacao.objects.count(), 1)
+
+    def test_sem_licitacao_que_depois_liga_sozinho_avisa_de_novo(self):
+        self.pmdf.numero_processo = ""
+        self.pmdf.save()
+        self.rodar(self.empenho())
+        self.pmdf.numero_processo = "00054-00061297/2026-38"
+        self.pmdf.save()
+
+        self.rodar(self.empenho())
+
+        self.assertEqual(
+            sorted(Notificacao.objects.values_list("nivel", flat=True)), ["aviso", "info"]
+        )
+
+    def test_ligado_a_mao_nao_avisa_de_novo(self):
+        self.rodar(self.empenho(processo="999-99999999/2026-99"))
+        doc = DocumentoFinanceiro.objects.get()
+        doc.oportunidade = self.pmdf
+        doc.save()
+
+        self.rodar(self.empenho(processo="999-99999999/2026-99"))
+
+        self.assertEqual(Notificacao.objects.count(), 1)

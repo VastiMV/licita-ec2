@@ -474,6 +474,7 @@ class DocumentoFinanceiroSerializer(_LancamentoComItemSerializer):
 
     tipo_rotulo = serializers.CharField(source="get_tipo_display", read_only=True)
     fonte_rotulo = serializers.CharField(source="get_fonte_display", read_only=True)
+    orgao_pagador = serializers.CharField(read_only=True, allow_null=True)
     valor = serializers.DecimalField(max_digits=18, decimal_places=2, min_value=0, required=False, allow_null=True)
 
     class Meta:
@@ -489,6 +490,7 @@ class DocumentoFinanceiroSerializer(_LancamentoComItemSerializer):
             "item_numero",
             "fonte",
             "fonte_rotulo",
+            "orgao_pagador",
             "criado_em",
         ]
         read_only_fields = ["fonte", "criado_em"]

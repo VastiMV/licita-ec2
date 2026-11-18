@@ -7,13 +7,21 @@ fases). Cada um vira `DocumentoFinanceiro` com fonte "transparencia" e é
 **ligado à licitação**, da regra mais segura para a menos segura:
 
 1. **processo** — o número do processo do documento (ou citado na
-   observação, como costuma vir no pagamento) é o da licitação, comparando
-   só os dígitos ("02001.015536/2024-21" = "02001015536202421");
+   observação, como costuma vir no pagamento) é o da licitação. Iguais
+   quando os dígitos são os mesmos ("02001.015536/2024-21" =
+   "02001015536202421") **ou** quando cada pedaço entre os símbolos é o mesmo
+   sem os zeros à esquerda ("00054-00061297/2026-38" do PNCP =
+   "054-00061297/2026-38" do Portal — PMDF 56/2026, GEN-97, 18/11/2026);
 2. **unidade** — a UG do documento é a UASG de **uma única** licitação ganha.
 
 Sem ligação, o documento fica guardado "sem licitação" para alguém escolher
 (`GET documentos-financeiros/sem-licitacao/`). Uma ligação feita à mão nunca é
 desfeita pela sincronia.
+
+Cada documento novo vira **aviso no sino** (e no Telegram): "ligou sozinho"
+com a licitação, ou "sem licitação" para ligar à mão; e de novo quando um
+"sem licitação" passa a ligar sozinho (GEN-97, 18/11/2026). O aviso diz o
+**órgão pagador**, que pode não ser a UASG da compra (PMDF: o FCDF).
 
 Estados e prefeituras não estão no Portal (cada um tem o seu): para eles o
 empenho continua manual. Agendada todo dia às 8h10, depois da do PNCP
@@ -40,9 +48,12 @@ from apps.integracoes.clients.transparencia import (
     data_brasileira,
     valor_brasileiro,
 )
+from apps.notificacoes.servico import avisar
+from apps.propostas.documento import brl
 from config.settings.environment import env
 
 from .models import DocumentoFinanceiro, Fonte, ItemParticipado, OportunidadeSalva
+from .torre import rotulo_da_compra
 
 logger = logging.getLogger(__name__)
 
@@ -58,12 +69,34 @@ def _digitos(texto: str | None) -> str:
     return re.sub(r"\D", "", texto or "")
 
 
+def _pedacos(texto: str | None) -> list[str]:
+    """"00054-00061297/2026-38" → ["54", "61297", "2026", "38"]."""
+
+    return [pedaco.lstrip("0") or "0" for pedaco in re.findall(r"\d+", texto or "")]
+
+
+def mesmo_processo(um: str | None, outro: str | None) -> bool:
+    """O número do processo não tem tamanho fixo (cada órgão e cada sistema
+    tem o seu) e o SIAFI corta zeros à esquerda que o PNCP mantém. Iguais pelos
+    dígitos ou, havendo símbolos nos dois, pedaço a pedaço sem esses zeros."""
+
+    digitos_um, digitos_outro = _digitos(um), _digitos(outro)
+    if not digitos_um or not digitos_outro:
+        return False
+    if digitos_um == digitos_outro:
+        return True
+    pedacos_um = _pedacos(um)
+    return len(pedacos_um) > 1 and pedacos_um == _pedacos(outro)
+
+
 def _processo_do_documento(registro: dict) -> str:
-    processo = _digitos(registro.get("numeroProcesso"))
-    if processo:
+    """O processo como veio (com os símbolos): eles separam os pedaços."""
+
+    processo = (registro.get("numeroProcesso") or "").strip()
+    if _digitos(processo):
         return processo
     achado = PROCESSO_NA_OBSERVACAO.search(registro.get("observacao") or "")
-    return _digitos(achado.group(1)) if achado else ""
+    return achado.group(1).strip(" .-/") if achado else ""
 
 
 def _licitacoes_ganhas() -> list[OportunidadeSalva]:
@@ -79,7 +112,7 @@ def _ligar(registro: dict, candidatas: list[OportunidadeSalva]) -> tuple[Oportun
     processo = _processo_do_documento(registro)
     if processo:
         for salva in candidatas:
-            if _digitos(salva.numero_processo) == processo:
+            if mesmo_processo(salva.numero_processo, processo):
                 return salva, "processo"
     mesma_unidade = [s for s in candidatas if s.uasg and s.uasg == str(registro.get("codigoUg") or "")]
     if len(mesma_unidade) == 1:
@@ -107,7 +140,7 @@ def _gravar(registro: dict, fase: int, candidatas: list[OportunidadeSalva], resu
         "numero_processo": registro.get("numeroProcesso"),
         "ligado_por": ligado_por,
     }
-    DocumentoFinanceiro.objects.update_or_create(
+    doc, novo = DocumentoFinanceiro.objects.update_or_create(
         fonte=Fonte.TRANSPARENCIA,
         tipo=TIPO_DA_FASE[fase],
         numero=numero,
@@ -120,6 +153,39 @@ def _gravar(registro: dict, fase: int, candidatas: list[OportunidadeSalva], resu
     )
     resumo["documentos"] += 1
     resumo["ligados" if salva else "sem_licitacao"] += 1
+    if novo or (salva and not (existente and existente.oportunidade_id)):
+        _avisar(doc)
+
+
+def _avisar(doc: DocumentoFinanceiro) -> None:
+    """Um aviso por documento e por situação ("ligado", "sem licitação"): a
+    `chave` impede repetir a cada rodada."""
+
+    numero = doc.dados.get("documento_resumido") or doc.numero
+    partes = [f"{doc.get_tipo_display()} {numero}", brl(doc.valor)]
+    if doc.orgao_pagador:
+        partes.append(f"pago por: {doc.orgao_pagador}")
+    if doc.oportunidade_id:
+        avisar(
+            "financeiro",
+            f"{doc.get_tipo_display()} · {rotulo_da_compra(doc.oportunidade)}",
+            texto=" · ".join(partes) + ". Veio do Portal da Transparência.",
+            oportunidade=doc.oportunidade,
+            nivel="info",
+            chave=f"financeiro:{doc.pk}:ligado",
+        )
+        return
+    processo = doc.dados.get("numero_processo") or "sem número"
+    avisar(
+        "financeiro",
+        f"{doc.get_tipo_display()} sem licitação · {numero}",
+        texto=(
+            " · ".join(partes) + f" · processo {processo}. Veio do Portal da Transparência e o "
+            "Licita não achou a licitação: ligue à mão."
+        ),
+        nivel="aviso",
+        chave=f"financeiro:{doc.pk}:sem_licitacao",
+    )
 
 
 def sincronizar_transparencia(hoje: dt.date | None = None, cliente=None) -> dict:
