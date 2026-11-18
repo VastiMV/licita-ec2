@@ -11,7 +11,9 @@ export type TipoNotificacao =
   | 'relatorio'
   | 'mensagem'
   /** A própria Sentinela parada ou sem ler (GEN-73, 14/11/2026). */
-  | 'sentinela';
+  | 'sentinela'
+  /** Empenho, liquidação ou pagamento do Portal da Transparência (GEN-97, 18/11/2026). */
+  | 'financeiro';
 
 export interface Notificacao {
   readonly id: number;

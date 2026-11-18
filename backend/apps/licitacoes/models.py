@@ -734,6 +734,17 @@ class DocumentoFinanceiro(models.Model):
     def __str__(self) -> str:
         return f"{self.get_tipo_display()} {self.numero}".strip()
 
+    @property
+    def orgao_pagador(self) -> str | None:
+        """Quem empenhou ou pagou, como o Portal da Transparência diz. Pode
+        não ser a UASG da compra: na PMDF, PCDF e CBMDF quem paga é o Fundo
+        Constitucional do DF (GEN-97, 18/11/2026). Lançado à mão: nenhum."""
+
+        ug, codigo, orgao = (self.dados.get(chave) for chave in ("ug", "codigo_ug", "orgao"))
+        unidade = f"{ug} (UG {codigo})" if ug and codigo else (ug or (f"UG {codigo}" if codigo else ""))
+        texto = " · ".join(parte for parte in (unidade, orgao) if parte)
+        return texto or None
+
 
 class Entrega(models.Model):
     """Uma entrega feita ao órgão. Lançada à mão: nenhum sistema público
