@@ -288,6 +288,19 @@ def _ler_fase_recursal(dados, params, codigo, item, sessao, **_) -> dict:
     return {"itens": 1, "recursos": len(recursos)}
 
 
+def _diligencia_aberta(diligencia) -> bool:
+    """GEN-76 (decisão D2, 18/11/2026): pela lista oficial
+    (`SituacaoDiligenciaEnum`: A em andamento, E encerrada, C cancelada), só
+    `A` está aberta. Antes, a `C` contava como aberta e acendia o vermelho.
+
+    O formato real de uma diligência ainda não foi visto (só listas vazias).
+    Sem o campo `situacao`, fica do lado seguro: conta como aberta, para não
+    esconder um alerta se o campo tiver outro nome."""
+    if not isinstance(diligencia, dict) or not diligencia.get("situacao"):
+        return True
+    return str(diligencia["situacao"]).upper() == "A"
+
+
 def _ler_diligencias(dados, params, codigo, item, cnpj, **_) -> dict:
     if cnpj not in _cnpjs_da_empresa():
         return {"itens": 0, "motivo": "diligência de outro CNPJ"}
@@ -297,9 +310,7 @@ def _ler_diligencias(dados, params, codigo, item, cnpj, **_) -> dict:
     registro = salva and salva.itens_participados.filter(numero_item=str(item)).first()
     if not registro:
         return {"itens": 0, "motivo": "item desconhecido"}
-    # O formato de uma diligência ainda não foi visto (só listas vazias):
-    # conta as que não vierem marcadas como encerradas.
-    abertas = [d for d in dados if not (isinstance(d, dict) and str(d.get("situacao", "")).upper() in {"E", "F", "ENCERRADA", "FINALIZADA"})]
+    abertas = [d for d in dados if _diligencia_aberta(d)]
     registro.diligencias_abertas = min(len(abertas), 32767)
     registro.save(update_fields=["diligencias_abertas", "atualizado_em"])
     return {"itens": 1, "diligencias": len(abertas)}

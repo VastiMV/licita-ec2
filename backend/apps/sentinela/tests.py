@@ -439,6 +439,24 @@ class LixeiraERecursoTests(APITestCase):
         textos = [e["texto"] for e in cartao_na_torre(self.pmdf)["etiquetas"]]
         self.assertIn("diligência · item 6", textos)
 
+    def test_so_diligencia_em_andamento_conta_como_aberta(self):
+        # GEN-76 (decisão D2, 18/11/2026): pela lista oficial
+        # (SituacaoDiligenciaEnum), só `A` está aberta; `E` e `C` não.
+        captura = exemplo("diligencias_56_item_6")
+        receber(captura["url"], [{"id": 1, "situacao": "C"}, {"id": 2, "situacao": "E"}])
+
+        self.assertEqual(self.pmdf.itens_participados.get(numero_item="6").diligencias_abertas, 0)
+        textos = [e["texto"] for e in cartao_na_torre(self.pmdf)["etiquetas"]]
+        self.assertNotIn("diligência · item 6", textos)
+
+    def test_diligencia_sem_situacao_conta_como_aberta(self):
+        # GEN-76: o formato real ainda não foi visto. Sem o campo `situacao`,
+        # fica do lado seguro: conta como aberta para não esconder o alerta.
+        captura = exemplo("diligencias_56_item_6")
+        receber(captura["url"], [{"id": 1}, {"id": 2, "situacao": "C"}])
+
+        self.assertEqual(self.pmdf.itens_participados.get(numero_item="6").diligencias_abertas, 1)
+
     # -- antes da sessão -------------------------------------------------------
 
     def test_antes_da_sessao_le_o_preco_lancado(self):
