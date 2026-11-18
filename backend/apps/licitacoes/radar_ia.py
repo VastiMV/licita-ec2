@@ -63,8 +63,13 @@ class Avaliacao(BaseModel):
     motivo: str
 
 
+_chave_recusada = False  # nesta execução (rodada/comando), não no banco
+
+
 def ligada() -> bool:
-    return bool(env.anthropic_api_key)
+    """Com chave, e sem a Anthropic ter recusado a chave nesta execução."""
+
+    return bool(env.anthropic_api_key) and not _chave_recusada
 
 
 def _parecidos(termo: str, textos: list[str], limite: int) -> list[str]:
@@ -144,8 +149,16 @@ def avaliar(termo: str, objeto: str, itens: list[dict], cliente=None) -> Avaliac
             messages=[{"role": "user", "content": _pergunta(termo, objeto, itens)}],
             output_format=Avaliacao,
         )
-    except anthropic.APIError:
-        logger.warning('Radar IA: falhou ao julgar "%s"', objeto[:80], exc_info=True)
+    except anthropic.AuthenticationError:
+        # Chave errada (teste no servidor, 17/11/2026: 100 erros iguais na
+        # tela). Para de perguntar nesta execução; a rodada segue sem IA para
+        # as próximas e não guarda nada que dependia dela.
+        global _chave_recusada
+        _chave_recusada = True
+        logger.error("Radar IA: a Anthropic recusou a chave (ANTHROPIC_API_KEY inválida). IA parada nesta rodada.")
+        return None
+    except anthropic.APIError as exc:
+        logger.warning('Radar IA: falhou ao julgar "%s": %s', objeto[:80], exc)
         return None
     if resposta.stop_reason == "refusal" or resposta.parsed_output is None:
         logger.warning('Radar IA: sem resposta (%s) para "%s"', resposta.stop_reason, objeto[:80])

@@ -538,3 +538,35 @@ class IALigadaSoComChaveTests(APITestCase):
             self.assertFalse(ligada())
         with mock.patch("apps.licitacoes.radar_ia.env", SimpleNamespace(anthropic_api_key="chave-de-teste")):
             self.assertTrue(ligada())
+
+
+
+class ChaveRecusadaTests(IADoRadarTests):
+    """Teste no servidor (17/11/2026): com a chave errada, o Radar fez 100
+    perguntas iguais. Agora para na primeira e nada entra sem nota."""
+
+    def test_chave_recusada_para_na_primeira(self):
+        import anthropic
+        import httpx
+
+        from . import radar_ia
+
+        class IARecusa(FakeIA):
+            def parse(self, **kw):
+                self.perguntas.append(kw)
+                resposta = httpx.Response(401, request=httpx.Request("POST", "https://x"))
+                raise anthropic.AuthenticationError("invalid x-api-key", response=resposta, body=None)
+
+        ia = IARecusa()
+        self.patches[0].stop()
+        self.patches = []
+        from types import SimpleNamespace
+        from unittest import mock
+
+        with mock.patch("apps.licitacoes.radar_ia.env", SimpleNamespace(anthropic_api_key="errada")):
+            resumo = self.rodar_com_ia(ia)
+        radar_ia._chave_recusada = False
+
+        self.assertEqual(len(ia.perguntas), 1)
+        self.assertEqual(resumo["ia_falhou"], 2)
+        self.assertFalse(SugestaoRadar.objects.exists())

@@ -273,6 +273,7 @@ def rodar(hoje: dt.date | None = None, pncp: PncpClient | None = None) -> dict[s
         if proprio:
             cliente.close()
         return resumo
+    ia_no_inicio = radar_ia.ligada()
     conhecidas = _ja_conhecidas()
     itens_da_compra: dict[tuple[str, str, str], list[dict] | None] = {}
     try:
@@ -325,6 +326,9 @@ def rodar(hoje: dt.date | None = None, pncp: PncpClient | None = None) -> dict[s
                         continue  # outro termo ainda pode casar com esta compra
                 objeto = primeiro.get("contratacao_objeto") or ""
                 nota = None
+                if ia_no_inicio and not radar_ia.ligada():
+                    resumo["ia_falhou"] += 1
+                    continue  # a chave foi recusada nesta rodada: sem nota, não entra
                 if radar_ia.ligada() and brutos:
                     avaliacao = radar_ia.avaliar(termo, objeto, [i for i in itens if item_casa(termo, i)])
                     if avaliacao is None:
