@@ -451,7 +451,11 @@ class FakeIA:
 
             raise anthropic.APIConnectionError(request=httpx.Request("POST", "https://x"))
         nota = next((n for palavra, n in self.notas.items() if palavra in pergunta), 5)
-        return SimpleNamespace(stop_reason="end_turn", parsed_output=Avaliacao(nota=nota, motivo="teste"))
+        return SimpleNamespace(
+            stop_reason="end_turn",
+            parsed_output=Avaliacao(nota=nota, motivo="teste"),
+            usage=SimpleNamespace(input_tokens=2000, output_tokens=500),
+        )
 
 
 class IADoRadarTests(APITestCase):
@@ -599,3 +603,15 @@ class ChaveRecusadaTests(IADoRadarTests):
         self.assertEqual(len(ia.perguntas), 1)
         self.assertFalse(SugestaoRadar.objects.exists())
         self.assertEqual(resumo["ia_falhou"], 2)
+
+
+
+class GastoDaIATests(IADoRadarTests):
+    def test_soma_tokens_e_dolares(self):
+        from . import radar_ia
+
+        radar_ia.gasto.update(perguntas=0, tokens_entrada=0, tokens_saida=0)
+        self.rodar_com_ia()
+
+        self.assertEqual(radar_ia.gasto, {"perguntas": 2, "tokens_entrada": 4000, "tokens_saida": 1000})
+        self.assertAlmostEqual(radar_ia.custo_dolares(), (4000 * 0.10 + 1000 * 0.50) / 1_000_000)

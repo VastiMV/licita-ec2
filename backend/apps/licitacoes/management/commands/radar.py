@@ -41,7 +41,16 @@ class Command(BaseCommand):
             estado_ia = "ligada"
         else:
             estado_ia = "DESLIGADA (sem ANTHROPIC_API_KEY)"
-        self.stdout.write(f"IA: {estado_ia}\n")
+        self.stdout.write(f"IA: {estado_ia}")
+        g = radar_ia.gasto
+        if g["perguntas"]:
+            custo = radar_ia.custo_dolares()
+            self.stdout.write(
+                f"Gasto da IA nesta rodada: {g['perguntas']} perguntas · {g['tokens_entrada']} tokens de entrada · "
+                f"{g['tokens_saida']} de saída · US$ {custo:.4f} · por mês (2 rodadas/dia): ~US$ {custo * 60:.2f}\n"
+            )
+        else:
+            self.stdout.write("")
         for s in novas.order_by("-nota_ia")[:60]:
             itens = [i for i in s.itens if (i or {}).get("descricao_resumida")]
             nota = "--" if s.nota_ia is None else f"{s.nota_ia:2d}"

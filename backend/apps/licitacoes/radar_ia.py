@@ -65,6 +65,17 @@ class Avaliacao(BaseModel):
 
 _chave_recusada = False  # nesta execução (rodada/comando), não no banco
 
+# Preço do Claude Haiku 5.5 (US$ por milhão de tokens, tabela de 03/11/2026).
+PRECO_ENTRADA = 0.10
+PRECO_SAIDA = 0.50
+# Gasto desta execução — o comando `radar` mostra (pergunta da operação,
+# 17/11/2026: "US$ 5 duram meses? CERTEZA?" — medir em vez de estimar).
+gasto = {"perguntas": 0, "tokens_entrada": 0, "tokens_saida": 0}
+
+
+def custo_dolares() -> float:
+    return (gasto["tokens_entrada"] * PRECO_ENTRADA + gasto["tokens_saida"] * PRECO_SAIDA) / 1_000_000
+
 
 def ligada() -> bool:
     """Com chave, e sem a Anthropic ter recusado a chave nesta execução."""
@@ -165,6 +176,11 @@ def avaliar(termo: str, objeto: str, itens: list[dict], cliente=None) -> Avaliac
     except anthropic.APIError as exc:
         logger.warning('Radar IA: falhou ao julgar "%s": %s', objeto[:80], exc)
         return None
+    uso = getattr(resposta, "usage", None)
+    if uso is not None:
+        gasto["perguntas"] += 1
+        gasto["tokens_entrada"] += getattr(uso, "input_tokens", 0) or 0
+        gasto["tokens_saida"] += getattr(uso, "output_tokens", 0) or 0
     if resposta.stop_reason == "refusal" or resposta.parsed_output is None:
         logger.warning('Radar IA: sem resposta (%s) para "%s"', resposta.stop_reason, objeto[:80])
         return None
