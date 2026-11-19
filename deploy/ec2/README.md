@@ -306,6 +306,20 @@ cd /opt/licita && sudo docker compose up -d --force-recreate backend worker beat
 
 Desligar: apague as duas linhas `TELEGRAM_` do `.env` e rode o último comando.
 
+**O botão "Testar Telegram" não prova que os avisos automáticos chegam.** Ele
+manda direto, sem passar pelo worker; os avisos do sino vão pelo worker
+(Celery). De 10/11 a 19/11/2026 o botão funcionava e nenhum aviso automático
+chegava, porque o worker não enxergava a tarefa (GEN-103). Para conferir os
+automáticos (só leitura):
+
+```bash
+cd /opt/licita && sudo docker compose logs --since 24h worker 2>&1 | grep -iE "enviar_telegram|Telegram:" | tail -15
+```
+
+- `succeeded ... 2` (um número igual à quantidade de chats): enviado;
+- `Received unregistered task`: o worker não conhece a tarefa (o defeito do GEN-103);
+- `Telegram: falha ao mandar`: o Telegram recusou (robô bloqueado, chat errado).
+
 ## Tempo de login
 
 O login vale **12 horas desde a entrada**, mesmo com uso (depois disso o
