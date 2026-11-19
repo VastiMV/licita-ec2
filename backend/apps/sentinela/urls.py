@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import CamadaView, CapturaView, EstadoView, PulsoView, RondaView, TarefasView, TarefaView
+from .views import AvisosView, CamadaView, CapturaView, EstadoView, PulsoView, RondaView, TarefasView, TarefaView
 
 urlpatterns = [
     path("pulso/", PulsoView.as_view(), name="sentinela-pulso"),
@@ -9,5 +9,6 @@ urlpatterns = [
     path("ronda/", RondaView.as_view(), name="sentinela-ronda"),
     path("estado/", EstadoView.as_view(), name="sentinela-estado"),
     path("tarefas/", TarefasView.as_view(), name="sentinela-tarefas"),
+    path("avisos/", AvisosView.as_view(), name="sentinela-avisos"),
     path("tarefas/<int:pk>/", TarefaView.as_view(), name="sentinela-tarefa"),
 ]

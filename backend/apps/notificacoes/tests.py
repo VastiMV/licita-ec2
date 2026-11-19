@@ -104,3 +104,48 @@ class TarefasRegistradasNoWorkerTests(TestCase):
             [sys.executable, "-c", script], cwd=raiz, capture_output=True, text=True, check=True
         ).stdout.split()
         self.assertEqual(sorted(nomes - set(saida)), [])
+
+
+class PrecisaDeVoceTests(TestCase):
+    """GEN-104 (19/11/2026): o sino em duas partes; Telegram e balão só
+    para "Precisa de você"."""
+
+    def setUp(self):
+        from rest_framework.test import APIClient
+
+        from apps.accounts.models import User
+
+        self.cliente = APIClient()
+        self.cliente.force_authenticate(User.objects.create_user(email="c@x.com", password="x"))
+
+    def test_sino_separa_as_duas_partes(self):
+        for i, tipo in enumerate(["mensagem", "convocacao", "desconto", "recurso", "situacao"]):
+            Notificacao.objects.create(tipo=tipo, titulo=tipo, chave=f"p{i}")
+        for i, tipo in enumerate(["resultado", "relatorio", "data", "favorito", "financeiro", "sentinela"]):
+            Notificacao.objects.create(tipo=tipo, titulo=tipo, chave=f"s{i}")
+
+        sino = self.cliente.get("/api/notificacoes/").json()
+
+        self.assertEqual(sorted(a["tipo"] for a in sino["precisa"]),
+                         ["convocacao", "desconto", "mensagem", "recurso", "situacao"])  # fmt: skip
+        self.assertEqual(len(sino["para_saber"]), 6)
+        self.assertEqual((sino["nao_lidas"], sino["para_saber_nao_lidas"]), (5, 6))
+
+    def test_muitos_resultados_nao_empurram_o_pregoeiro(self):
+        Notificacao.objects.create(tipo="mensagem", titulo="Pregoeiro", chave="m")
+        for i in range(60):
+            Notificacao.objects.create(tipo="resultado", titulo=f"r{i}", chave=f"r{i}")
+
+        sino = self.cliente.get("/api/notificacoes/").json()
+
+        self.assertEqual([a["titulo"] for a in sino["precisa"]], ["Pregoeiro"])
+        self.assertEqual(len(sino["para_saber"]), 40)
+
+    def test_telegram_so_para_o_que_precisa_de_voce(self):
+        with mock.patch.object(telegram, "env", LIGADO), mock.patch.object(telegram.enviar_telegram, "delay") as delay:
+            with self.captureOnCommitCallbacks(execute=True):
+                avisar("resultado", "Resultado", chave="r1")
+                avisar("favorito", "Fora dos favoritos", chave="f1")
+                avisar("mensagem", "Pregoeiro", chave="m1")
+
+        delay.assert_called_once_with(Notificacao.objects.get(chave="m1").pk)

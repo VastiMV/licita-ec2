@@ -11,6 +11,16 @@ from django.conf import settings
 from django.db import models
 
 
+# GEN-104 (19/11/2026): o que pede ação do Carlinhos. Fica em cima no sino,
+# conta no número vermelho, faz o sino tremer, o título da aba piscar, vai
+# para o Telegram e vira balão da Sentinela. O resto é "Para saber".
+PRECISA_DE_VOCE = frozenset({"mensagem", "convocacao", "desconto", "recurso", "situacao"})
+
+
+def precisa_de_voce(tipo: str) -> bool:
+    return tipo in PRECISA_DE_VOCE
+
+
 class Notificacao(models.Model):
     class Tipo(models.TextChoices):
         CONVOCACAO = "convocacao", "Convocação"

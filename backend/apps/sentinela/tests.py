@@ -305,6 +305,23 @@ class ApiTests(APITestCase):
     def post(self, rota, corpo, chave=CHAVE):
         return self.client.post(f"/api/sentinela/{rota}", corpo, format="json", HTTP_X_SENTINELA_CHAVE=chave)
 
+    def test_avisos_para_o_balao(self):
+        # GEN-104 (19/11/2026): só "Precisa de você"; na primeira vez, só o último id.
+        from apps.notificacoes.models import Notificacao
+
+        antiga = Notificacao.objects.create(tipo="convocacao", titulo="Antiga", chave="a")
+        primeira = self.client.get("/api/sentinela/avisos/", HTTP_X_SENTINELA_CHAVE=CHAVE).json()
+        self.assertEqual(primeira, {"ultimo": antiga.pk, "avisos": []})
+
+        Notificacao.objects.create(tipo="resultado", titulo="Resultado", chave="r")
+        nova = Notificacao.objects.create(tipo="mensagem", titulo="Pregoeiro", texto="Envie o anexo", chave="m")
+        depois = self.client.get(
+            f"/api/sentinela/avisos/?depois={antiga.pk}", HTTP_X_SENTINELA_CHAVE=CHAVE
+        ).json()
+        self.assertEqual(depois["avisos"], [{"id": nova.pk, "titulo": "Pregoeiro", "texto": "Envie o anexo"}])
+        self.assertEqual(depois["ultimo"], nova.pk)
+        self.assertEqual(self.client.get("/api/sentinela/avisos/").status_code, 403)
+
     def test_sem_chave_ou_com_chave_errada_e_recusado(self):
         self.assertEqual(self.client.post("/api/sentinela/pulso/", {}, format="json").status_code, 403)
         self.assertEqual(self.post("pulso/", {}, chave="errada").status_code, 403)

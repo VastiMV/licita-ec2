@@ -386,7 +386,10 @@ def _ler_propostas_do_item(dados, params, codigo, item, **_) -> dict:
     vencedora = proposta_vencedora(novas) if homologado else None
 
     if acompanhado:
-        decidiu = homologado and vencedora is not None and not acompanhado.decidido
+        # GEN-104 (2a, 19/11/2026): resultado que já tinha saído quando o
+        # Licita leu o item pela primeira vez é antigo — grava sem avisar.
+        primeira_leitura = acompanhado.propostas_lidas_em is None
+        decidiu = homologado and vencedora is not None and not acompanhado.decidido and not primeira_leitura
         acompanhado.propostas_lidas_em = timezone.now()
         acompanhado.decidido = acompanhado.decidido or (homologado and vencedora is not None)
         acompanhado.save(update_fields=["propostas_lidas_em", "decidido"])
@@ -413,21 +416,35 @@ def _ler_propostas_do_item(dados, params, codigo, item, **_) -> dict:
 
 
 def _avisar_resultado(salva: OportunidadeSalva, numero: str, vencedora: PropostaDoItem) -> None:
-    """O resultado saiu num item que ele perdeu ou só acompanha → sino."""
+    """O resultado saiu num item que ele perdeu ou só acompanha → sino.
+
+    **Um aviso por compra e por dia** (GEN-104, 19/11/2026): antes era um por
+    item, e 7 itens da Dispensa 12/2026 viraram 7 avisos de uma vez. Cada
+    item novo vira uma linha do mesmo aviso, que volta a aparecer como não
+    lido."""
 
     from apps.licitacoes.torre import rotulo_da_compra
+    from apps.notificacoes.models import Leitura, Notificacao
     from apps.notificacoes.servico import avisar
 
     valor = f"R$ {vencedora.valor_final:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".") if vencedora.valor_final is not None else ""
     partes = [p for p in (vencedora.nome, vencedora.marca, valor) if p]
-    avisar(
-        "resultado",
-        f"Resultado · {rotulo_da_compra(salva)} · item {numero}",
-        texto="Ganhou: " + " · ".join(partes),
-        oportunidade=salva,
-        nivel="info",
-        chave=f"resultado:{salva.pk}:{numero}",
-    )
+    linha = f"Item {numero}: " + " · ".join(partes)
+    rotulo = rotulo_da_compra(salva)
+    chave = f"resultado:{salva.pk}:{timezone.localdate():%Y%m%d}"
+    if avisar("resultado", f"Resultado · {rotulo} · item {numero}", texto=linha, oportunidade=salva, nivel="info", chave=chave):
+        return
+    aviso = Notificacao.objects.select_for_update().filter(chave=chave).first()
+    if aviso is None:
+        return
+    linhas = [l for l in aviso.texto.split("\n") if l]
+    if any(l.startswith(f"Item {numero}:") for l in linhas):
+        return
+    linhas.append(linha)
+    aviso.texto = "\n".join(linhas)[:4000]
+    aviso.titulo = f"Resultado · {rotulo} · {len(linhas)} itens"[:200]
+    aviso.save(update_fields=["texto", "titulo"])
+    Leitura.objects.filter(notificacao=aviso).delete()
 
 
 def _talvez_relatorio_completo(salva: OportunidadeSalva) -> None:
@@ -473,7 +490,8 @@ def _ler_favoritas(dados, params, **_) -> dict:
                 texto=f"{salva.orgao_nome}: está no Licita, mas não nos favoritos. Vai participar?",
                 oportunidade=salva,
                 nivel="aviso",
-                chave=f"favorito:{salva.pk}:{agora:%Y%m%d}",
+                # Uma vez por compra (GEN-104, 19/11/2026); antes, todo dia.
+                chave=f"favorito:{salva.pk}",
             )
         salva.favorita_no_compras = favorita
         salva.favorita_conferida_em = agora

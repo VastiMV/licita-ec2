@@ -1,7 +1,9 @@
 """API da Sentinela.
 
 A extensão usa a chave (`ChaveDaSentinela`): `pulso/`, `captura/`,
-`camada/<código>/` e `ronda/`. O Licita (usuário logado) usa `estado/`.
+`camada/<código>/`, `ronda/`, `tarefas/` e `avisos/` (GEN-104: os avisos
+"Precisa de você" para o balão do Windows). O Licita (usuário logado) usa
+`estado/`.
 """
 
 from __future__ import annotations
@@ -79,6 +81,29 @@ class TarefasView(_DaExtensao):
     def get(self, request):
         pendentes = Tarefa.objects.filter(estado=Tarefa.Estado.PENDENTE)[:20]
         return Response([{"id": t.pk, "tipo": t.tipo, "compra": t.compra} for t in pendentes])
+
+
+class AvisosView(_DaExtensao):
+    """`GET avisos/?depois=<id>` — os avisos "Precisa de você" novos, para o
+    balão do Windows e o som (GEN-104, 19/11/2026). Sem `depois` (primeira
+    vez, extensão recém-instalada): só devolve o último id, sem avisos, para
+    não soltar uma enxurrada de balões antigos."""
+
+    def get(self, request):
+        from apps.notificacoes.models import PRECISA_DE_VOCE, Notificacao
+
+        urgentes = Notificacao.objects.filter(tipo__in=PRECISA_DE_VOCE).order_by("-id")
+        ultimo = urgentes.values_list("id", flat=True).first() or 0
+        depois = request.query_params.get("depois", "")
+        if not depois.isdigit():
+            return Response({"ultimo": ultimo, "avisos": []})
+        novos = list(urgentes.filter(id__gt=int(depois))[:10])
+        return Response(
+            {
+                "ultimo": ultimo,
+                "avisos": [{"id": n.pk, "titulo": n.titulo, "texto": n.texto[:300]} for n in reversed(novos)],
+            }
+        )
 
 
 class TarefaView(_DaExtensao):

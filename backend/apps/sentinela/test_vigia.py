@@ -361,20 +361,54 @@ class AcompanhadaTests(_Base):
         ItemAcompanhado.objects.create(oportunidade=self.s, numero_item="2")
         self.captura = exemplo("propostas_cubatao_item_2")
 
-    def test_le_as_propostas_e_avisa_quando_sai_o_resultado(self):
+    def dados_sem_a_inside(self, homologado):
         dados = copy.deepcopy(self.captura["dados"])
         for p in dados[0]["propostasItem"]:
             if p["participante"]["identificacao"] == CNPJ:
                 p["participante"]["identificacao"] = "11111111000111"
-        dados[0]["homologado"] = True
+        dados[0]["homologado"] = homologado
+        return dados
 
-        receber(self.captura["url"], dados)
+    def test_le_as_propostas_e_avisa_quando_sai_o_resultado(self):
+        receber(self.captura["url"], self.dados_sem_a_inside(False))  # 1ª leitura: sem resultado
+        receber(self.captura["url"], self.dados_sem_a_inside(True))
 
         item = ItemAcompanhado.objects.get()
         self.assertTrue(item.decidido)
         self.assertEqual(item.propostas.count(), 31)
         self.assertTrue(Notificacao.objects.filter(tipo="resultado", texto__contains="VL-LOJA").exists())
         self.assertTrue(Notificacao.objects.filter(tipo="relatorio").exists())
+
+    def test_varios_itens_viram_um_aviso_por_compra(self):
+        # GEN-104 (19/11/2026): a Dispensa 12/2026 deu 7 avisos de uma vez.
+        ItemAcompanhado.objects.create(oportunidade=self.s, numero_item="3")
+        url3 = self.captura["url"].replace("/itens/2/", "/itens/3/")
+        for url, numero in ((self.captura["url"], "2"), (url3, "3")):
+            for homologado in (False, True):
+                dados = self.dados_sem_a_inside(homologado)
+                dados[0]["identificador"] = numero
+                receber(url, dados)
+
+        aviso = Notificacao.objects.get(tipo="resultado")
+        self.assertTrue(aviso.titulo.endswith("· 2 itens"))
+        self.assertEqual([l.split(":")[0] for l in aviso.texto.split("\n")], ["Item 2", "Item 3"])
+
+    def test_resultado_antigo_na_primeira_leitura_nao_avisa(self):
+        # GEN-104 (2a, 19/11/2026): o resultado já tinha saído quando o
+        # Licita leu o item pela primeira vez — grava, mas não avisa.
+        receber(self.captura["url"], self.dados_sem_a_inside(True))
+
+        self.assertTrue(ItemAcompanhado.objects.get().decidido)
+        self.assertFalse(Notificacao.objects.filter(tipo__in=["resultado", "relatorio"]).exists())
+
+    def test_compra_que_virou_dele_para_de_ler_os_outros_itens(self):
+        # GEN-104 (1a, 19/11/2026): Dispensa 12/2026 — a rede de segurança
+        # achou a proposta da Inside num item; os outros não são mais lidos.
+        ItemAcompanhado.objects.create(oportunidade=self.s, numero_item="3")
+        receber(self.captura["url"], self.captura["dados"])  # item 2: tem a Inside
+
+        self.assertEqual(list(self.s.itens_acompanhados.values_list("numero_item", flat=True)), ["3"])
+        self.assertEqual([c for c in consultas() if "/em-selecao-fornecedores/itens/3/" in c], [])
 
     def test_rede_de_seguranca_tinha_proposta_dele_volta_para_a_torre(self):
         receber(self.captura["url"], self.captura["dados"])
@@ -391,13 +425,17 @@ class SinoApiTests(APITestCase):
         ana = User.objects.create_user(email="ana@x.com", password="x")
         bia = User.objects.create_user(email="bia@x.com", password="x")
 
+        # GEN-104 (19/11/2026): o número conta só "Precisa de você" (a
+        # convocação); a data alterada é "Para saber".
         self.client.force_authenticate(ana)
-        self.assertEqual(self.client.get("/api/notificacoes/").json()["nao_lidas"], 2)
+        sino = self.client.get("/api/notificacoes/").json()
+        self.assertEqual((sino["nao_lidas"], sino["para_saber_nao_lidas"]), (1, 1))
         self.client.post("/api/notificacoes/lidas/", {}, format="json")
-        self.assertEqual(self.client.get("/api/notificacoes/").json()["nao_lidas"], 0)
+        sino = self.client.get("/api/notificacoes/").json()
+        self.assertEqual((sino["nao_lidas"], sino["para_saber_nao_lidas"]), (0, 0))
 
         self.client.force_authenticate(bia)
-        self.assertEqual(self.client.get("/api/notificacoes/").json()["nao_lidas"], 2)
+        self.assertEqual(self.client.get("/api/notificacoes/").json()["nao_lidas"], 1)
 
     def test_repetida_nao_duplica(self):
         from apps.notificacoes.servico import avisar
