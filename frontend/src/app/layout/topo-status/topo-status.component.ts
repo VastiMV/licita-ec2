@@ -1,11 +1,13 @@
-import { Component, DestroyRef, ElementRef, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, ElementRef, computed, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
+import { DOCUMENT, NgTemplateOutlet } from '@angular/common';
 import { catchError, map, of, switchMap, timer } from 'rxjs';
 
 import {
   Notificacao,
   NotificacoesResponse,
+  TipoNotificacao,
 } from '../../contracts/notificacoes/notificacoes.contracts';
 import { RelatorioCabecalho } from '../../contracts/licitacoes/relatorio.contracts';
 import { ModalService } from '../../shared/overlay/modal.service';
@@ -33,7 +35,7 @@ type Painel = 'sentinela' | 'avisos';
  */
 @Component({
   selector: 'app-topo-status',
-  imports: [IconComponent, RouterLink],
+  imports: [IconComponent, NgTemplateOutlet, RouterLink],
   templateUrl: './topo-status.component.html',
   styleUrl: './topo-status.component.scss',
   host: {
@@ -59,17 +61,55 @@ export class TopoStatusComponent {
 
   /** O sino (09/11/2026): relido a cada minuto. */
   protected readonly avisos = signal<NotificacoesResponse | null>(null);
+  /** O número vermelho: só "Precisa de você" (GEN-104, 19/11/2026). */
   protected readonly naoLidas = computed(() => this.avisos()?.nao_lidas ?? 0);
+  protected readonly paraSaberNaoLidas = computed(() => this.avisos()?.para_saber_nao_lidas ?? 0);
+  protected readonly precisa = computed(() => this.avisos()?.precisa ?? []);
+  protected readonly paraSaber = computed(() => this.avisos()?.para_saber ?? []);
+  /** "Para saber" começa recolhido. */
+  protected readonly paraSaberAberto = signal(false);
+
+  /**
+   * Chamar a atenção (GEN-104): enquanto houver "Precisa de você" não lido
+   * que ele ainda não viu (não abriu o sino depois que chegou), o sino treme
+   * e o título da aba pisca. Abrir o sino para os dois.
+   */
+  private readonly vistoAte = signal(0);
+  private readonly urgenteNovo = computed(
+    () =>
+      this.precisa().find((a) => !a.lida && a.id > this.vistoAte()) ?? null,
+  );
+  protected readonly chamando = computed(() => this.urgenteNovo() !== null);
+
+  private readonly documento = inject(DOCUMENT);
 
   constructor() {
+    const destroy = inject(DestroyRef);
     timer(0, 60_000)
       .pipe(
         switchMap(() => this.servicoAvisos.listar().pipe(catchError(() => of(null)))),
-        takeUntilDestroyed(inject(DestroyRef)),
+        takeUntilDestroyed(destroy),
       )
       .subscribe((resposta) => {
         if (resposta) this.avisos.set(resposta);
       });
+
+    // Título da aba piscando: "🔴 Pregoeiro! · Licita" ↔ "Licita".
+    effect((onCleanup) => {
+      const aviso = this.urgenteNovo();
+      if (!aviso) return;
+      const prefixo = `🔴 ${chamadaDoTitulo(aviso.tipo)} · `;
+      let ligado = false;
+      const piscar = setInterval(() => {
+        const base = this.documento.title.replace(/^🔴 [^·]+ · /, '');
+        ligado = !ligado;
+        this.documento.title = ligado ? prefixo + base : base;
+      }, 1000);
+      onCleanup(() => {
+        clearInterval(piscar);
+        this.documento.title = this.documento.title.replace(/^🔴 [^·]+ · /, '');
+      });
+    });
   }
 
   private recarregarAvisos(): void {
@@ -157,10 +197,31 @@ export class TopoStatusComponent {
 
   protected alternar(painel: Painel): void {
     this.aberto.update((atual) => (atual === painel ? null : painel));
+    if (painel === 'avisos') {
+      // Abriu o sino: viu o que chegou; para de tremer e de piscar.
+      const maior = Math.max(0, ...this.precisa().map((a) => a.id));
+      this.vistoAte.set(Math.max(this.vistoAte(), maior));
+    }
   }
 
   protected fecharSeFora(evento: Event): void {
     if (!this.elemento.nativeElement.contains(evento.target as Node)) this.aberto.set(null);
+  }
+}
+
+/** O que o título da aba grita, por tipo de aviso urgente (GEN-104). */
+export function chamadaDoTitulo(tipo: TipoNotificacao): string {
+  switch (tipo) {
+    case 'mensagem':
+      return 'Pregoeiro!';
+    case 'convocacao':
+      return 'Convocação!';
+    case 'desconto':
+      return 'Pedido de desconto!';
+    case 'recurso':
+      return 'Recurso!';
+    default:
+      return 'Atenção!';
   }
 }
 

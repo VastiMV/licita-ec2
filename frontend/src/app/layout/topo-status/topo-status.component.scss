@@ -292,6 +292,97 @@
 
 .aviso-texto {
   color: var(--color-muted);
+  // Resultado agrupado por compra: uma linha por item (GEN-104).
+  white-space: pre-line;
+}
+
+// GEN-104 (19/11/2026): as duas partes do sino.
+.parte {
+  margin: var(--space-2) 0 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+
+  &.precisa {
+    color: var(--color-danger);
+  }
+
+  &.para-saber {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: var(--space-3);
+    padding-top: var(--space-2);
+    border-top: 1px solid var(--color-border);
+    color: var(--color-muted);
+
+    .link {
+      appearance: none;
+      border: 0;
+      background: none;
+      color: var(--color-blue);
+      font: inherit;
+      font-weight: 600;
+      letter-spacing: 0;
+      text-transform: none;
+      cursor: pointer;
+      min-height: 32px;
+    }
+  }
+}
+
+.vazio {
+  margin: 0;
+  color: var(--color-muted);
+}
+
+// Chamar a atenção (GEN-104): o sino treme a cada 4 s e o número pulsa,
+// até ele abrir o sino. Quem pediu menos movimento no sistema não vê o
+// tremor (o título da aba continua piscando).
+.sino.chamando {
+  animation: sino-treme 4s ease-in-out infinite;
+  transform-origin: 50% 0;
+
+  .contador {
+    animation: contador-pulsa 1s ease-in-out infinite;
+  }
+}
+
+@keyframes sino-treme {
+  0%,
+  20%,
+  100% {
+    transform: rotate(0);
+  }
+  2%,
+  10% {
+    transform: rotate(-14deg);
+  }
+  6%,
+  14% {
+    transform: rotate(14deg);
+  }
+  18% {
+    transform: rotate(-6deg);
+  }
+}
+
+@keyframes contador-pulsa {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.25);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sino.chamando,
+  .sino.chamando .contador {
+    animation: none;
+  }
 }
 
 .aviso-quando {

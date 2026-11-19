@@ -9,29 +9,33 @@ import { EmpresasService } from '../../services/empresas/empresas.service';
 import { NotificacoesService } from '../../services/notificacoes/notificacoes.service';
 import { RadarService } from '../../services/licitacoes/radar.service';
 import { SentinelaService } from '../../services/sentinela/sentinela.service';
-import { TopoStatusComponent, vigiaDe } from './topo-status.component';
+import { TopoStatusComponent, chamadaDoTitulo, vigiaDe } from './topo-status.component';
 
+// GEN-104 (19/11/2026): o sino em duas partes.
 const AVISOS: NotificacoesResponse = {
-  nao_lidas: 2,
-  itens: [
+  nao_lidas: 1,
+  para_saber_nao_lidas: 1,
+  precisa: [
+    {
+      id: 8,
+      tipo: 'mensagem',
+      nivel: 'alerta',
+      titulo: 'Mensagem do pregoeiro · Pregão 61/2026 · item 22',
+      texto: 'Enviar a proposta ajustada em até 2 horas.',
+      oportunidade_id: 20,
+      criada_em: '2026-11-19T11:00:00Z',
+      lida: false,
+    },
+  ],
+  para_saber: [
     {
       id: 7,
       tipo: 'resultado',
       nivel: 'info',
-      titulo: 'Resultado · Pregão 9/2026 · item 3',
-      texto: 'Ganhou: EMPRESA X · Marca Y · R$ 1.250,00',
+      titulo: 'Resultado · Dispensa 12/2026 · 2 itens',
+      texto: 'Item 2: EMPRESA X · Marca Y · R$ 1.250,00\nItem 3: EMPRESA Z · R$ 3,33',
       oportunidade_id: 17,
-      criada_em: '2026-11-09T10:00:00Z',
-      lida: false,
-    },
-    {
-      id: 8,
-      tipo: 'convocacao',
-      nivel: 'alerta',
-      titulo: 'Convocação · Pregão 59/2026 · item 30',
-      texto: '',
-      oportunidade_id: 20,
-      criada_em: '2026-11-09T11:00:00Z',
+      criada_em: '2026-11-19T10:00:00Z',
       lida: false,
     },
   ],
@@ -136,28 +140,73 @@ describe('TopoStatusComponent', () => {
     fixture.detectChanges();
   };
 
-  it('o sino mostra quantos avisos novos e a lista', async () => {
+  it('o número conta só "Precisa de você" e o urgente vem em cima', async () => {
     await avisosChegarem();
-    expect(el.querySelector('.sino .contador')?.textContent?.trim()).toBe('2');
+    expect(el.querySelector('.sino .contador')?.textContent?.trim()).toBe('1');
 
     clicar('.sino');
 
+    expect(el.querySelector('.parte.precisa')?.textContent).toContain('Precisa de você · 1');
+    const itens = [...el.querySelectorAll('.aviso')];
+    expect(itens.length).toBe(1);
+    expect(itens[0].textContent).toContain('pregoeiro');
+    expect(el.querySelector('.parte.para-saber')?.textContent).toContain('1 novos · mostrar');
+  });
+
+  it('"Para saber" começa recolhido e abre com um clique', async () => {
+    await avisosChegarem();
+    clicar('.sino');
+    clicar('.parte.para-saber .link');
+
     const itens = [...el.querySelectorAll('.aviso')];
     expect(itens.length).toBe(2);
-    expect(itens[1].getAttribute('data-nivel')).toBe('alerta');
-    expect(itens[0].textContent).toContain('EMPRESA X');
+    expect(itens[1].textContent).toContain('Item 3: EMPRESA Z');
+  });
+
+  it('com urgente novo o sino treme e o título pisca; abrir o sino para', async () => {
+    vi.useFakeTimers();
+    try {
+      document.title = 'Licita';
+      fixture.destroy();
+      fixture = TestBed.createComponent(TopoStatusComponent);
+      fixture.detectChanges();
+      el = fixture.nativeElement as HTMLElement;
+      await vi.advanceTimersByTimeAsync(0);
+      fixture.detectChanges();
+
+      expect(el.querySelector('.sino')?.classList).toContain('chamando');
+      await vi.advanceTimersByTimeAsync(1000);
+      expect(document.title).toBe('🔴 Pregoeiro! · Licita');
+      await vi.advanceTimersByTimeAsync(1000);
+      expect(document.title).toBe('Licita');
+
+      clicar('.sino');
+      await vi.advanceTimersByTimeAsync(3000);
+      expect(el.querySelector('.sino')?.classList).not.toContain('chamando');
+      expect(document.title).toBe('Licita');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('o que grita no título, por tipo', () => {
+    expect(chamadaDoTitulo('mensagem')).toBe('Pregoeiro!');
+    expect(chamadaDoTitulo('convocacao')).toBe('Convocação!');
+    expect(chamadaDoTitulo('situacao')).toBe('Atenção!');
   });
 
   it('clicar num resultado abre o relatório e marca como lido', async () => {
     await avisosChegarem();
     clicar('.sino');
-    clicar('.aviso');
+    clicar('.parte.para-saber .link');
+    (el.querySelectorAll('.aviso')[1] as HTMLButtonElement).click();
+    fixture.detectChanges();
     await new Promise((r) => setTimeout(r, 50));
 
     expect(avisos.marcarLidas).toHaveBeenCalledWith([7]);
     expect(modal.abrir).toHaveBeenCalledWith(expect.anything(), {
       id: 17,
-      titulo: AVISOS.itens[0].titulo,
+      titulo: AVISOS.para_saber[0].titulo,
     });
   });
 

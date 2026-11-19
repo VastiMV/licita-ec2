@@ -26,7 +26,15 @@ export interface Notificacao {
   readonly lida: boolean;
 }
 
+/**
+ * O sino em duas partes (GEN-104, 19/11/2026): `precisa` (o que pede ação
+ * dele: pregoeiro, convocação, desconto, recurso, compra suspensa/revogada)
+ * e `para_saber` (o resto). `nao_lidas` conta só `precisa` (o número
+ * vermelho).
+ */
 export interface NotificacoesResponse {
   readonly nao_lidas: number;
-  readonly itens: readonly Notificacao[];
+  readonly para_saber_nao_lidas: number;
+  readonly precisa: readonly Notificacao[];
+  readonly para_saber: readonly Notificacao[];
 }

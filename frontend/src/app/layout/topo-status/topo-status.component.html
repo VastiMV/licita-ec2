@@ -46,8 +46,11 @@
     <button
       type="button"
       class="sino"
+      [class.chamando]="chamando()"
       [attr.aria-expanded]="aberto() === 'avisos'"
-      [attr.aria-label]="naoLidas() ? 'Avisos: ' + naoLidas() + ' novos' : 'Avisos: nenhum novo'"
+      [attr.aria-label]="
+        naoLidas() ? 'Avisos: ' + naoLidas() + ' precisam de você' : 'Avisos: nada precisando de você'
+      "
       (click)="alternar('avisos')"
     >
       <app-icon name="sino" />
@@ -59,36 +62,61 @@
       <div class="painel avisos" role="dialog" aria-label="Avisos">
         <div class="avisos-topo">
           <b>Avisos</b>
-          @if (naoLidas()) {
+          @if (naoLidas() || paraSaberNaoLidas()) {
             <button type="button" class="link" (click)="marcarTodas()">
               Marcar todos como lidos
             </button>
           }
         </div>
-        @if (avisos()?.itens?.length) {
-          <ul class="lista-avisos">
-            @for (aviso of avisos()!.itens; track aviso.id) {
-              <li>
-                <button
-                  type="button"
-                  class="aviso"
-                  [class.nao-lido]="!aviso.lida"
-                  [attr.data-nivel]="aviso.nivel"
-                  (click)="abrirAviso(aviso)"
-                >
-                  <span class="aviso-titulo">{{ aviso.titulo }}</span>
-                  @if (aviso.texto) {
-                    <span class="aviso-texto">{{ aviso.texto }}</span>
-                  }
-                  <span class="aviso-quando">{{ quando(aviso.criada_em) }}</span>
-                </button>
-              </li>
+        @if (precisa().length || paraSaber().length) {
+          <h3 class="parte precisa">Precisa de você · {{ naoLidas() }}</h3>
+          @if (precisa().length) {
+            <ul class="lista-avisos">
+              @for (aviso of precisa(); track aviso.id) {
+                <li>
+                  <ng-container
+                    *ngTemplateOutlet="umAviso; context: { $implicit: aviso }"
+                  ></ng-container>
+                </li>
+              }
+            </ul>
+          } @else {
+            <p class="vazio">Nada precisando de você agora.</p>
+          }
+
+          @if (paraSaber().length) {
+            <div class="parte para-saber">
+              <span>Para saber</span>
+              <button
+                type="button"
+                class="link"
+                [attr.aria-expanded]="paraSaberAberto()"
+                (click)="paraSaberAberto.set(!paraSaberAberto())"
+              >
+                @if (paraSaberAberto()) {
+                  esconder ▴
+                } @else {
+                  {{ paraSaberNaoLidas() || paraSaber().length }}
+                  {{ paraSaberNaoLidas() ? 'novos' : 'avisos' }} · mostrar ▾
+                }
+              </button>
+            </div>
+            @if (paraSaberAberto()) {
+              <ul class="lista-avisos">
+                @for (aviso of paraSaber(); track aviso.id) {
+                  <li>
+                    <ng-container
+                      *ngTemplateOutlet="umAviso; context: { $implicit: aviso }"
+                    ></ng-container>
+                  </li>
+                }
+              </ul>
             }
-          </ul>
+          }
         } @else {
           <p>
-            Nenhum aviso ainda. Convocação, pedido de desconto, recurso, data alterada, compra fora
-            dos favoritos e resultados aparecem aqui.
+            Nenhum aviso ainda. Mensagem do pregoeiro, convocação, pedido de desconto, recurso e
+            compra suspensa aparecem em cima; resultados, datas e favoritos, embaixo.
           </p>
         }
         <div class="telegram">
@@ -101,3 +129,19 @@
     }
   </div>
 </div>
+
+<ng-template #umAviso let-aviso>
+  <button
+    type="button"
+    class="aviso"
+    [class.nao-lido]="!aviso.lida"
+    [attr.data-nivel]="aviso.nivel"
+    (click)="abrirAviso(aviso)"
+  >
+    <span class="aviso-titulo">{{ aviso.titulo }}</span>
+    @if (aviso.texto) {
+      <span class="aviso-texto">{{ aviso.texto }}</span>
+    }
+    <span class="aviso-quando">{{ quando(aviso.criada_em) }}</span>
+  </button>
+</ng-template>
