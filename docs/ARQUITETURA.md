@@ -294,6 +294,16 @@ task Celery, com RabbitMQ como broker:
 | `capag.sincronizar_capag` | Celery Beat | a cada 30 dias — notas CAPAG do Tesouro |
 | chamadas à API do PNCP/compras.gov.br feitas por busca interativa do usuário | request síncrono da `licitacoes` view | -- ficam síncronas mesmo, são a resposta da busca; só o que não bloqueia a resposta ao usuário vira task |
 
+**Regra: toda task fica num `tasks.py`** (ou é importada por ele). O worker
+só carrega as tasks de `tasks.py` de cada app (`app.autodiscover_tasks()` em
+`config/celery.py`); uma task definida em outro arquivo funciona no site, que
+a importa, mas o worker a joga fora ("Received unregistered task"). Foi o que
+aconteceu com `notificacoes.enviar_telegram` (estava só em `telegram.py`): de
+10/11 a 19/11/2026 nenhum aviso automático chegou ao Telegram (GEN-103). O
+teste `TarefasRegistradasNoWorkerTests` (`apps/notificacoes/tests.py`) confere,
+num processo novo, que toda `@shared_task(name=...)` do projeto é vista pelo
+worker.
+
 Agendamento via `django-celery-beat` (schedule editável no banco/admin, não
 hardcoded), substituindo o `APScheduler` embutido do protótipo — que não
 sobrevive a múltiplas réplicas do pod da API.

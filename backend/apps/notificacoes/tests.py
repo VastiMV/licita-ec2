@@ -73,3 +73,34 @@ class TesteTelegramApiTests(TestCase):
 
         self.assertEqual(resposta.json(), {"ligado": True, "enviados": 2, "chats": 2})
         self.assertIn("Pedido por Vasti", post.call_args.kwargs["json"]["text"])
+
+
+class TarefasRegistradasNoWorkerTests(TestCase):
+    """GEN-103 (19/11/2026): o worker só carrega tarefas de `tasks.py`
+    (`autodiscover_tasks`). A do Telegram estava só em `telegram.py` e o
+    worker jogava fora todo aviso ("unregistered task"). Roda num processo
+    novo, como o worker ao subir: aqui dentro o `telegram.py` já foi
+    importado pelos outros testes e esconderia o defeito."""
+
+    def test_toda_tarefa_do_projeto_e_vista_pelo_worker(self):
+        import re
+        import subprocess
+        import sys
+        from pathlib import Path
+
+        raiz = Path(__file__).resolve().parents[2]
+        nomes = set()
+        for arquivo in (raiz / "apps").rglob("*.py"):
+            nomes.update(re.findall(r'@shared_task\(name="([^"]+)"', arquivo.read_text(encoding="utf-8")))
+        self.assertIn("notificacoes.enviar_telegram", nomes)
+
+        script = (
+            "import django; django.setup()\n"
+            "from config.celery import app\n"
+            "app.loader.import_default_modules()\n"
+            "print('\\n'.join(sorted(app.tasks)))\n"
+        )
+        saida = subprocess.run(
+            [sys.executable, "-c", script], cwd=raiz, capture_output=True, text=True, check=True
+        ).stdout.split()
+        self.assertEqual(sorted(nomes - set(saida)), [])
