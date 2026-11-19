@@ -372,6 +372,17 @@ class FavoritosTests(TestCase):
         self.assertIn("fora dos favoritos no Compras.gov", textos(self.lavras))
         self.assertNotIn("fora dos favoritos no Compras.gov", textos(self.cubatao))
 
+    def test_fora_dos_favoritos_avisa_uma_vez_por_compra(self):
+        # GEN-104 (19/11/2026): saiu, voltou e saiu de novo → 1 aviso só.
+        from apps.notificacoes.models import Notificacao
+
+        receber(f"{self.URL}?compras={self.LAVRAS}", [])
+        receber(f"{self.URL}?compras={self.LAVRAS}", [self.LAVRAS])
+        with mock.patch("django.utils.timezone.now", return_value=timezone.now() + dt.timedelta(days=1)):
+            receber(f"{self.URL}?compras={self.LAVRAS}", [])
+
+        self.assertEqual(Notificacao.objects.filter(tipo="favorito").count(), 1)
+
     def test_voltou_aos_favoritos_o_aviso_some(self):
         receber(f"{self.URL}?compras={self.LAVRAS}", [])
         receber(f"{self.URL}?compras={self.LAVRAS}", [self.LAVRAS])

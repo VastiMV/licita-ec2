@@ -108,12 +108,17 @@ que abre.
 
 **No topo da tela:** a empresa e o CNPJ, o **Radar** (em breve), o estado da
 **Sentinela** (verde lendo, âmbar precisa de você, vermelho parada) e o
-**sino** 🔔: convocação, pedido de desconto, recurso, mensagens do Compras.gov,
-data alterada, compra suspensa, fora dos favoritos, resultados. **Os mesmos
-avisos vão para o Telegram** de quem estiver cadastrado (botão "Testar
-Telegram" no painel do sino; configuração em `deploy/ec2/README.md`).
+**sino** 🔔, em duas partes (GEN-104, 19/11/2026): **"Precisa de você"** em
+cima (mensagem do pregoeiro, convocação, pedido de desconto, recurso, compra
+suspensa/revogada/anulada, Sentinela parada) e **"Para saber"** embaixo,
+recolhido (resultados, relatório, data alterada, fora dos favoritos,
+empenho/pagamento). O número vermelho conta só "Precisa de você"; quando
+chega um, o sino treme e o título da aba pisca até ele abrir o sino. **Só
+"Precisa de você" vai para o Telegram** de quem estiver cadastrado (botão
+"Testar Telegram" no painel do sino; configuração em `deploy/ec2/README.md`)
+e vira **balão do Windows** pela Sentinela (0.2.9).
 
-**Sentinela (0.2.8, 18/11/2026):** extensão do Chrome no computador do
+**Sentinela (0.2.9, 19/11/2026):** extensão do Chrome no computador do
 Carlinhos ([`sentinela/`](sentinela/), guia em
 [`sentinela/README.md`](sentinela/README.md)). Traz para a Torre as compras e
 os itens em que ele participa no Compras.gov, mostra a **camada de disputa**

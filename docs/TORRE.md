@@ -329,7 +329,8 @@ o tinha desde 16/11, mas ficou "sem licitação" e ninguém viu.
   **Não ligou** → aviso "Empenho sem licitação · 2026NE…" (aviso), com o
   processo, para ligar à mão. Um "sem licitação" que depois liga sozinho
   avisa de novo; ligado à mão, não. Vale para empenho, liquidação e
-  pagamento. Tipo `financeiro` no sino; vai ao Telegram como todos.
+  pagamento. Tipo `financeiro` no sino, em "Para saber"; desde 19/11/2026
+  (GEN-104) não vai mais ao Telegram.
 - **Órgão pagador**: campo `orgao_pagador` nos documentos financeiros da API
   ("UG (UG código) · órgão"), lido dos dados do Portal. Lançado à mão: vazio.
 - **Contratos no PNCP** ainda não são lidos: o módulo de contratos da API
@@ -591,6 +592,22 @@ Disputar › Aguardando sessão. Decisões da operação:
   item perdido/acompanhado, relatório completo e, desde 18/11/2026 (GEN-97),
   empenho/liquidação/pagamento do Portal da Transparência. Uma notificação por fato
   (`chave`); cada pessoa marca as suas como lidas.
+  - **Desde 19/11/2026 (GEN-104), em duas partes.** "Precisa de você"
+    (`PRECISA_DE_VOCE` em `notificacoes/models.py`: mensagem, convocação,
+    desconto, recurso, situação da compra, Sentinela parada) fica em cima,
+    conta no número vermelho, faz o sino tremer e o título da aba piscar, vai
+    ao Telegram e vira balão da Sentinela. O resto é "Para saber", recolhido.
+    **Por quê:** 7 resultados da Dispensa 12/2026 de uma vez esconderam as
+    mensagens do pregoeiro (18/11/2026).
+  - **Resultado: um aviso por compra e por dia**, uma linha por item (antes,
+    um por item).
+  - **Resultado que já tinha saído** na primeira leitura de um item
+    acompanhado é gravado **sem aviso** (é antigo).
+  - **Compra "xeretar" que virou dele** (a rede de segurança achou a proposta
+    da Inside): os outros itens **param de ser lidos** pela ronda; o que já
+    foi lido continua no relatório.
+  - **Fora dos favoritos: uma vez por compra** (antes avisava de novo se a
+    compra voltasse aos favoritos e saísse outra vez).
 - **Conferência diária** (Celery Beat, seg–sex 7h45): `conferencia_diaria.py`.
 
 ## Regras e relatórios de 10/11/2026
@@ -608,5 +625,6 @@ Disputar › Aguardando sessão. Decisões da operação:
   meses. Média sem valores absurdos; marcas que mais venceram; quanto ele
   ofereceu. Renovado 1x por semana na conferência diária.
 - **Caixa de mensagens e Telegram:** cada mensagem nova do Compras.gov e cada
-  aviso do sino vão ao Telegram dos chats em `TELEGRAM_CHAT_IDS`.
+  aviso do sino vão ao Telegram dos chats em `TELEGRAM_CHAT_IDS`. Desde
+  19/11/2026 (GEN-104), só os de "Precisa de você".
 

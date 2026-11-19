@@ -334,6 +334,57 @@ async function fazerRonda(forcar = false) {
   );
 }
 
+// -- balão do Windows (0.2.9, GEN-104, 19/11/2026) ---------------------------
+// O que precisa do Carlinhos (pregoeiro, convocação, desconto, recurso, compra
+// suspensa) vira um balão por cima de tudo, com o som do Windows. O resto do
+// sino não vira balão. Confere a cada minuto. Na primeira vez só anota onde
+// está, para não soltar balões antigos.
+
+async function buscarAvisos() {
+  try {
+    const { avisoUltimo, som } = await chrome.storage.local.get({
+      avisoUltimo: null,
+      som: true,
+    });
+    const caminho =
+      avisoUltimo === null ? "avisos/" : `avisos/?depois=${avisoUltimo}`;
+    const resposta = await licita(caminho);
+    for (const aviso of resposta.avisos || []) {
+      await mostrarBalao(aviso, som);
+    }
+    await chrome.storage.local.set({ avisoUltimo: resposta.ultimo || 0 });
+  } catch (erro) {
+    await guardarUltimo("ultimoErro", `avisos: ${erro.message || erro}`);
+  }
+}
+
+function mostrarBalao(aviso, som) {
+  return chrome.notifications.create(`aviso-${aviso.id}`, {
+    type: "basic",
+    iconUrl: "icones/icone-128.png",
+    title: aviso.titulo || "Licita",
+    message: aviso.texto || "Abra o Licita para ver.",
+    priority: 2,
+    // Fica na tela até ele clicar ou fechar.
+    requireInteraction: true,
+    silent: !som,
+  });
+}
+
+// Clicou no balão: abre (ou traz para a frente) o Licita.
+chrome.notifications.onClicked.addListener(async (id) => {
+  chrome.notifications.clear(id);
+  const { licita } = await configuracao();
+  if (!licita) return;
+  const [aba] = await chrome.tabs.query({ url: `${licita}/*` });
+  if (aba) {
+    await chrome.tabs.update(aba.id, { active: true });
+    await chrome.windows.update(aba.windowId, { focused: true });
+  } else {
+    await chrome.tabs.create({ url: `${licita}/torre` });
+  }
+});
+
 function agendar() {
   chrome.alarms.create("vigia", { periodInMinutes: 3 });
   chrome.alarms.create("tarefas", { periodInMinutes: 1 });
@@ -346,7 +397,10 @@ chrome.runtime.onInstalled.addListener(agendar);
 chrome.runtime.onStartup.addListener(agendar);
 chrome.alarms.onAlarm.addListener((alarme) => {
   if (alarme.name === "vigia") vigiar();
-  if (alarme.name === "tarefas") fazerTarefas();
+  if (alarme.name === "tarefas") {
+    fazerTarefas();
+    buscarAvisos();
+  }
   if (alarme.name === "ronda") fazerRonda();
 });
 
@@ -417,6 +471,22 @@ chrome.runtime.onMessage.addListener((mensagem, _remetente, responder) => {
         chrome.storage.local.get(["ultimaRonda", "ultimaTarefa", "ultimoErro"]),
       )
       .then((estado) => responder(estado));
+    return true;
+  }
+  if (mensagem.tipo === "testar_balao") {
+    chrome.storage.local
+      .get({ som: true })
+      .then(({ som }) =>
+        mostrarBalao(
+          {
+            id: `teste-${Date.now()}`,
+            titulo: "Teste da Sentinela",
+            texto: "Assim chega a mensagem do pregoeiro.",
+          },
+          som,
+        ),
+      )
+      .then(() => responder({ ok: true }));
     return true;
   }
   if (mensagem.tipo === "testar") {

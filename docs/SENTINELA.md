@@ -1,4 +1,4 @@
-# Sentinela — plano e o que já existe (0.2.8, 18/11/2026)
+# Sentinela — plano e o que já existe (0.2.9, 19/11/2026)
 
 A Sentinela é uma **extensão do Chrome** no computador do Carlinhos. Ela é a
 ponte entre o Compras.gov.br (a sessão **dele**, já logada) e o Licita. Sem
@@ -183,7 +183,8 @@ diz "ok" só porque existe uma aba do Compras.gov, viva ou não. Correção no
 **servidor**, decidida com a operação:
 
 - alarme de silêncio: em horário de trabalho (seg–sex, **8h–19h**, o mesmo
-  da ronda), **30 min sem leitura** → sino + Telegram + topo âmbar;
+  da ronda), **30 min sem leitura** → sino ("Precisa de você", desde o
+  GEN-104) + Telegram + topo âmbar;
 - conta da última leitura, mas nunca antes das 8h do dia (o fim de semana
   não dispara aviso na segunda);
 - avisa também quando não há **nenhum** sinal de vida ("parada");
@@ -228,6 +229,24 @@ velho. Decisão da operação de 18/11/2026: opção **(A + C)**.
   entrar de novo.
 - Teste: `node sentinela/testes/teste-retoken.js` (Chromium de verdade,
   Compras.gov simulado; não precisa do Licita).
+
+**0.2.9 (19/11/2026, GEN-104):** o balão do Windows. **Por quê:** o
+Carlinhos não presta atenção no sino; na disputa ele está na aba do
+Compras.gov, e o sino do Licita fica escondido.
+- A cada minuto, o fundo pergunta ao Licita (`GET /api/sentinela/avisos/?depois=<id>`)
+  os avisos **"Precisa de você"** novos e mostra um **balão** no canto da
+  tela para cada um (`chrome.notifications`, permissão nova "notifications").
+  Fica na tela até ele clicar ou fechar; clicar abre (ou traz para a frente)
+  o Licita.
+- **Som:** o som de aviso do Windows. Pode ser desligado nas opções
+  ("Som no balão do pregoeiro"). Botão **"Testar o balão"** nas opções.
+- Na primeira vez (extensão recém-instalada) ela só anota o último aviso,
+  para não soltar balões antigos.
+- **Para funcionar no Windows:** o Chrome precisa ter as notificações
+  ligadas em Configurações do Windows › Sistema › Notificações (a confirmar
+  no computador do Carlinhos com o botão de teste).
+- Teste: `node sentinela/testes/teste-balao.js` (Chromium com a extensão e um
+  Licita falso).
 
 **10/11/2026 — compra trazida pela Sentinela fica completa:** a compra
 que a Sentinela cria no Licita (a empresa já participa no Compras.gov) vinha

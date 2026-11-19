@@ -41,6 +41,15 @@ o Licita abre aba nova como antes (`licita.js` marca a página do Licita com
 - A cotação do painel não confere mais a cada minuto: é lida ao abrir a
   compra e no F5 (o ↻ continua).
 
+**0.2.9 (19/11/2026):** **balão no canto da tela** para o que precisa de
+você: mensagem do pregoeiro, convocação, pedido de desconto, recurso, compra
+suspensa e Sentinela parada. Toca o som de aviso do Windows (dá para
+desligar nas opções) e fica na tela até você clicar; clicar abre o Licita.
+Depois de atualizar, o Chrome pode pedir para **permitir notificações**:
+aceite. Use o botão **"Testar o balão"** nas opções para conferir. Não
+apareceu? Ligue as notificações do Chrome no Windows (Configurações ›
+Sistema › Notificações).
+
 **0.2.8 (18/11/2026):** menos queda de sessão. A ronda usa o token que o
 Compras.gov guarda **agora** (antes usava uma cópia que envelhecia quando o
 site renovava a sessão). Se levar "não autorizado", espera 5 segundos o site

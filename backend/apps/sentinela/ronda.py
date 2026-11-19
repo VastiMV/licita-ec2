@@ -147,6 +147,10 @@ def _acompanhados(agora: dt.datetime) -> list[str]:
 
     itens = (
         ItemAcompanhado.objects.filter(decidido=False, oportunidade__removida_em__isnull=True)
+        # GEN-104 (1a, 19/11/2026): compra em que a Inside tem item (a rede de
+        # segurança achou a proposta dela) não é mais "xeretar": os outros
+        # itens param de ser lidos e de avisar. O que já foi lido fica.
+        .filter(oportunidade__itens_participados__isnull=True)
         .filter(Q(propostas_lidas_em__isnull=True) | Q(propostas_lidas_em__lt=_inicio_do_dia(agora)))
         .select_related("oportunidade")
         .order_by(F("propostas_lidas_em").asc(nulls_first=True), "id")

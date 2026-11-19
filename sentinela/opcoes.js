@@ -29,6 +29,8 @@ async function carregar() {
     chave: "",
   });
   campos.forEach((c) => (document.getElementById(c).value = salvo[c] || ""));
+  const { som } = await chrome.storage.local.get({ som: true });
+  document.getElementById("som").checked = som;
   mostrarEstado();
 }
 
@@ -36,7 +38,10 @@ document.getElementById("salvar").addEventListener("click", async () => {
   const valores = Object.fromEntries(
     campos.map((c) => [c, document.getElementById(c).value.trim()]),
   );
-  await chrome.storage.local.set(valores);
+  await chrome.storage.local.set({
+    ...valores,
+    som: document.getElementById("som").checked,
+  });
   estado.textContent = "Salvo.";
 });
 
@@ -54,4 +59,11 @@ document.getElementById("ronda").addEventListener("click", async () => {
   await chrome.storage.local.remove("ultimoErro");
   await chrome.runtime.sendMessage({ tipo: "ronda_agora" });
   mostrarEstado();
+});
+
+document.getElementById("balao").addEventListener("click", async () => {
+  await chrome.storage.local.set({ som: document.getElementById("som").checked });
+  await chrome.runtime.sendMessage({ tipo: "testar_balao" });
+  estado.textContent =
+    "Balão enviado. Não apareceu? Veja se as notificações do Chrome estão ligadas no Windows.";
 });

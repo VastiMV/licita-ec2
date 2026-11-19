@@ -279,9 +279,10 @@ comando.
 
 ## Telegram (avisos do sino no celular)
 
-Desde 10/11/2026 cada aviso novo do sino (convocação, recurso, pedido de
-desconto, mensagem do pregoeiro, data alterada, resultado…) também vai para
-o Telegram. Uma vez só:
+Cada aviso novo do sino de **"Precisa de você"** (mensagem do pregoeiro,
+convocação, pedido de desconto, recurso, compra suspensa/revogada/anulada,
+Sentinela parada) também vai para o Telegram. Resultado, data, favoritos e
+empenho ficam só no sino (GEN-104, 19/11/2026). Uma vez só:
 
 1. No Telegram, fale com **@BotFather** → `/newbot` → dê um nome (ex.:
    "Licita Inside") e um usuário terminado em `bot`. Ele responde com a

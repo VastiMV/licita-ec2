@@ -30,6 +30,16 @@
         gap: 4px;
         font-weight: 600;
       }
+      label.caixa {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 400;
+      }
+      label.caixa input {
+        width: 20px;
+        height: 20px;
+      }
       input {
         padding: 10px;
         border: 1px solid #c9d2e3;
@@ -90,6 +100,10 @@
           placeholder="a SENTINELA_CHAVE do servidor"
         />
       </label>
+      <label class="caixa">
+        <input id="som" type="checkbox" />
+        Som no balão do pregoeiro (o som de aviso do Windows)
+      </label>
       <div class="botoes">
         <button id="salvar" type="button">Salvar</button>
         <button id="testar" type="button" class="secundario">
@@ -97,6 +111,9 @@
         </button>
         <button id="ronda" type="button" class="secundario">
           Fazer a ronda agora
+        </button>
+        <button id="balao" type="button" class="secundario">
+          Testar o balão
         </button>
       </div>
       <pre id="estado" aria-live="polite">—</pre>
@@ -111,6 +128,11 @@
         </li>
         <li>
           Deixe uma aba do Compras.gov aberta e logada para ela trabalhar.
+        </li>
+        <li>
+          Mensagem do pregoeiro, convocação, pedido de desconto, recurso e
+          compra suspensa viram um balão no canto da tela. Clique nele para
+          abrir o Licita.
         </li>
         <li>
           A cada 10 minutos (dias úteis, 8h–18h) ela confere sozinha proposta,

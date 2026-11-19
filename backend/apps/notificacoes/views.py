@@ -1,4 +1,7 @@
-"""`GET /api/notificacoes/` — as últimas 40 e quantas não lidas (de quem pede).
+"""`GET /api/notificacoes/` — o sino em duas partes (GEN-104, 19/11/2026):
+`precisa` (o que pede ação dele, até 40) e `para_saber` (o resto, até 40).
+`nao_lidas` conta **só** as de `precisa` (o número vermelho);
+`para_saber_nao_lidas`, as outras.
 `POST /api/notificacoes/lidas/` — `{"ids": [...]}` marca essas; sem ids, todas."""
 
 from __future__ import annotations
@@ -7,29 +10,38 @@ from django.db.models import Exists, OuterRef
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import Leitura, Notificacao
+from .models import PRECISA_DE_VOCE, Leitura, Notificacao
 
 QUANTAS = 40
+
+
+def _item(n) -> dict:
+    return {
+        "id": n.pk,
+        "tipo": n.tipo,
+        "nivel": n.nivel,
+        "titulo": n.titulo,
+        "texto": n.texto,
+        "oportunidade_id": n.oportunidade_id,
+        "criada_em": n.criada_em,
+        "lida": n.lida,
+    }
 
 
 class NotificacoesView(APIView):
     def get(self, request):
         lidas = Leitura.objects.filter(notificacao=OuterRef("pk"), usuario=request.user)
         todas = Notificacao.objects.select_related("oportunidade").annotate(lida=Exists(lidas))
-        itens = [
+        precisa = todas.filter(tipo__in=PRECISA_DE_VOCE)
+        para_saber = todas.exclude(tipo__in=PRECISA_DE_VOCE)
+        return Response(
             {
-                "id": n.pk,
-                "tipo": n.tipo,
-                "nivel": n.nivel,
-                "titulo": n.titulo,
-                "texto": n.texto,
-                "oportunidade_id": n.oportunidade_id,
-                "criada_em": n.criada_em,
-                "lida": n.lida,
+                "nao_lidas": precisa.filter(lida=False).count(),
+                "para_saber_nao_lidas": para_saber.filter(lida=False).count(),
+                "precisa": [_item(n) for n in precisa[:QUANTAS]],
+                "para_saber": [_item(n) for n in para_saber[:QUANTAS]],
             }
-            for n in todas[:QUANTAS]
-        ]
-        return Response({"nao_lidas": todas.filter(lida=False).count(), "itens": itens})
+        )
 
 
 class LidasView(APIView):
