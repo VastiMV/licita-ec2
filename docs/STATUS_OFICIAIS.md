@@ -388,7 +388,7 @@ Dezesseis pedidos, cada um ligado a um cartão GEN (rótulo
 **Corrigido em 19/11/2026:** de 10/11 a 19/11 **nenhum** aviso automático
 chegou ao Telegram (o worker não enxergava a tarefa, GEN-103). Desde o
 GEN-104 (19/11/2026), só os avisos de **"Precisa de você"** vão ao Telegram
-(`notificacoes/servico.py`, `avisar`). O item 16 ("todas para o Telegram")
-**conflita** com essa decisão: a confirmar com a operação no GEN-88. O que
+(`notificacoes/servico.py`, `avisar`). **O item 16 ("todas para o Telegram")
+foi superado:** vale o que está no ar (decisão da dona, 19/11/2026). O que
 falta é que muitas mudanças de status **não geram notificação nenhuma**. O
 GEN-88 cria o tipo "Mudança de status" para cobrir isso.
