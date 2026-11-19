@@ -447,7 +447,9 @@ A Sentinela (0.2.4) e os avisos no Telegram **já existem** (ver
    Contratos.gov.br, para os órgãos que o usam. Falta o PNCP e o Portal da
    Transparência para os outros órgãos (cartão novo).
 2. **Telegram para cobrança.** Empenho, liquidação e pagamento do Portal da
-   Transparência **já avisam** no sino e no Telegram (GEN-97, 18/11/2026).
+   Transparência **já avisam** no sino (GEN-97, 18/11/2026). Desde o GEN-104
+   (19/11/2026) ficam em "Para saber" e **não vão ao Telegram**; voltar a
+   mandar ao Telegram é o GEN-105 (a decidir).
 3. **Telas de lançamento manual** — a API existe (contrato, OF, entrega,
    ligar documento "sem licitação"); falta o formulário na tela. Inclui
    mostrar o **órgão pagador** de cada documento (**GEN-98**).

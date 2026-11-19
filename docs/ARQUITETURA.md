@@ -107,8 +107,8 @@ manifests já usam esse nome; o valor `licita` que aparecia aqui antes nunca foi
 | `accounts` | usuários, autenticação (JWT), perfil |
 | `catalogo` | model `Pdm`, sincronização do catálogo de materiais |
 | `licitacoes` | busca de oportunidades (live, cruza PNCP + catálogo), os models `OportunidadeSalva`/`EventoOportunidadeSalva` (lista salva + histórico) e a **Torre de Controle**: `torre.py` (etapas), `encerradas.py` (saídas), os models `ParticipacaoCompra`/`ItemParticipado`/`DocumentoFinanceiro`/`Entrega` e as sincronias diárias `sincronia_pncp.py`/`sincronia_transparencia.py`/`conferencia_diaria.py`; os relatórios (`relatorio.py` da licitação, `relatorio_mensal.py`, `mercado.py`) e `PropostaDoItem`/`ItemAcompanhado`/`MercadoDoItem` — ver [`TORRE.md`](TORRE.md) |
-| `sentinela` | API da extensão do Chrome: `captura/` (o que a página do Compras.gov recebeu → `ingestao.py`), `ronda/` (o que ela consulta sozinha → `ronda.py`), `tarefas/` (tirar favorito pela lixeira), `camada/`, `pulso/` — ver [`SENTINELA.md`](SENTINELA.md) |
-| `notificacoes` | o **sino** (`Notificacao`, uma por fato; `Leitura` por pessoa) e o envio ao **Telegram** (`telegram.py`, Celery) |
+| `sentinela` | API da extensão do Chrome: `captura/` (o que a página do Compras.gov recebeu → `ingestao.py`), `ronda/` (o que ela consulta sozinha → `ronda.py`), `tarefas/` (tirar favorito pela lixeira), `avisos/` (os "Precisa de você" para o balão do Windows, GEN-104), `camada/`, `pulso/` — ver [`SENTINELA.md`](SENTINELA.md) |
+| `notificacoes` | o **sino** (`Notificacao`, uma por fato; `Leitura` por pessoa), em duas partes: `PRECISA_DE_VOCE` (`models.py`) e "Para saber" (GEN-104); e o envio ao **Telegram** (`telegram.py`, Celery), só dos "Precisa de você" |
 | `tenants` | model `Tenant` (uma linha só hoje) e `tenant_atual()`, o único ponto que resolve de quem é a requisição — ver `DOMINIO.md` |
 | `empresas` | model `Empresa` — os CNPJs com que a equipe disputa (não confundir com `fornecedores`, que é de quem ela compra) |
 | `documentos` | dossiê de habilitação da empresa: catálogo da Lei 14.133, a vaga de cada documento, as versões com validade e o histórico — ver `DOMINIO.md` |
@@ -288,7 +288,7 @@ task Celery, com RabbitMQ como broker:
 | `licitacoes.sincronizar_pncp` | Celery Beat | segunda a sexta, 8h (Brasília) — vitórias e atas da empresa; ver `TORRE.md` |
 | `licitacoes.sincronizar_transparencia` | Celery Beat | segunda a sexta, 8h10 — empenho, liquidação, pagamento federais |
 | `licitacoes.conferencia_diaria` | Celery Beat | segunda a sexta, 7h45 — data/situação no PNCP, itens acompanhados, fim da vigia (atas), mercado dos itens |
-| `notificacoes.enviar_telegram` | a cada aviso novo do sino | manda ao Telegram (sem chave no `.env`: não faz nada) |
+| `notificacoes.enviar_telegram` | a cada aviso novo do sino de "Precisa de você" (GEN-104) | manda ao Telegram (sem chave no `.env`: não faz nada) |
 | `licitacoes.completar_salva` | captura da Sentinela, quando a salva está sem órgão ou sem itens (10/11/2026), ou sem prazo ao ser criada (14/11/2026, GEN-87) | preenche pelo PNCP só o que está vazio (`completar.py`); a conferência das 7h45 pega as que ficaram para trás |
 | `licitacoes.radar` | Celery Beat | todo dia, 8h e 18h (GEN-68, 14/11/2026) — compras abertas parecidas com as salvas em 30 dias e com o que a Inside ganhou, em todos os portais (`radar.py`) |
 | `capag.sincronizar_capag` | Celery Beat | a cada 30 dias — notas CAPAG do Tesouro |
