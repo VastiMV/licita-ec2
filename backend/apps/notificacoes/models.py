@@ -14,7 +14,9 @@ from django.db import models
 # GEN-104 (19/11/2026): o que pede ação do Carlinhos. Fica em cima no sino,
 # conta no número vermelho, faz o sino tremer, o título da aba piscar, vai
 # para o Telegram e vira balão da Sentinela. O resto é "Para saber".
-PRECISA_DE_VOCE = frozenset({"mensagem", "convocacao", "desconto", "recurso", "situacao"})
+# "sentinela" (ela parada ou sem ler, GEN-73) entra aqui por decisão da dona
+# (19/11/2026): sem ela, ninguém fica sabendo do pregoeiro.
+PRECISA_DE_VOCE = frozenset({"mensagem", "convocacao", "desconto", "recurso", "situacao", "sentinela"})
 
 
 def precisa_de_voce(tipo: str) -> bool:

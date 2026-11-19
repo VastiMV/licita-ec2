@@ -119,17 +119,17 @@ class PrecisaDeVoceTests(TestCase):
         self.cliente.force_authenticate(User.objects.create_user(email="c@x.com", password="x"))
 
     def test_sino_separa_as_duas_partes(self):
-        for i, tipo in enumerate(["mensagem", "convocacao", "desconto", "recurso", "situacao"]):
+        for i, tipo in enumerate(["mensagem", "convocacao", "desconto", "recurso", "situacao", "sentinela"]):
             Notificacao.objects.create(tipo=tipo, titulo=tipo, chave=f"p{i}")
-        for i, tipo in enumerate(["resultado", "relatorio", "data", "favorito", "financeiro", "sentinela"]):
+        for i, tipo in enumerate(["resultado", "relatorio", "data", "favorito", "financeiro"]):
             Notificacao.objects.create(tipo=tipo, titulo=tipo, chave=f"s{i}")
 
         sino = self.cliente.get("/api/notificacoes/").json()
 
         self.assertEqual(sorted(a["tipo"] for a in sino["precisa"]),
-                         ["convocacao", "desconto", "mensagem", "recurso", "situacao"])  # fmt: skip
-        self.assertEqual(len(sino["para_saber"]), 6)
-        self.assertEqual((sino["nao_lidas"], sino["para_saber_nao_lidas"]), (5, 6))
+                         ["convocacao", "desconto", "mensagem", "recurso", "sentinela", "situacao"])  # fmt: skip
+        self.assertEqual(len(sino["para_saber"]), 5)
+        self.assertEqual((sino["nao_lidas"], sino["para_saber_nao_lidas"]), (6, 5))
 
     def test_muitos_resultados_nao_empurram_o_pregoeiro(self):
         Notificacao.objects.create(tipo="mensagem", titulo="Pregoeiro", chave="m")

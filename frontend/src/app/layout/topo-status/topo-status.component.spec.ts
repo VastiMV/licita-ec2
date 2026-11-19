@@ -193,6 +193,7 @@ describe('TopoStatusComponent', () => {
     expect(chamadaDoTitulo('mensagem')).toBe('Pregoeiro!');
     expect(chamadaDoTitulo('convocacao')).toBe('Convocação!');
     expect(chamadaDoTitulo('situacao')).toBe('Atenção!');
+    expect(chamadaDoTitulo('sentinela')).toBe('Sentinela parada!');
   });
 
   it('clicar num resultado abre o relatório e marca como lido', async () => {

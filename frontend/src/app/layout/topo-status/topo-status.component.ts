@@ -220,6 +220,8 @@ export function chamadaDoTitulo(tipo: TipoNotificacao): string {
       return 'Pedido de desconto!';
     case 'recurso':
       return 'Recurso!';
+    case 'sentinela':
+      return 'Sentinela parada!';
     default:
       return 'Atenção!';
   }
