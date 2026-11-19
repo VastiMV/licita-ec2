@@ -55,7 +55,10 @@ pasta [`docs/`](docs/).
   `insidesolutions-brasil.atlassian.net`.
 - Todo trabalho tem um cartão. O **código do cartão** vai no nome do ramo
   (`GEN-48-descricao`) e no **título do PR** (`GEN-48: …`).
-- Status: To Do → In Progress (ao começar) → Done (publicado).
+- Status: To Do → In Progress (ao começar) → **Testando** (publicado,
+  conferindo na produção) → Done (confirmado que funciona). Etapa Testando
+  combinada com a operação em 19/11/2026 (GEN-103: o Telegram foi publicado,
+  mas só fecha quando o primeiro aviso chegar de verdade).
 
 ## 4. Segredos e dados sensíveis
 
