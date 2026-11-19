@@ -189,8 +189,8 @@ marcada. Fim de semana não tem movimentação, por isso as outras são seg–se
 Além delas, duas rodam **na hora**, sem agenda:
 `licitacoes.completar_salva`, quando uma captura da Sentinela toca uma salva
 sem órgão ou sem itens (pede ao PNCP o que falta); e
-`notificacoes.enviar_telegram`, a cada aviso novo do sino (se o Telegram
-estiver ligado).
+`notificacoes.enviar_telegram`, a cada aviso novo do sino de "Precisa de
+você" (se o Telegram estiver ligado; GEN-104).
 
 - **8h — PNCP:** traz os itens que a empresa ganhou e as atas de registro de
   preços, para cada CNPJ ativo em Cadastros › Empresas. Licitação ganha que

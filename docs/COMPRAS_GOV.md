@@ -123,6 +123,7 @@ Todas em `https://insidelicitacoes.com.br/api/sentinela/` (sem `www`: o
 | `GET estado/` | para o botão do topo do Licita (usuário logado, não a chave) | 0.1 |
 | `GET ronda/` | o que consultar sozinha agora: as propostas dos itens da empresa (`apps/sentinela/ronda.py`) | 0.1.4 |
 | `GET tarefas/`, `POST tarefas/{id}/` | tarefas pedidas pelo Licita (tirar favorito pela lixeira) | 0.2.1 |
+| `GET avisos/?depois={id}` | os avisos "Precisa de você" novos, para o balão do Windows (sem `depois`: só o último id) | 0.2.9 |
 
 ## Regras que não se negociam
 

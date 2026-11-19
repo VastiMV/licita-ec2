@@ -305,9 +305,10 @@ as listas (participações e itens) e o chat.
 
 | O que | Como |
 |---|---|
-| **Sessão** | `pagina.js` guarda o `authorization` que a própria página usa, **só na memória da aba**. Nunca é gravado, nunca sai do computador |
+| **Sessão** | `pagina.js` usa o token atual que o próprio site guarda (`sessionStorage.accessToken`, desde a 0.2.8) ou, sem ele, o `authorization` que a página usou; **só na memória da aba**. Nunca é gravado, nunca sai do computador. Depois de um 401, espera 5 s o site renovar e tenta 1 vez; nunca chama o retoken |
 | **Consultas próprias** | só uma lista fechada (`PERMITIDO` em `pagina.js`): proposta do item (`?filtro=2`), fase recursal, diligências e `DELETE …/favorita`. Nada com captcha |
 | **Tarefas** | a cada 1 min pergunta `GET tarefas/` (hoje: tirar favorito pedido pela lixeira) e responde `POST tarefas/<id>/` |
+| **Balão** (0.2.9) | a cada 1 min pergunta `GET avisos/?depois=<id>` e mostra um balão do Windows (com som, se ligado nas opções) para cada "Precisa de você" novo |
 | **Ronda** | a cada 10 min (dias úteis, 8h–19h) pega `GET ronda/` e consulta, uma por vez com pausa, proposta/recurso/diligências de cada item com proposta; manda as respostas para `captura/`. Botão "Fazer a ronda agora" nas opções. Desde 12/11/2026 (GEN-71) entram também as compras ainda gravadas **antes da sessão** cuja sessão (ou, sem data, o prazo) já passou — antes elas só mudavam se ele abrisse a tela. Item com **proposta retirada** sai da ronda e da vigia diária. Só o servidor mudou: a Sentinela continua a mesma (0.2.5) |
 | **Sessão caiu** | 401 ou sessão ainda não vista → estado "precisa de você" no topo do Licita ("abra ou atualize a aba do Compras.gov") |
 | **Ligada, mas sem ler** (GEN-73, 14/11/2026) | em horário de trabalho (seg–sex, 8h–19h), **30 min sem nenhuma leitura** (contando do início do expediente) → topo âmbar ("Ligada, mas sem ler o Compras.gov há X min") e **aviso no sino e no Telegram**, um por episódio (tarefa `sentinela.conferir_silencio`, a cada 10 min). Sem sinal de vida também, o aviso é "parada". É do **servidor**: pega qualquer falha da extensão, até as que ninguém previu |
